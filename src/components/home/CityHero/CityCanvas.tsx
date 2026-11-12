@@ -13,12 +13,28 @@ import {
   createAtmosphere,
   prepareCity,
 } from './cityRuntime';
+import { CityPostFx } from './cityPostFx';
 
 const CITY_CONFIG: CityConfig = config;
 const HERO_POSITION = new THREE.Vector3().fromArray(CITY_CONFIG.hero.position);
 const MODEL_URL = '/models/smart_city.glb';
-// 0 başlangıç görünümü (cityRuntime içindeki BASE_LOOK: alacakaranlık maketi), 1 mavi saat.
+// 0 başlangıç görünümü (cityRuntime içindeki BASE_LOOK: alacakaranlık), 1 mavi saat.
 const TIME_OF_DAY = 0;
+// Geliştirmede `?fx=0` post-process'i kapatır (kare süresini karşılaştırmak için).
+const FX_DISABLED = import.meta.env.DEV && new URLSearchParams(window.location.search).get('fx') === '0';
+
+/** Bloom ve renk düzeltme. Öncelikli useFrame çizimi R3F'ten devralır: sahneyi çizer, sonra efektleri uygular. */
+function PostFx({ quality }: { quality: Quality }) {
+  const { gl, scene, camera, size, viewport } = useThree();
+  const fx = useMemo(() => new CityPostFx(gl, { bloom: quality === 'high' ? 1.3 : 1.1 }), [gl, quality]);
+  useEffect(() => () => fx.dispose(), [fx]);
+  useEffect(() => {
+    const buffer = gl.getDrawingBufferSize(new THREE.Vector2());
+    fx.setSize(buffer.x, buffer.y);
+  }, [fx, gl, size, viewport.dpr]);
+  useFrame(() => fx.render(scene, camera), 1);
+  return null;
+}
 
 interface CitySceneProps {
   quality: Quality;
@@ -35,7 +51,7 @@ function CityScene({ quality, reducedMotion, onReady }: CitySceneProps) {
   // Şehir ve kamera sahneye ışık eklemez, ışıklar efektte kurulup temizlenir (StrictMode çift çalıştırır).
   const { city, director } = useMemo(
     () => ({
-      city: prepareCity(gltf.scene, CITY_CONFIG, { quality, timeOfDay: TIME_OF_DAY }),
+      city: prepareCity(gltf.scene, CITY_CONFIG, { quality }),
       director: new CameraDirector(camera as THREE.PerspectiveCamera, CITY_CONFIG, {
         idleOrbit: !reducedMotion,
         parallax: !reducedMotion,
@@ -81,7 +97,12 @@ function CityScene({ quality, reducedMotion, onReady }: CitySceneProps) {
     if (++frames.current === 3) onReady();
   });
 
-  return <primitive object={gltf.scene} />;
+  return (
+    <>
+      <primitive object={gltf.scene} />
+      {quality !== 'low' && !FX_DISABLED && <PostFx quality={quality} />}
+    </>
+  );
 }
 
 interface CityCanvasProps extends CitySceneProps {

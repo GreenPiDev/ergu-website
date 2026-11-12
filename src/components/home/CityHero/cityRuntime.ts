@@ -2,6 +2,7 @@
 // Post-process (MSAA'lı HDR hedef + bloom) kaldırıldı: kare süresini ikiye katlayıp fare hareketinde kasma yapıyordu.
 // Çizim doğrudan tuvale, tarayıcının kendi antialias'ıyla yapılır, vinyet CSS ile verilir.
 import * as THREE from 'three';
+import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
 
 type Vec3 = number[];
 
@@ -25,13 +26,18 @@ const POSTER_ASPECT = 16 / 9;
 
 // Hero kamerası paketteki açıdan 270° döndürülmüş, şehre yandan bakar (havalimanı sol üstte, deniz solda kalır).
 const HERO_AZIMUTH_OFFSET = Math.PI * 1.5;
-// Hero kamerasının hedefe uzaklığı, paketteki değere göre (1 = paketteki konum, ~3500 m). 0.4455 ile ~1560 m.
-const HERO_DISTANCE_SCALE = 0.33 * 1.35;
-// Kameranın ufuktan yüksekliği (derece). Paketteki 34° harita gibi tepeden bakıyordu. 26° ile binaların cepheleri ve
+// Hero kamerasının hedefe uzaklığı, paketteki değere göre (1 = paketteki konum, ~3500 m). 0.58 ile ~2030 m.
+// Uzun odakla birlikte: kamera uzakta, görüş açısı dar. Perspektif sıkışır (ön ve arka binalar yakın boyda, düşey
+// kenarlar paralele yakın), maket hissi buradan gelir. Yaklaşmak yerine açıyı daraltmak kadrajdaki bina sayısını korur.
+const HERO_DISTANCE_SCALE = 0.58;
+// Dikey görüş açısı (derece, 16:9 için). Paketteki 30° geniş açılı, perspektifi abartıyordu.
+const HERO_FOV = 22;
+// Kameranın ufuktan yüksekliği (derece). Paketteki 34° harita gibi tepeden bakıyordu. 30° ile binaların cepheleri ve
 // arkadaki sisli derinlik görünür, kadrajın üst kenarı ufkun ~7° altında kalır (gökyüzü kadraja girmez).
-const HERO_ELEVATION = 26 * DEG;
-// Dik ekranda yatay görüş daralır, kamera en-boy oranı düştükçe geri çekilir (0.46 oranında ~1.5 kat).
-const PORTRAIT_PULLBACK = 0.9;
+const HERO_ELEVATION = 30 * DEG;
+// Dik ekranda yatay görüş daralır, kamera en-boy oranı düştükçe geri çekilir (0.46 oranında ~1.3 kat). Daha fazlası
+// telefonda şehri küçültüp ön plana boş nehir şeridini sokuyordu.
+const PORTRAIT_PULLBACK = 0.6;
 // Hedefin kameranın sağına kayma payı, hero mesafesinin oranı olarak.
 const HERO_SIDE_SHIFT = 0.14;
 
@@ -51,13 +57,15 @@ const HEIGHT_MAX = 400;
 // Prosedürel shader'ların ortak uniform'ları.
 const cityUniforms = {
   uWin: { value: 1.0 }, // pencere ışığı şiddeti
-  uWarm: { value: new THREE.Color('#ffb25c') },
+  uWarm: { value: new THREE.Color('#ffb868') },
   uLitShare: { value: 0.22 }, // güçlü yanan binaların payı
   uNight: { value: 0 }, // 0 gün ışığı, 1 mavi saat: zemin kat ışıması yalnızca akşam görünür
   uTime: { value: 0 }, // su dalgaları ve bulut gölgeleri için saniye
   uAo: { value: 0 }, // yükseklik haritası hazır olunca 1
   uCloud: { value: 0.42 }, // bulut gölgesinin güneş ışığını kısma payı
-  uMono: { value: 0 }, // 1: renkler tek tonlu taş makete çekilir (yeşil alan ve su hariç)
+  uGrade: { value: 0 }, // malzeme renklerinin doygunluğundan alınan pay (renk uyumu)
+  uFogD: { value: 0.0002 }, // sis yoğunluğu (ışık noktaları kendi sislerini hesaplar)
+  uDpr: { value: 1 }, // ışık noktalarının piksel ölçüsü için
   uHeightTex: { value: null as THREE.Texture | null },
   uHeightRect: { value: new THREE.Vector4(HEIGHT_RECT.minX, HEIGHT_RECT.minZ, 1 / HEIGHT_RECT.sizeX, 1 / HEIGHT_RECT.sizeZ) },
   uCloudTex: { value: null as THREE.Texture | null },
@@ -66,26 +74,28 @@ const cityUniforms = {
 // Gün batımı (0) ile mavi saat (1) arasındaki ara değerler.
 // Altın saat: alçak ve sıcak güneş, uzun gölgeler, gölge tarafları mavi gökyüzü ışığıyla dolar, sokak lambaları neredeyse sönük.
 // Güneş rengi bilerek az doygun: koyu turuncu güneş bütün sahneyi tek bir bej tona boyuyordu, sıcak-soğuk ayrımı kayboluyordu.
+// fogK: sis yoğunluğu x kameranın hedefe uzaklığı. Alacakaranlıkta sis ve pus bilerek yok (kullanıcı tercihi), `fog`
+// rengi yalnızca arka plandır. Yoğunluk mesafeye bölünür, hedefteki pus her ekran oranında aynı
+// kalır (dik ekranda kamera geri çekildiğinde sabit yoğunluk görüntüyü süt gibi griye gömüyordu).
+// ground: ortam haritasının ufuk altı yarısı (gölge yüzlerin dolgusu). grade: malzeme renklerinin doygunluğundan alınan pay.
 const TIME_OF_DAY = {
-  golden: { sun: '#ffe1bd', sunI: 4.2, sunEl: 15, hemiSky: '#8fb4ea', hemiGround: '#8f8676', hemiI: 0.9, env: 0.7, fog: '#cfd6dd', fogD: 0.00014, zenith: '#5f8fd0', horizon: '#e9dcc8', windows: 0.5, lamps: 1.0, exposure: 1.08, night: 0, cloud: 0.42, mono: 0 },
-  // Alacakaranlık maketi: güneş alçak ve kısık, gökyüzü dolgusu serin gri-mavi, pencereler, zemin katlar ve sokak ışıkları yanar.
-  // Renkler tek tonlu taş makete çekilir, sıcak ışık tek vurgudur.
-  dusk: { sun: '#ffd0a0', sunI: 2.3, sunEl: 13, hemiSky: '#8494b4', hemiGround: '#5c554b', hemiI: 0.6, env: 0.45, fog: '#59606e', fogD: 0.00016, zenith: '#3f5684', horizon: '#c9a98a', windows: 2.2, lamps: 0.85, exposure: 1.0, night: 0.65, cloud: 0.15, mono: 0.85 },
-  blue: { sun: '#ff9a68', sunI: 0.5, sunEl: 2.5, hemiSky: '#506a9a', hemiGround: '#2a2c36', hemiI: 0.6, env: 0.4, fog: '#3e4a66', fogD: 0.0001, zenith: '#1c2a4a', horizon: '#8086a6', windows: 4.0, lamps: 6.0, exposure: 1.1, night: 1, cloud: 0.1, mono: 0.85 },
+  golden: { sun: '#ffe1bd', sunI: 4.2, sunEl: 15, hemiSky: '#8fb4ea', hemiGround: '#8f8676', hemiI: 0.9, env: 0.7, fog: '#cfd6dd', fogK: 0.22, zenith: '#5f8fd0', horizon: '#e9dcc8', ground: '#b9ab92', windows: 0.5, exposure: 1.08, night: 0, cloud: 0.42, grade: 0 },
+  // Alacakaranlık: güneş zayıf ve nötr, ışık neredeyse yönsüz. Hacmi yükseklik haritasından gelen ortam gölgesi verir.
+  // Ortam serin, sıcak olan yalnızca yapay ışıklar (pencere, vitrin, sokak lambaları ve ışık havuzları). Renkler korunur,
+  // doygunlukları aynı ışığın altında duracak kadar kısılır. Sıcak dolgu (ufuk ve zemin) bilerek nötr tutulur: önceki
+  // sürümde güneş, ufuk, zemin ve tek ton katmanı birlikte bütün ekranı sarı-turuncuya çekiyordu.
+  dusk: { sun: '#ffe2c8', sunI: 1.25, sunEl: 26, hemiSky: '#a9a8a6', hemiGround: '#46423e', hemiI: 0.85, env: 0.45, fog: '#64666d', fogK: 0, zenith: '#5a6886', horizon: '#a49e9a', ground: '#605d5a', windows: 2.6, exposure: 0.92, night: 0.8, cloud: 0, grade: 0.18 },
+  blue: { sun: '#ff9a68', sunI: 0.5, sunEl: 2.5, hemiSky: '#506a9a', hemiGround: '#2a2c36', hemiI: 0.6, env: 0.4, fog: '#3e4a66', fogK: 0.16, zenith: '#1c2a4a', horizon: '#8086a6', ground: '#3a3c46', windows: 4.0, exposure: 1.1, night: 1, cloud: 0.1, grade: 0.18 },
 } as const;
 
-// Sahnenin başlangıç görünümü (timeOfDay 0). `golden` renkli gündüz, `dusk` alacakaranlık maketi. timeOfDay 1 her ikisinde mavi saattir.
+// Sahnenin başlangıç görünümü (timeOfDay 0). `golden` renkli gündüz, `dusk` alacakaranlık. timeOfDay 1 her ikisinde mavi saattir.
 const BASE_LOOK = TIME_OF_DAY.dusk;
-
-/** 0 gün ışığı, 1 gece: ışıkların ne kadar yandığı. */
-function nightLevel(timeOfDay: number): number {
-  return lerp(BASE_LOOK.night, TIME_OF_DAY.blue.night, clamp01(timeOfDay));
-}
 
 function skyTexture(
   renderer: THREE.WebGLRenderer,
   zenith: THREE.Color,
   horizon: THREE.Color,
+  ground: THREE.Color,
   sunDir: THREE.Vector3,
   sunColor: THREE.Color,
 ): THREE.Texture {
@@ -99,7 +109,7 @@ function skyTexture(
       hor: { value: horizon },
       sun: { value: sunDir.clone().normalize() },
       sunC: { value: sunColor },
-      gnd: { value: new THREE.Color('#b9ab92') },
+      gnd: { value: ground },
     },
     vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
     fragmentShader: `varying vec3 vDir; uniform vec3 zen, hor, sun, sunC, gnd;
@@ -158,6 +168,7 @@ export function createAtmosphere(
   });
 
   let envTexture: THREE.Texture | null = null;
+  let fogK = 0;
   let lastEnvT = -1;
   const sunDir = new THREE.Vector3();
   const A = BASE_LOOK;
@@ -176,17 +187,21 @@ export function createAtmosphere(
     hemi.groundColor.copy(lerpColor(A.hemiGround, B.hemiGround, t));
     hemi.intensity = lerp(A.hemiI, B.hemiI, t);
     fog.color.copy(lerpColor(A.fog, B.fog, t));
-    fog.density = lerp(A.fogD, B.fogD, t);
+    fogK = lerp(A.fogK, B.fogK, t);
+    // Gerçek yoğunluk her karede focusShadows içinde kamera mesafesine göre kurulur.
+    fog.density = fogK / 2000;
     scene.background = fog.color.clone();
     scene.environmentIntensity = lerp(A.env, B.env, t);
     renderer.toneMappingExposure = lerp(A.exposure, B.exposure, t);
     cityUniforms.uWin.value = lerp(A.windows, B.windows, eased);
     cityUniforms.uLitShare.value = lerp(0.2, 0.42, t);
     cityUniforms.uNight.value = lerp(A.night, B.night, t);
-    cityUniforms.uMono.value = lerp(A.mono, B.mono, t);
+    cityUniforms.uGrade.value = lerp(A.grade, B.grade, t);
     cityUniforms.uCloud.value = lerp(A.cloud, B.cloud, t);
+    // Kalan ışık mesh'leri (havalimanı ışıkları, kule tepesi). Sokak lambaları ve yol ışıkları nokta olarak çizilir.
+    const night = cityUniforms.uNight.value;
     for (const material of lampMaterials) {
-      material.emissiveIntensity = lerp(A.lamps, B.lamps, eased) * (material.name === 'Light_Red' ? 0.8 : 1);
+      material.emissiveIntensity = (0.6 + 2.4 * night) * (material.name === 'Light_Red' ? 0.8 : 1);
     }
     if (Math.abs(t - lastEnvT) > 0.04 || !envTexture) {
       const previous = envTexture;
@@ -194,6 +209,7 @@ export function createAtmosphere(
         renderer,
         lerpColor(A.zenith, B.zenith, t),
         lerpColor(A.horizon, B.horizon, t),
+        lerpColor(A.ground, B.ground, t),
         sunDir,
         lerpColor(A.sun, B.sun, t).multiplyScalar(1 - t * 0.8),
       );
@@ -209,6 +225,9 @@ export function createAtmosphere(
   const shadowTarget = new THREE.Vector3();
   const lastFocus = new THREE.Vector4(NaN);
   function focusShadows(target: THREE.Vector3, distance: number) {
+    cityUniforms.uDpr.value = renderer.getPixelRatio();
+    fog.density = fogK / distance;
+    cityUniforms.uFogD.value = fog.density;
     // Alçak kamerada kadraj hedefin çok ötesine uzanır, gölge alanı buna göre geniş tutulur.
     const half = THREE.MathUtils.clamp(distance * 0.95, 260, 2600);
     if (lastFocus.x === target.x && lastFocus.y === target.z && lastFocus.z === half) return;
@@ -251,6 +270,66 @@ const QUAD_VERTEX = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4
 const HEIGHT_SKIP_NAME =
   /^(Vehicles_|Traffic_|Roads_TrafficGlow|Infrastructure_|Energy_(WindTurbines|Pylons|PowerLines|Busbars)|CableCar_(Gondolas|Cables)|Bridge_StayCables|Military_UtilityTrucks|Greens_Shrubs)/;
 const HEIGHT_SKIP_MATERIAL = /^(Water|Light_|Glass_|Cable_)/;
+
+// Sokak lambasının zemine düşürdüğü ışık havuzunun yarıçapı (metre).
+const LAMP_POOL_RADIUS = 17;
+
+interface LightPointData {
+  positions: Float32Array;
+  pools: Float32Array; // nokta başına zemin ışığı payı
+}
+
+/**
+ * Lamba ve yol ışığı konumlarını yükseklik haritasının mavi kanalına yumuşak lekeler olarak toplar. Shader'lar zemine
+ * yakın yüzeylerde bunu sıcak ışık olarak ekler: sokaklar boyunca ışık havuzları. Açılışta bir kez çizilir.
+ */
+function drawLightPools(
+  renderer: THREE.WebGLRenderer,
+  target: THREE.WebGLRenderTarget,
+  cityRoot: THREE.Object3D,
+  camera: THREE.Camera,
+  width: number,
+) {
+  const data = cityRoot.userData.lightPoints as LightPointData | undefined;
+  if (!data) return;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
+  geometry.setAttribute('aPool', new THREE.BufferAttribute(data.pools, 1));
+  const material = new THREE.ShaderMaterial({
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    uniforms: {
+      uRect: { value: cityUniforms.uHeightRect.value },
+      uPx: { value: (LAMP_POOL_RADIUS * 2 * width) / HEIGHT_RECT.sizeX },
+    },
+    vertexShader: `uniform vec4 uRect; uniform float uPx; attribute float aPool; varying float vPool;
+      void main(){
+        vec2 uv = (position.xz - uRect.xy) * uRect.zw;
+        vPool = aPool;
+        gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+        gl_PointSize = uPx;
+      }`,
+    fragmentShader: `varying float vPool;
+      void main(){
+        vec2 c = gl_PointCoord * 2.0 - 1.0;
+        float r2 = dot(c, c);
+        gl_FragColor = vec4(0.0, 0.0, vPool * exp(-r2 * 3.0) * step(r2, 1.0), 1.0);
+      }`,
+  });
+  const points = new THREE.Points(geometry, material);
+  points.frustumCulled = false;
+  const scene = new THREE.Scene();
+  scene.add(points);
+  const autoClear = renderer.autoClear;
+  renderer.autoClear = false;
+  renderer.setRenderTarget(target);
+  renderer.render(scene, camera);
+  renderer.autoClear = autoClear;
+  geometry.dispose();
+  material.dispose();
+}
 
 export interface HeightField {
   dispose: () => void;
@@ -339,6 +418,12 @@ export function bakeHeightField(
   const hidden: THREE.Object3D[] = [];
   const shown: THREE.Object3D[] = [];
   cityRoot.traverse((object) => {
+    // Işık noktaları yükseklik sayılmaz.
+    if (object instanceof THREE.Points && object.visible) {
+      object.visible = false;
+      hidden.push(object);
+      return;
+    }
     if (!(object instanceof THREE.Mesh)) return;
     const material: THREE.Material = Array.isArray(object.material) ? object.material[0] : object.material;
     const skip = HEIGHT_SKIP_NAME.test(object.name) || HEIGHT_SKIP_MATERIAL.test(material.name);
@@ -392,6 +477,7 @@ export function bakeHeightField(
   quad.material = combineMaterial;
   renderer.setRenderTarget(result);
   renderer.render(quadScene, camera);
+  drawLightPools(renderer, result, cityRoot, camera, width);
 
   renderer.setRenderTarget(previous.target);
   renderer.setClearColor(previous.clearColor, previous.clearAlpha);
@@ -498,50 +584,55 @@ const VERT_BODY = `
 const FRAG_COMMON = `
 varying vec3 vWPos; varying vec3 vWNrm; varying float vKey; varying vec3 vLocal; varying vec3 vHalf; varying float vKind;
 uniform float uWin; uniform vec3 uWarm; uniform float uLitShare; uniform float uNight; uniform float uTime;
-uniform float uAo; uniform float uCloud; uniform float uMono; uniform sampler2D uHeightTex; uniform vec4 uHeightRect; uniform sampler2D uCloudTex;
+uniform float uAo; uniform float uCloud; uniform float uGrade; uniform sampler2D uHeightTex; uniform vec4 uHeightRect; uniform sampler2D uCloudTex;
 float h12(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
   return mix(mix(h12(i), h12(i+vec2(1,0)), f.x), mix(h12(i+vec2(0,1)), h12(i+vec2(1,1)), f.x), f.y); }
 float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++){ s += a * vnoise(p); p *= 2.03; a *= 0.5; } return s; }
-// x: yakın çevrenin, y: geniş çevrenin ortalama yüksekliği (metre). z: nokta haritanın içindeyse 1, kenarda 0'a iner.
-vec3 cityHeights(vec2 p){
+// x: yakın çevrenin, y: geniş çevrenin ortalama yüksekliği (metre). z: sokak lambalarının zemine düşürdüğü ışık.
+// w: nokta haritanın içindeyse 1, kenarda 0'a iner.
+vec4 cityHeights(vec2 p){
   vec2 uv = (p - uHeightRect.xy) * uHeightRect.zw;
   vec2 e = min(uv, 1.0 - uv);
   float inside = smoothstep(0.0, 0.05, min(e.x, e.y));
-  return vec3(texture2D(uHeightTex, uv).rg + ${HEIGHT_BASE.toFixed(1)}, inside);
+  vec3 t = texture2D(uHeightTex, uv).rgb;
+  return vec4(t.rg + ${HEIGHT_BASE.toFixed(1)}, t.b, inside);
 }
 `;
 
 // Bütün malzemelerde ortak ışık düzeltmesi: yükseklik haritasından ortam gölgesi ve yavaşça kayan bulut gölgeleri.
 // Ortam gölgesi gökyüzü ışığını keser, güneşi yalnızca hafifçe. Bulut yalnızca güneşi keser, gökyüzü ışığı kalır.
+// Işık yumuşak ve neredeyse yönsüz olduğundan hacmi bu ortam gölgesi taşır: güneş de büyük ölçüde kısılır.
 const LIGHT_FRAGMENT = `#include <aomap_fragment>
   {
-    vec3 ch = cityHeights(vWPos.xz);
+    vec4 ch = cityHeights(vWPos.xz);
     float d1 = max(ch.x - vWPos.y - 0.35, 0.0);
     float d2 = max(ch.y - vWPos.y - 0.35, 0.0);
-    float cao = 1.0 - (0.5 * (1.0 - exp(-d1 / 10.0)) + 0.3 * (1.0 - exp(-d2 / 30.0))) * ch.z * uAo;
+    float cao = 1.0 - (0.62 * (1.0 - exp(-d1 / 9.0)) + 0.38 * (1.0 - exp(-d2 / 26.0))) * ch.w * uAo;
     vec2 cuv = vWPos.xz / 2600.0 + uTime * vec2(0.0035, 0.0012);
     float cl = texture2D(uCloudTex, cuv).r * 0.65 + texture2D(uCloudTex, cuv * 2.3 + 0.37).r * 0.35;
     float csun = 1.0 - uCloud * smoothstep(0.52, 0.74, cl);
     reflectedLight.indirectDiffuse *= cao;
     reflectedLight.indirectSpecular *= cao;
-    reflectedLight.directDiffuse *= mix(1.0, cao, 0.3) * csun;
+    reflectedLight.directDiffuse *= mix(1.0, cao, 0.55) * csun;
     reflectedLight.directSpecular *= csun;
-    // Akşam: binaların dibindeki zemin ve alt duvarlar pencere ve vitrin ışığından sıcak bir pay alır (ışık havuzu).
-    // Bloom olmadan ışığın çevresine yayıldığı hissini verir. Aynı yükseklik haritasından okunur, ek maliyeti yoktur.
-    float spill = (1.0 - exp(-d1 / 7.0)) * ch.z * uAo * uNight;
-    reflectedLight.indirectDiffuse += material.diffuseColor * uWarm * spill * 0.5;
+    // Akşam: bina diplerindeki zemin vitrin ışığından, sokaklar lambalardan sıcak bir ışık havuzu alır. Lamba ışığı
+    // açılışta yükseklik haritasının mavi kanalına bir kez çizilir (ek doku okuması yok), zemine yakın yüzeyleri aydınlatır.
+    float spill = (1.0 - exp(-d1 / 7.0)) * ch.w * uAo * uNight;
+    // Lamba ışığı yalnızca zemine değil alt cephelere de vurur: düşey yüzler daha çok alır (kaldırım kenarları şeritlenmez).
+    float facing = 1.0 - abs(vWNrm.y);
+    float pool = ch.z * ch.w * uAo * uNight * (1.0 - smoothstep(1.0, mix(10.0, 18.0, facing), vWPos.y));
+    reflectedLight.indirectDiffuse += material.diffuseColor * uWarm * (spill * 0.15 + pool * mix(0.6, 1.5, facing));
   }`;
 
-// Tek tonlu maket: bütün malzeme renkleri hesaplandıktan sonra, ışıklandırmadan hemen önce uygulanır. Parlaklık korunur ve
-// orta tona doğru toplanır (koyu asfalt koyu kalır), renk sıcak taş grisine çekilir. Yeşil alanlar ve ağaçlar yeşil kalır.
-const MONO_FRAGMENT = `
+// Renk uyumu: malzeme renkleri hesaplandıktan sonra, ışıklandırmadan hemen önce doygunluk biraz kısılır ve çok açık
+// yüzeyler hafifçe bastırılır. Renkler kalır, aynı alacakaranlık ışığının altında duruyormuş gibi tek bir aileye oturur.
+// (Önceki tek ton katmanı renkleri sıcak gri bir maket tonuna çekiyordu, kaldırıldı.)
+const GRADE_FRAGMENT = `
   {
-    float ml = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
-    float mk = smoothstep(0.1, 0.28, ml);
-    float mt = mix(ml, mix(ml, 0.5, 0.45), mk);
-    float keep = smoothstep(1.08, 1.3, diffuseColor.g / max(max(diffuseColor.r, diffuseColor.b), 1e-3));
-    diffuseColor.rgb = mix(diffuseColor.rgb, mt * vec3(1.0, 0.96, 0.9), uMono * (1.0 - keep * 0.85));
+    float gy = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(gy), uGrade);
+    diffuseColor.rgb *= mix(1.0, 1.0 - 0.25 * smoothstep(0.5, 0.85, gy), uGrade / 0.18);
   }
   #include <lights_physical_fragment>`;
 
@@ -585,7 +676,7 @@ const FACADE_FRAGMENT = `#include <emissivemap_fragment>
     float glassShare = mix(0.25, 0.75, h12(vec2(bkey * 13.7, 1.9)));
     // Pencere tek tek seçilemeyecek kadar uzaksa kat hizasında şerit pencere, o da seçilemiyorsa ortalama ton.
     float ribbon = 1.0 - smoothstep(0.22, 0.45, fwidth(cell.y));
-    float glass = mix(mix(0.42, wy * 0.72, ribbon), win, detail) * wall * above * glassShare * (1.0 - glassTower);
+    float glass = mix(mix(0.3, wy * 0.6, ribbon), win, detail) * wall * above * glassShare * (1.0 - glassTower);
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.08, 0.14, 0.24), glass);
     roughnessFactor = mix(roughnessFactor, 0.14, glass);
 
@@ -632,13 +723,39 @@ const FACADE_FRAGMENT = `#include <emissivemap_fragment>
       diffuseColor.rgb = mix(rc, wallColor * 1.05, rim);
     }
 
-    // Pencere ışığı: gün ışığında yalnızca tek tük yanan pencere, zemin kat ışıması akşama doğru belirir.
+    // Yapay ışık. Uzaktan tek tek pencere seçilemediği için cephenin tamamına ortalama bir ışıma vermek bütün ekranı
+    // turuncu bir örtüyle boyuyordu. Bunun yerine ışık kaynakları ayrık tutulur:
+    // 1) Yanan pencere grupları: iki pencere genişliğinde, bir kat yüksekliğinde hücrelerin bir bölümü yanar. Hücre bu
+    //    mesafede birkaç piksel olduğundan seçilir, ancak bir pikselin altına inerse söner (titreme olmaz).
     float bright = step(1.0 - uLitShare, bkey);
-    float share = mix(0.1, 0.55, bright);
-    float lit = step(h12(id + bkey * 91.7), share);
-    float glow = mix(share * 0.2 * mix(0.25, 1.0, uNight), win * lit * (0.65 + 0.35 * h12(id * 1.7 + 4.0)), detail);
-    float base = (1.0 - smoothstep(4.5, 7.5, vWPos.y)) * wall * (0.25 + 0.75 * bright);
-    totalEmissiveRadiance += uWarm * uWin * (glow * wall + base * 0.3 * uNight);
+    float share = mix(0.1, 0.45, bright) * uNight;
+    vec2 lcell = vec2(u / 6.2, (vWPos.y - 0.8) / 3.45);
+    vec2 lf = fract(lcell), lid = floor(lcell);
+    vec2 la = max(fwidth(lcell) * 0.8, vec2(1e-4));
+    float lrect = smoothstep(0.06 - la.x, 0.06 + la.x, lf.x) * (1.0 - smoothstep(0.94 - la.x, 0.94 + la.x, lf.x))
+      * smoothstep(0.3 - la.y, 0.3 + la.y, lf.y) * (1.0 - smoothstep(0.82 - la.y, 0.82 + la.y, lf.y));
+    float lvis = 1.0 - smoothstep(0.45, 0.9, max(la.x, la.y));
+    // Karar hücre başına değil, katın üç hücrelik bölümü başına verilir: yanan pencereler kat boyunca kümelenir,
+    // puantiye desen gibi okunmaz. Parlaklık bölüm başına değişir.
+    // Yaşayan şehir: her bölümün kendi saati vardır (25-90 sn, rastgele başlangıç). Süre dolunca yanıp yanmayacağına
+    // yeniden karar verilir, 0.3 sn'de solarak geçer. Saatler bağımsız olduğundan şehrin bir yerinde birkaç saniyede bir
+    // ışık yanar veya söner, toplam yanan pay sabit kalır. Hareket azaltma açıkken uTime durur, ışıklar sabit kalır.
+    vec2 lseg = vec2(floor(lid.x / 3.0), lid.y);
+    float lper = mix(25.0, 90.0, h12(lseg * 3.1 + bkey * 7.3));
+    float ltt = uTime / lper + h12(lseg * 5.7 + bkey * 13.1);
+    float lep = floor(ltt);
+    float lkey = h12(lseg + bkey * 91.7 + lep * 17.13);
+    float lprev = h12(lseg + bkey * 91.7 + (lep - 1.0) * 17.13);
+    float lon = mix(step(lprev, share), step(lkey, share), smoothstep(0.0, 0.3 / lper, fract(ltt)));
+    float lit = lon * (0.4 + 0.6 * h12(lseg * 1.7 + 4.0));
+    float windowsLit = lrect * lit * lvis * step(4.6, vWPos.y) * wall;
+    // 2) Vitrin: zemin katta parlak bir şerit (sokak seviyesinin canlılığı).
+    float shop = (1.0 - smoothstep(3.6, 4.4, vWPos.y)) * step(0.6, vWPos.y) * wall * bright * uNight;
+    // 3) Cephe aydınlatması: binaların bir bölümünün cephesi dipten yukarı sönen sıcak ışıkla yıkanır (ışık havuzu).
+    float wash = step(h12(vec2(bkey * 7.7, 2.2)), 0.2) * exp(-max(vWPos.y - 1.0, 0.0) / 9.0) * wall * uNight;
+    // Pencere ışığı ton eşlemede beyaza doymasın diye orta şiddette: kehribar okunur, bloom'u yalnızca en parlakları alır.
+    totalEmissiveRadiance += uWarm * uWin * (windowsLit * 1.1 + shop * 0.7);
+    totalEmissiveRadiance += wallColor * uWarm * wash * 0.75;
   }`;
 
 // Arazi ve ağaçlar aynı malzemeyi paylaşır. Ağaçlar örnek başına ton alır. Arazi kum rengi tek düze değildir:
@@ -647,7 +764,8 @@ const TERRAIN_FRAGMENT = `#include <color_fragment>
   {
     vec2 p = vWPos.xz;
     if (vKey >= 0.0) {
-      diffuseColor.rgb *= mix(vec3(0.7, 1.2, 0.6), vec3(1.05, 1.25, 0.55), vKey) * 1.5;
+      // Koyu zeytin yeşili: ağaçlar alacakaranlıkta parlak yeşil leke değil, dokuyu taşıyan koyu kütlelerdir.
+      diffuseColor.rgb *= mix(vec3(0.62, 0.86, 0.5), vec3(0.82, 0.9, 0.48), vKey);
     } else {
       float sandy = smoothstep(0.66, 0.74, diffuseColor.r);
       float n1 = fbm(p * 0.00045);
@@ -678,7 +796,7 @@ const MATTE_FRAGMENT = `#include <color_fragment>
     vec3 mc = diffuseColor.rgb;
     float grass = smoothstep(1.05, 1.2, mc.g / max(mc.r, 1e-3)) * step(mc.b * 1.6, mc.g);
     float dry = step(mc.b, mc.g * 0.75) * step(mc.r, mc.g * 1.12) * smoothstep(0.25, 0.38, mc.g) * (1.0 - grass);
-    mc *= mix(vec3(1.0), vec3(0.78, 1.3, 0.7), grass);
+    mc *= mix(vec3(1.0), vec3(0.86, 1.08, 0.8), grass);
     mc *= mix(vec3(1.0), vec3(0.62, 0.92, 0.58), dry * (0.45 + 0.55 * smoothstep(0.35, 0.65, n)));
     // Yeşil alan tek renk halı değildir: büyük ölçekte koyu-açık bölgeler ve sararmış yamalar.
     float green = clamp(grass + dry, 0.0, 1.0);
@@ -687,7 +805,8 @@ const MATTE_FRAGMENT = `#include <color_fragment>
     mc *= 1.0 + green * ((g1 - 0.5) * 0.7 + (n - 0.5) * 0.3);
     mc = mix(mc, mc * vec3(1.3, 1.05, 0.62), green * smoothstep(0.45, 0.7, g2) * 0.65);
     float lum = dot(mc, vec3(0.3, 0.6, 0.1));
-    mc = mix(vec3(0.1, 0.105, 0.115) * (0.85 + 0.3 * n), mc, smoothstep(0.05, 0.14, lum));
+    // Asfalt simsiyah değil, zeminle akraba koyu gri: yol ızgarası görüntünün en baskın öğesi olmaz.
+    mc = mix(vec3(0.2, 0.195, 0.19) * (0.85 + 0.3 * n), mc, smoothstep(0.05, 0.14, lum));
     diffuseColor.rgb = mc;
     float wet = 1.0 - smoothstep(-1.7, -0.7, vWPos.y);
     diffuseColor.rgb *= mix(1.0, 0.6, wet);
@@ -726,8 +845,8 @@ const WATER_FRAGMENT = `#include <normal_fragment_maps>
     normal = normalize((viewMatrix * vec4(normalize(wn + ripple), 0.0)).xyz);
     diffuseColor.rgb *= mix(0.75, 1.2, gust) * (0.82 + 0.4 * flow);
     roughnessFactor = clamp(roughnessFactor + (flow - 0.5) * 0.25, 0.05, 1.0);
-    vec3 ch = cityHeights(p);
-    float shallow = (1.0 - smoothstep(1.5, 9.0, vWPos.y - ch.y)) * ch.z * uAo;
+    vec4 ch = cityHeights(p);
+    float shallow = (1.0 - smoothstep(1.5, 9.0, vWPos.y - ch.y)) * ch.w * uAo;
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.09, 0.3, 0.33), shallow * 0.6);
     diffuseColor.rgb *= 0.88 + 0.24 * fbm(p * 0.0012 + 3.0);
   }`;
@@ -736,8 +855,8 @@ const WATER_FRAGMENT = `#include <normal_fragment_maps>
 function patchMaterial(
   material: THREE.MeshStandardMaterial,
   cacheKey: string,
-  block?: { include: string; code: string },
-  mono = true,
+  block?: { include: string; code: string; header?: string },
+  grade = true,
 ) {
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, cityUniforms);
@@ -745,10 +864,10 @@ function patchMaterial(
       .replace('#include <common>', `#include <common>\n${VERT_DECL}`)
       .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>\n${VERT_BODY}`);
     let fragment = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${FRAG_COMMON}`)
+      .replace('#include <common>', `#include <common>\n${FRAG_COMMON}${block?.header ?? ''}`)
       .replace('#include <aomap_fragment>', LIGHT_FRAGMENT);
     if (block) fragment = fragment.replace(block.include, block.code);
-    if (mono) fragment = fragment.replace('#include <lights_physical_fragment>', MONO_FRAGMENT);
+    if (grade) fragment = fragment.replace('#include <lights_physical_fragment>', GRADE_FRAGMENT);
     shader.fragmentShader = fragment;
   };
   material.customProgramCacheKey = () => cacheKey;
@@ -924,10 +1043,10 @@ type MassVariant = keyof typeof MASS_VARIANTS;
 
 const massGeometries = new Map<MassVariant, THREE.BufferGeometry>();
 
-function pickVariant(halfX: number, halfY: number, halfZ: number, a: number, b: number): MassVariant {
+function pickVariant(halfX: number, halfY: number, halfZ: number, a: number, b: number, allowPitched = true): MassVariant {
   const alongX = halfX >= halfZ;
   // Eğimli çatı yalnızca küçük, alçak ve eninden çok uzun olmayan binalarda (yoksa sivri kule gibi durur).
-  if (Math.min(halfX, halfZ) < 8.5 && halfY < 10 && halfY < Math.min(halfX, halfZ) * 1.8) {
+  if (allowPitched && Math.min(halfX, halfZ) < 8.5 && halfY < 10 && halfY < Math.min(halfX, halfZ) * 1.8) {
     if (a < 0.45) return alongX ? 'hipX' : 'hipZ';
     if (a < 0.85) return alongX ? 'gableX' : 'gableZ';
     return 'plain';
@@ -942,6 +1061,89 @@ function pickVariant(halfX: number, halfY: number, halfZ: number, a: number, b: 
   if (a < 0.5) return b < 0.5 ? 'podiumA' : 'podiumB';
   if (a < 0.65) return 'ell';
   return 'plain';
+}
+
+// Parsel bölme: iri bloklar küçük binalara ayrılır. lot: hedef parsel genişliği (metre), gap: aradaki geçit genişliği.
+// Bu yükseklikten uzun kuleler silüeti taşıdığı için bölünmez.
+const SUBDIVIDE = {
+  business: { lot: 12.5, minEdge: 24, gap: 2.4 },
+  residential: { lot: 10, minEdge: 19, gap: 2 },
+  maxHeight: 55,
+  maxCells: 3,
+};
+
+interface Lot {
+  matrix: THREE.Matrix4;
+  allowPitched: boolean;
+}
+
+/**
+ * Model ölçeği örnekteki maket şehirlere göre iri: iş merkezinde 35-40 m'lik tek parça bloklar var. Bunlar parsellere
+ * bölünür, her parsel kendi yüksekliğini alır, aralarında dar geçitler kalır. Sokak cephesi korunur (dış kenarlar aynı),
+ * bloğun en yüksek parseli özgün yükseklikte kalır, böylece silüet değişmez. Az sayıda parsel boş bırakılır (avlu).
+ */
+function subdivideLot(
+  matrix: THREE.Matrix4,
+  business: boolean,
+  hash: (x: number, z: number, seed: number) => number,
+): Lot[] {
+  const position = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  matrix.decompose(position, quaternion, scale);
+  const rule = business ? SUBDIVIDE.business : SUBDIVIDE.residential;
+  const width = scale.x * 2;
+  const depth = scale.z * 2;
+  const height = scale.y * 2;
+  const whole = [{ matrix, allowPitched: true }];
+  if (height > SUBDIVIDE.maxHeight || Math.max(width, depth) < rule.minEdge) return whole;
+  const cells = (edge: number, seed: number) =>
+    // Bazı bloklar yalnızca tek yönde bölünür, ızgara düzeni tekrar etmez.
+    edge < rule.minEdge || hash(position.x, position.z, seed) < 0.25
+      ? 1
+      : Math.min(SUBDIVIDE.maxCells, Math.max(2, Math.round(edge / rule.lot)));
+  const nx = cells(width, 11);
+  const nz = cells(depth, 12);
+  if (nx * nz < 2) return whole;
+
+  // Parsel sınırları eşit değil: her kesim çizgisi biraz kayar.
+  const cuts = (n: number, seed: number) => {
+    const edges = [0];
+    for (let i = 1; i < n; i++) edges.push((i + (hash(position.x, position.z, seed + i) - 0.5) * 0.35) / n);
+    edges.push(1);
+    return edges;
+  };
+  const xs = cuts(nx, 20);
+  const zs = cuts(nz, 30);
+  const base = position.y - scale.y;
+  const tallest = Math.floor(hash(position.x, position.z, 40) * nx * nz);
+  const lots: Lot[] = [];
+  const offset = new THREE.Vector3();
+  for (let ix = 0; ix < nx; ix++) {
+    for (let iz = 0; iz < nz; iz++) {
+      const index = ix * nz + iz;
+      const r = hash(position.x + ix * 7.1, position.z + iz * 5.3, 50);
+      if (index !== tallest && nx * nz >= 4 && r < 0.08) continue;
+      // Parsel kenarları: dış kenar blok kenarıdır, iç kenarlarda yarım geçit payı bırakılır.
+      const x0 = -1 + 2 * xs[ix] + (ix > 0 ? rule.gap / 2 / scale.x : 0);
+      const x1 = -1 + 2 * xs[ix + 1] - (ix < nx - 1 ? rule.gap / 2 / scale.x : 0);
+      const z0 = -1 + 2 * zs[iz] + (iz > 0 ? rule.gap / 2 / scale.z : 0);
+      const z1 = -1 + 2 * zs[iz + 1] - (iz < nz - 1 ? rule.gap / 2 / scale.z : 0);
+      const hx = ((x1 - x0) / 2) * scale.x;
+      const hz = ((z1 - z0) / 2) * scale.z;
+      if (hx < 2.5 || hz < 2.5) continue;
+      const factor = index === tallest ? 1 : business ? 0.35 + 0.75 * r : 0.55 + 0.6 * r;
+      const hy = Math.max(1.8, Math.min(scale.y * factor, scale.y * 1.1));
+      offset.set(((x0 + x1) / 2) * scale.x, 0, ((z0 + z1) / 2) * scale.z).applyQuaternion(quaternion);
+      const center = new THREE.Vector3(position.x + offset.x, base + hy, position.z + offset.z);
+      lots.push({
+        matrix: new THREE.Matrix4().compose(center, quaternion, new THREE.Vector3(hx, hy, hz)),
+        // İş merkezindeki küçük parseller eğimli çatılı ev olmaz.
+        allowPitched: !business,
+      });
+    }
+  }
+  return lots.length ? lots : whole;
 }
 
 /**
@@ -966,13 +1168,23 @@ function diversifyBuildings(cityRoot: THREE.Object3D) {
     const parent = source.parent;
     if (!parent) continue;
     const groups = new Map<MassVariant, THREE.Matrix4[]>();
+    const business = source.name.startsWith('Business');
     for (let i = 0; i < source.count; i++) {
       source.getMatrixAt(i, matrix);
-      matrix.decompose(position, quaternion, scale);
-      const variant = pickVariant(scale.x, scale.y, scale.z, hash(position.x, position.z, 1), hash(position.x, position.z, 2));
-      const list = groups.get(variant) ?? [];
-      list.push(matrix.clone());
-      groups.set(variant, list);
+      for (const lot of subdivideLot(matrix.clone(), business, hash)) {
+        lot.matrix.decompose(position, quaternion, scale);
+        const variant = pickVariant(
+          scale.x,
+          scale.y,
+          scale.z,
+          hash(position.x, position.z, 1),
+          hash(position.x, position.z, 2),
+          lot.allowPitched,
+        );
+        const list = groups.get(variant) ?? [];
+        list.push(lot.matrix);
+        groups.set(variant, list);
+      }
     }
     for (const [variant, matrices] of groups) {
       let geometry = massGeometries.get(variant);
@@ -1009,6 +1221,103 @@ interface Lane {
 }
 
 const TREE_SCALE = 1.35;
+
+// Sokak lambası başlıkları ve yol ışıkları bu mesafeden piksel altında kalıp görünmüyordu. Örnekli kutular yerine sabit
+// piksel boyutlu, yumuşak kenarlı noktalar olarak çizilir (bloom bunları parlatır). size: piksel, glow: parlaklık,
+// pool: zemine düşen ışık payı. Kırmızı yol ışıkları (stop lambaları) alınmaz: yerinde asılı duran kırmızı noktalar
+// hareketli trafikle çelişiyordu.
+const LIGHT_POINT_SOURCES: Record<string, { size: number; glow: number; pool: number }> = {
+  Infrastructure_StreetLamp_Heads: { size: 3.4, glow: 1, pool: 1 },
+  Roads_TrafficGlow: { size: 2.3, glow: 0.55, pool: 0.05 },
+};
+const LIGHT_POINT_HIDE = /^(Infrastructure_StreetLamp_Heads|Roads_TrafficGlow)/;
+
+const LIGHT_POINT_VERTEX = `attribute float aSize; attribute float aGlow;
+  uniform float uDpr; uniform float uNight; uniform float uFogD;
+  varying float vGlow;
+  void main(){
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mv;
+    float d = -mv.z;
+    // Sahnedeki FogExp2 ile aynı sönüm: uzaktaki noktalar pusun içinde kaybolur.
+    float fogF = exp(-pow(uFogD * d, 2.0));
+    vGlow = aGlow * uNight * fogF;
+    gl_PointSize = aSize * uDpr * clamp(1800.0 / d, 0.75, 1.4);
+  }`;
+const LIGHT_POINT_FRAGMENT = `uniform vec3 uColor; varying float vGlow;
+  void main(){
+    vec2 c = gl_PointCoord * 2.0 - 1.0;
+    float r2 = dot(c, c);
+    if (r2 > 1.0) discard;
+    gl_FragColor = vec4(uColor * vGlow * exp(-r2 * 4.0), 1.0);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }`;
+
+/** Lamba ve yol ışıklarını tek bir nokta bulutunda toplar, kaynak mesh'leri gizler. Konumlar ışık havuzu için saklanır. */
+function createLightPoints(cityRoot: THREE.Object3D, thin: number, extraLamps: number[] = []) {
+  if (cityRoot.userData.lightPoints) return;
+  const positions: number[] = [];
+  const sizes: number[] = [];
+  const glows: number[] = [];
+  const pools: number[] = [];
+  const matrix = new THREE.Matrix4();
+  const point = new THREE.Vector3();
+  const hash = (i: number) => {
+    const value = Math.sin(i * 12.9898 + 4.1) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  cityRoot.traverse((object) => {
+    if (!(object instanceof THREE.InstancedMesh)) return;
+    const source = LIGHT_POINT_SOURCES[object.name];
+    if (!source) return;
+    const keep = object.userData.thinnable ? thin : 1;
+    for (let i = 0; i < object.count; i++) {
+      if (hash(i) > keep) continue;
+      object.getMatrixAt(i, matrix);
+      point.setFromMatrixPosition(matrix).applyMatrix4(object.matrixWorld);
+      positions.push(point.x, point.y, point.z);
+      const jitter = hash(i + 0.5);
+      sizes.push(source.size * (0.8 + 0.4 * jitter));
+      glows.push(source.glow * (0.7 + 0.6 * hash(i + 0.25)));
+      pools.push(source.pool);
+    }
+  });
+  // Park lambaları: sokak lambasından küçük ve biraz sönük, zemine daha dar havuz bırakır.
+  for (let i = 0; i < extraLamps.length; i += 3) {
+    positions.push(extraLamps[i], extraLamps[i + 1], extraLamps[i + 2]);
+    sizes.push(2.4 * (0.85 + 0.3 * hash(i + 0.7)));
+    glows.push(0.75);
+    pools.push(0.7);
+  }
+  if (!positions.length) return;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('aSize', new THREE.Float32BufferAttribute(sizes, 1));
+  geometry.setAttribute('aGlow', new THREE.Float32BufferAttribute(glows, 1));
+  const material = new THREE.ShaderMaterial({
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthWrite: false,
+    uniforms: {
+      uDpr: cityUniforms.uDpr,
+      uNight: cityUniforms.uNight,
+      uFogD: cityUniforms.uFogD,
+      uColor: { value: new THREE.Color('#ffcf94').multiplyScalar(5) },
+    },
+    vertexShader: LIGHT_POINT_VERTEX,
+    fragmentShader: LIGHT_POINT_FRAGMENT,
+  });
+  const cloud = new THREE.Points(geometry, material);
+  cloud.name = 'Runtime_LightPoints';
+  cloud.frustumCulled = false;
+  cloud.renderOrder = 2;
+  cityRoot.add(cloud);
+  cityRoot.userData.lightPoints = {
+    positions: new Float32Array(positions),
+    pools: new Float32Array(pools),
+  } satisfies LightPointData;
+}
 const TRAFFIC_FADE = 14; // metre: yolun iki ucunda araç bu mesafede küçülerek kaybolur ve belirir
 
 /**
@@ -1177,11 +1486,8 @@ interface CityUserData {
 export function prepareCity(
   cityRoot: THREE.Object3D,
   config: CityConfig,
-  { quality, timeOfDay }: { quality: Quality; timeOfDay: number },
+  { quality }: { quality: Quality },
 ): PreparedCity {
-  // Yollardaki durağan far noktaları (5583 adet) yalnızca tam gecede görünür. Alacakaranlıkta yolları beyaz noktalarla
-  // dolduruyor, üstelik araçlar artık hareket ettiği için yerlerinde asılı kalıyorlardı. Yolu sokak lambaları aydınlatır.
-  const daylight = nightLevel(timeOfDay) < 0.8;
   const lodObjects: THREE.Object3D[] = [];
   const patched = new Set<THREE.Material>();
   const thin = quality === 'low' ? 0.35 : quality === 'medium' ? 0.6 : 1;
@@ -1191,6 +1497,9 @@ export function prepareCity(
 
   cityRoot.updateMatrixWorld(true);
   const traffic = createTraffic(cityRoot);
+  // Park peyzajı: ağaçlar yeniden dikilir, park lambaları ışık noktalarına katılır.
+  const parkLamps = landscapePark(cityRoot, TREE_SCALE);
+  createLightPoints(cityRoot, thin, parkLamps);
   // Şehir içi ağaçlar gerçek ölçüde bu mesafeden nokta gibi kalıyor, maketlerdeki gibi iri tutulur (orman aynı kalır).
   for (const name of ['Greens_Trees', 'Greens_Trees_Olive']) {
     const trees = cityRoot.getObjectByName(name);
@@ -1216,7 +1525,7 @@ export function prepareCity(
       // Gölge haritası durağan, hareket eden gondollar gölge düşürmez.
       if (object.name === config.cableCar.instancedMesh) object.castShadow = false;
       object.receiveShadow = quality !== 'low';
-      if (daylight && /^Roads_TrafficGlow/.test(object.name)) object.visible = false;
+      if (LIGHT_POINT_HIDE.test(object.name)) object.visible = false;
       else if (data.lodMaxDistance || data.lodMinDistance) lodObjects.push(object);
       if (object instanceof THREE.InstancedMesh && data.thinnable) {
         // Kalite değişirse veya StrictMode çift çalıştırırsa seyreltme üst üste binmesin diye ilk sayı saklanır.
@@ -1227,26 +1536,38 @@ export function prepareCity(
       object.updateMatrix();
       const materials: THREE.Material[] = Array.isArray(object.material) ? object.material : [object.material];
       for (const material of materials) {
+        if (object.name === 'Park_Ground' && material instanceof THREE.MeshStandardMaterial) {
+          // Park zemini kendi malzemesini alır, ortak mat malzeme (başka mesh'te zaten yamanmış olabilir) diğer zeminlerde
+          // değişmeden kalır. İkinci hazırlıkta (StrictMode) klon yeniden klonlanmaz.
+          const park = material.name === 'Park_Ground_Landscape' ? material : material.clone();
+          park.name = 'Park_Ground_Landscape';
+          object.material = park;
+          if (!patched.has(park)) {
+            patched.add(park);
+            patchMaterial(park, 'city_park_v1', { include: '#include <color_fragment>', code: PARK_FRAGMENT, header: PARK_GLSL });
+          }
+          continue;
+        }
         if (patched.has(material) || !(material instanceof THREE.MeshStandardMaterial)) continue;
         patched.add(material);
         // Işık, cam ve kablo malzemeleri olduğu gibi kalır, diğer hepsi ortak ışık düzeltmesini alır.
         if (/^(Light_|Glass_|Cable_)/.test(material.name)) continue;
         if (material.name === 'Facade_Model') {
           material.defines = { ...material.defines, CITY_FACE: '' };
-          patchMaterial(material, 'city_facade_v8', { include: '#include <emissivemap_fragment>', code: FACADE_FRAGMENT });
+          patchMaterial(material, 'city_facade_v11', { include: '#include <emissivemap_fragment>', code: FACADE_FRAGMENT });
         } else if (material.name === 'Terrain_Sand') {
-          patchMaterial(material, 'city_terrain_v7', { include: '#include <color_fragment>', code: TERRAIN_FRAGMENT });
+          patchMaterial(material, 'city_terrain_v9', { include: '#include <color_fragment>', code: TERRAIN_FRAGMENT });
         } else if (material.name === 'Mat_Matte') {
-          patchMaterial(material, 'city_matte_v5', { include: '#include <color_fragment>', code: MATTE_FRAGMENT });
+          patchMaterial(material, 'city_matte_v7', { include: '#include <color_fragment>', code: MATTE_FRAGMENT });
         } else if (material.name === 'Water') {
           // Su kendi mavisini taşır, sıcak gökyüzü yansıması baskın olmaz.
           material.color.set('#1b5878');
           // Hafif metalik: yüzey rengini boyadan çok gökyüzü yansımasından alır.
           material.metalness = 0.3;
           material.envMapIntensity = 1.3;
-          patchMaterial(material, 'city_water_v5', { include: '#include <normal_fragment_maps>', code: WATER_FRAGMENT }, false);
+          patchMaterial(material, 'city_water_v6', { include: '#include <normal_fragment_maps>', code: WATER_FRAGMENT }, false);
         } else {
-          patchMaterial(material, 'city_light_v3');
+          patchMaterial(material, 'city_light_v5');
         }
       }
     }
@@ -1338,6 +1659,7 @@ export class CameraDirector {
     hero.az += HERO_AZIMUTH_OFFSET;
     hero.dist *= HERO_DISTANCE_SCALE;
     hero.el = HERO_ELEVATION;
+    hero.fov = HERO_FOV;
     // Kamerayı sağa çevir: hedef kameranın sağ vektörü yönünde kayar, sahne ekranda sola kayar, sol üstteki boşluk azalır.
     const side = hero.dist * HERO_SIDE_SHIFT;
     hero.target.x += Math.cos(hero.az) * side;

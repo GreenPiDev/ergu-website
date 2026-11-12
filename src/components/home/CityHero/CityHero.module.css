@@ -18,17 +18,24 @@
   opacity: 1;
 }
 
-/* Vinyet: kenarları hafifçe karartıp gözü merkeze toplar (post-process yerine, maliyetsiz). */
+/* Vinyet: kenarları hafifçe karartıp gözü merkeze toplar (post-process yerine, maliyetsiz). Üst bant ayrıca koyulaşır:
+   uzaktaki açık havalimanı düzlüğü geri çekilir, menü yazıları okunaklı kalır. */
 .root::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(
-    ellipse 75% 70% at 50% 48%,
-    transparent 55%,
-    color-mix(in srgb, var(--color-carbon) 32%, transparent) 100%
-  );
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-carbon) 38%, transparent) 0%,
+      transparent 26%
+    ),
+    radial-gradient(
+      ellipse 75% 70% at 50% 48%,
+      transparent 55%,
+      color-mix(in srgb, var(--color-carbon) 32%, transparent) 100%
+    );
 }
 
 /* Film greni: düz renkli yüzeylerdeki bilgisayar çıktısı temizliğini kırar. Durağan, maliyetsiz bir SVG gürültüsü. */
