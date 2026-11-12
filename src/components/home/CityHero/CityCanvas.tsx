@@ -4,12 +4,20 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import config from '../../../content/city-config.json';
-import { type Atmosphere, type CityConfig, type Quality, CameraDirector, createAtmosphere, prepareCity } from './cityRuntime';
+import {
+  type Atmosphere,
+  type CityConfig,
+  type Quality,
+  CameraDirector,
+  bakeHeightField,
+  createAtmosphere,
+  prepareCity,
+} from './cityRuntime';
 
 const CITY_CONFIG: CityConfig = config;
 const HERO_POSITION = new THREE.Vector3().fromArray(CITY_CONFIG.hero.position);
 const MODEL_URL = '/models/smart_city.glb';
-// 0 gün batımı (altın saat), 1 mavi saat. Ara değerler gündüz gölgeleriyle parlayan cepheleri karıştırıp yapay görünüyordu.
+// 0 başlangıç görünümü (cityRuntime içindeki BASE_LOOK: alacakaranlık maketi), 1 mavi saat.
 const TIME_OF_DAY = 0;
 
 interface CitySceneProps {
@@ -38,13 +46,16 @@ function CityScene({ quality, reducedMotion, onReady }: CitySceneProps) {
   const atmosphereRef = useRef<Atmosphere | null>(null);
 
   useEffect(() => {
+    // Yükseklik haritası (ortam gölgesi) ışıklar kurulmadan önce, şehir sahneye eklendikten sonra bir kez çizilir.
+    const heightField = bakeHeightField(gl, scene, gltf.scene, quality);
     const atmosphere = createAtmosphere(gl, scene, gltf.scene, { quality, timeOfDay: TIME_OF_DAY });
     atmosphereRef.current = atmosphere;
     return () => {
       atmosphere.dispose();
+      heightField.dispose();
       atmosphereRef.current = null;
     };
-  }, [gl, scene, gltf, quality]);
+  }, [gl, scene, gltf, quality, city]);
 
   useEffect(() => {
     director.setAspect(size.width / size.height);
