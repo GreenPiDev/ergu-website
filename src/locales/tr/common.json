@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "title": "Firma Adı | Kurumsal Web Sitesi"
+  },
+  "nav": {
+    "label": "Ana menü",
+    "items": {
+      "home": "Ana Sayfa",
+      "about": "Hakkında",
+      "services": "Hizmetlerimiz",
+      "projects": "Çalışmalarımız",
+      "contact": "İletişim",
+      "knowledgeCenter": "Bilgi Merkezi"
+    }
+  },
+  "language": {
+    "target": "EN",
+    "switch": "Switch to English"
+  },
+  "a11y": {
+    "skipToContent": "İçeriğe geç",
+    "homeLink": "Ana sayfa",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat",
+    "close": "Kapat"
+  },
+  "scrollCue": "Kaydır",
+  "sectionRail": {
+    "label": "Bölümler arasında gezinme"
+  },
+  "device": {
+    "mobile": "Mobil",
+    "tabletPortrait": "Dikey tablet",
+    "tabletLandscape": "Yatay tablet",
+    "desktop": "Masaüstü"
+  },
+  "demo": {
+    "detectedDevice": "Algılanan cihaz: {{device}}",
+    "dark": {
+      "eyebrow": "Koyu zemin",
+      "title": "Bu bölümde header beyaz görünür."
+    },
+    "light": {
+      "eyebrow": "Açık zemin",
+      "title": "Bu bölümde header siyah görünür."
+    }
+  }
+}

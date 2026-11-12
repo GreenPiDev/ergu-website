@@ -1,0 +1,253 @@
+.hero {
+  /* Uzun başlık neredeyse tam boydur. Header'dan büyük bir değer ortalama payıyla hero'yu ekrandan taşırır. */
+  --hero-padding-end: var(--header-height);
+  --hairline: color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  grid-row: 1 / -1;
+  grid-column: 2;
+  min-inline-size: 0;
+  /* Kaydırma belirteci dizinin üstüne binmesin. */
+  padding-block-end: calc(4.75rem - var(--header-height));
+  margin-inline-start: var(--space-sm);
+}
+
+.search {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  border-block-end: 2px solid var(--color-accent);
+}
+
+.input {
+  flex: 1;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--touch-target);
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-kb-search);
+  font-weight: var(--weight-display);
+  line-height: 1.2;
+  color: inherit;
+  caret-color: var(--color-accent);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  appearance: none;
+}
+
+/* Tarayıcının kendi temizleme düğmesi yerine aynı işi yapan düğme kullanılır. */
+.input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.input::placeholder {
+  color: currentColor;
+  opacity: 0.45;
+}
+
+.search:focus-within {
+  border-block-end-color: currentColor;
+}
+
+.clear {
+  position: relative;
+  flex: none;
+  inline-size: var(--touch-target);
+  block-size: var(--touch-target);
+}
+
+.clearMark,
+.clearMark::after {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 25%;
+  display: block;
+  inline-size: 50%;
+  block-size: 2px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.clearMark::after {
+  inset-inline-start: 0;
+  inline-size: 100%;
+  content: '';
+  transform: rotate(90deg);
+}
+
+.hint {
+  padding-block: var(--space-sm);
+  font-size: var(--text-nav);
+  opacity: 0.55;
+}
+
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --list-rows bölüm sayısıdır, KnowledgeHero tarafından verilir. Sonuç sayısı da en fazla bu kadardır. */
+.list {
+  display: grid;
+  flex: 1;
+  /* Telefonda satırlar ekranı doldurmak için uzamaz, uzun başlıklar gerekirse kendi boyunu alır. */
+  grid-template-rows: repeat(var(--list-rows), minmax(min-content, 3.75rem));
+  align-content: start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  overflow: hidden;
+  border-block-start: 1px solid var(--hairline);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  block-size: 100%;
+  min-block-size: var(--touch-target);
+}
+
+.row:focus-visible {
+  outline-offset: -2px;
+}
+
+.row > .number,
+.row > .result,
+.row > .meta {
+  margin-inline-end: var(--space-sm);
+}
+
+/*
+ * Giriş animasyonu bu elemanda çalışır. Satır boyunca uzar ki maskeden tamamen çıksın.
+ * CSS transition verilmez: GSAP ile aynı elemanda transform geçişi, bitiş konumunu bozar.
+ */
+.rowReveal {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  align-self: stretch;
+  min-inline-size: 0;
+}
+
+.rowInner {
+  display: flex;
+  flex: 1;
+  gap: var(--space-sm);
+  align-items: center;
+  min-inline-size: 0;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.number {
+  flex: none;
+  min-inline-size: 1.75rem;
+  font-family: var(--font-transition);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-heavy);
+  color: var(--color-accent);
+}
+
+.chapter {
+  flex: 1;
+  min-inline-size: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-kb-row);
+  font-weight: var(--weight-display);
+  line-height: 1.05;
+}
+
+.result {
+  flex: 1;
+  min-inline-size: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-kb-result);
+  font-weight: var(--weight-display);
+  line-height: 1.1;
+}
+
+/* Dar kolonda bölüm adı ve madde sayısı başlığa yer bırakmak için gizlenir. */
+.meta {
+  display: none;
+  flex: none;
+  font-size: var(--text-nav);
+  opacity: 0.6;
+}
+
+.empty {
+  padding-block: var(--space-md);
+  font-family: var(--font-display);
+  font-size: var(--text-kb-result);
+  font-weight: var(--weight-display);
+  line-height: 1.2;
+}
+
+.emptyLink {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.hero .cue {
+  --scroll-cue-track: 1.25rem;
+
+  inset-block-end: var(--space-sm);
+}
+
+@media (min-width: 37.5rem) {
+  .panel {
+    grid-row: auto;
+    padding-block-end: calc(6.25rem - var(--header-height));
+    margin-inline: var(--space-md);
+  }
+
+  .list {
+    grid-template-rows: repeat(var(--list-rows), minmax(min-content, 1fr));
+  }
+
+  .meta {
+    display: block;
+  }
+
+  .hero .cue {
+    --scroll-cue-track: 2rem;
+
+    inset-block-end: var(--space-md);
+  }
+}
+
+@media (min-width: 64rem) {
+  .panel {
+    padding-block-end: calc(7.5rem - var(--header-height));
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover .rowInner {
+    transform: translateX(var(--space-sm));
+  }
+
+  .row:hover .chapter,
+  .row:hover .result {
+    color: var(--color-accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rowInner {
+    transition: none;
+  }
+}

@@ -1,0 +1,64 @@
+/* Vurgu renkli zeminde öne çıkan blok ters renklidir. Vurgu rengi koyuysa yazı rengi beyaz yapılır. */
+.root {
+  --callout-bg: var(--color-black);
+  --callout-fg: var(--color-white);
+  --selection-bg: var(--color-white);
+
+  color: var(--color-black);
+  background: var(--color-accent);
+}
+
+/* Vurgu renkli zeminde vurgu renkli bağlantı çizgisi kaybolur. */
+.root a {
+  text-decoration-color: currentColor;
+}
+
+/* Sayaç yalnızca yapışık sütunda vardır, dar ekranda listenin altındaki satır okunur. */
+.counter {
+  display: none;
+}
+
+.counterTotal {
+  font-size: 0.3em;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: var(--touch-target);
+  padding-block-start: var(--space-sm);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-medium);
+  border-block-start: 2px solid currentColor;
+}
+
+.reset {
+  min-block-size: var(--touch-target);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.closing > h3 {
+  font-size: var(--text-kb-chapter);
+  line-height: 1;
+}
+
+@media (min-width: 64rem) {
+  .counter {
+    display: block;
+    margin-block-start: var(--space-md);
+    font-family: var(--font-transition);
+    font-size: var(--text-kb-counter);
+    font-weight: var(--weight-heavy);
+    line-height: 1;
+  }
+}

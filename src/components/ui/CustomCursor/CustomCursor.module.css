@@ -1,0 +1,44 @@
+.dot,
+.ring,
+.accentRing {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: var(--z-cursor);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* difference karışımı sayesinde imleç koyu zeminde beyaz, açık zeminde siyah görünür. */
+.dot,
+.ring {
+  mix-blend-mode: difference;
+}
+
+.dot {
+  inline-size: 6px;
+  block-size: 6px;
+  background: var(--color-white);
+}
+
+.ring,
+.accentRing {
+  /* Normalde 36 px görünür, tıklanabilir alanda bu boyuta çıkar. */
+  inline-size: 50px;
+  block-size: 50px;
+  border: 2px solid var(--color-white);
+}
+
+/* Vurgu renkli halka karışıma girmez, yoksa açık zeminde rengi tersine döner. */
+.accentRing {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  border-color: var(--color-accent);
+}
+
+/* Vurgu renkli zeminde halka düz renktir, aynı saydamlıkta dolguyla vurgu renkli halkanın karşılığıdır. */
+.accentRing.onAccent {
+  background: color-mix(in srgb, var(--rail-solid-color) 12%, transparent);
+  border-color: var(--rail-solid-color);
+}

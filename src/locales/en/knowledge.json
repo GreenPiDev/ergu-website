@@ -1,0 +1,170 @@
+{
+  "hero": {
+    "searchLabel": "Search the knowledge center",
+    "placeholder": "What are you looking for?",
+    "hint": "Try: table, image, checklist…",
+    "clear": "Clear search",
+    "indexLabel": "Chapters",
+    "resultsLabel": "Search results",
+    "resultCount_one": "{{count}} entry found",
+    "resultCount_other": "{{count}} entries found",
+    "noResults": "We couldn't find an entry for this term.",
+    "noResultsLink": "Ask us"
+  },
+  "common": {
+    "seeAlso": "See",
+    "newTab": "opens in a new tab",
+    "entryIndex": "Entries in this chapter",
+    "openImage": "Enlarge image: {{title}}",
+    "note": "[PLACEHOLDER] General notice or disclaimer at the end of the page. Industry-specific legal text must be approved by the company."
+  },
+  "images": {
+    "1": "[PLACEHOLDER] Small emblem image",
+    "2": "[PLACEHOLDER] Full-width diagram below the text",
+    "3": "[PLACEHOLDER] Portrait promotional image",
+    "4": "[PLACEHOLDER] Technical document image"
+  },
+  "checklist": {
+    "progress": "{{done}} / {{total}} criteria reviewed",
+    "reset": "Reset the list",
+    "complete": {
+      "title": "You have reviewed all {{total}} criteria",
+      "text": "[PLACEHOLDER] Short text that guides the reader to the next step once the list is complete. It invites them to seek expert advice or get in touch without promising a definite result.",
+      "cta": "Contact us",
+      "back": "Back to the list"
+    }
+  },
+  "chapters": {
+    "basics": {
+      "title": "Basics",
+      "short": "Basics"
+    },
+    "guide": {
+      "title": "Guide",
+      "short": "Guide"
+    },
+    "checklist": {
+      "title": "Checklist",
+      "short": "Checklist"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "short": "FAQ"
+    }
+  },
+  "entries": {
+    "intro": {
+      "title": "How does the knowledge center work?",
+      "short": "Introduction",
+      "lead": "This page is not meant to be read from start to finish. It is a reference book you search and open. Each entry can be read on its own, with its own number and shareable address.",
+      "body": [
+        "As soon as you start typing in the search box in the hero, the chapter rows are replaced by results. Search ignores case and accents.",
+        "The small emblem in this entry sits next to the large text, at the same height. On narrow screens it moves below the text."
+      ]
+    },
+    "overview": {
+      "title": "Entry layout",
+      "short": "Layout",
+      "lead": "Each entry starts with a number, a title and a highlighted definition. Details continue with paragraphs, lists, tables or steps.",
+      "body": [
+        "Wide images sit below the text at full width and enlarge when clicked. External links in the text are marked <docs>like this</docs> and open in a new tab."
+      ],
+      "listIntro": "A numbered list is for items where order matters:",
+      "list": [
+        "The first item, its number is shown in the accent colour.",
+        "The second item, rows are separated by a thin line.",
+        "The third item, long text continues from the start of the line."
+      ]
+    },
+    "scope": {
+      "title": "Flow list",
+      "short": "Flow",
+      "lead": "Long lists of equally weighted items are not shown item by item, but as a single block of text separated by slashes.",
+      "list": ["First item", "Second item", "Third item", "Fourth item", "Fifth item", "Sixth item"]
+    },
+    "principle": {
+      "title": "Highlighted statement",
+      "short": "Highlight",
+      "verdict": "Short answer",
+      "lead": "A short answer to the question can be added to the start of the large text with a highlighted label.",
+      "callout": "The sentence highlighted like a marker pen is the one idea the reader should remember from the entry.",
+      "outro": ["Paragraphs after the highlight complete the entry. Using at most one highlight per entry is recommended."]
+    },
+    "guideIntro": {
+      "title": "Image in the side column",
+      "short": "Side image",
+      "lead": "On wide screens, this entry's image does not sit next to the text but below the entry index on the left, filling the remaining space in the column.",
+      "body": [
+        "The image is only visible while its own entry is being read. When the reader moves on to another entry, it fades out.",
+        "On phones and portrait tablets there is no side column, so the image stays next to or below the text.",
+        "To get this behaviour, add imageInAside: true to the entry definition. If a chapter has two entries with images, leaving at least one entry between them keeps the first image on screen long enough."
+      ]
+    },
+    "comparison": {
+      "title": "Comparison table",
+      "short": "Table",
+      "lead": "The table turns into cards on narrow screens. Row names can link to the related entry.",
+      "columns": ["Option", "When it fits"],
+      "rows": [
+        { "type": "Option A", "use": "[PLACEHOLDER] Short description of when the first option fits." },
+        { "type": "Option B", "use": "[PLACEHOLDER] Short description of when the second option fits." }
+      ]
+    },
+    "optionA": {
+      "title": "What is option A?",
+      "short": "Option A",
+      "lead": "This entry also shows its image in the side column. Document images are not fitted to the screen when enlarged; they open at full size and scroll.",
+      "body": ["[PLACEHOLDER] Detailed description of the option."]
+    },
+    "optionB": {
+      "title": "What is option B?",
+      "short": "Option B",
+      "lead": "An entry without an image. It shows an unnumbered list and a closing sentence.",
+      "listIntro": "Unnumbered list:",
+      "list": ["[PLACEHOLDER] First feature", "[PLACEHOLDER] Second feature", "[PLACEHOLDER] Third feature"],
+      "more": "The closing sentence in bold guides the reader to the next step."
+    },
+    "criteria": {
+      "title": "Check before you decide",
+      "short": "Criteria",
+      "lead": "The accent-coloured chapter is the page's moment of decision. The list can be ticked, progress shows in the counter in the left column, and once everything is ticked a dialog opens that leads to the contact page.",
+      "steps": [
+        { "title": "First criterion", "text": "[PLACEHOLDER] The first question readers should ask themselves." },
+        { "title": "Second criterion", "text": "[PLACEHOLDER] The second question readers should ask themselves." },
+        { "title": "Third criterion", "text": "[PLACEHOLDER] The third question readers should ask themselves." },
+        { "title": "Fourth criterion", "text": "[PLACEHOLDER] The fourth question readers should ask themselves." },
+        { "title": "Fifth criterion", "text": "[PLACEHOLDER] The fifth question readers should ask themselves." }
+      ]
+    },
+    "process": {
+      "title": "Process steps",
+      "short": "Steps",
+      "lead": "Steps that are only read, not ticked, are shown as numbered rows.",
+      "steps": [
+        { "title": "Define the need", "text": "[PLACEHOLDER] Description of the first step." },
+        { "title": "Compare the options", "text": "[PLACEHOLDER] Description of the second step." },
+        { "title": "Consult an expert", "text": "[PLACEHOLDER] Description of the third step." }
+      ]
+    },
+    "closing": {
+      "title": "The right decision starts with the right information.",
+      "short": "Closing",
+      "lead": "[PLACEHOLDER] Description of the short, large sentence that closes the chapter."
+    },
+    "faqStart": {
+      "title": "Where should I start?",
+      "short": "Getting started",
+      "lead": "[PLACEHOLDER] Short answer to the frequently asked question. Readers go to the related entry for details through the \"See\" link."
+    },
+    "faqDifference": {
+      "title": "What is the difference between option A and B?",
+      "short": "Difference",
+      "lead": "[PLACEHOLDER] Short answer comparing the two options."
+    },
+    "faqHelp": {
+      "title": "What should I do if I'm not sure?",
+      "short": "Help",
+      "lead": "[PLACEHOLDER] Short answer guiding the reader to the checklist or the contact page."
+    }
+  }
+}

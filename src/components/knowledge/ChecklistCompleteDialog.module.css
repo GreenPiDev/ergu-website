@@ -1,0 +1,126 @@
+/* Telefonda pencere alttan açılan bir sayfa gibi en alta oturur, başparmakla erişilir. */
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-lightbox);
+  display: flex;
+  align-items: flex-end;
+  color: var(--color-white);
+}
+
+.curtain {
+  position: absolute;
+  inset: 0;
+  background: var(--color-black);
+  transform-origin: 50% 100%;
+}
+
+/* Kısa yatay ekranlarda içerik taşarsa pencere kendi içinde kayar. */
+.panel {
+  position: relative;
+  display: grid;
+  gap: var(--space-md);
+  inline-size: 100%;
+  max-block-size: 100%;
+  padding-block: calc(var(--space-lg) + env(safe-area-inset-top)) calc(var(--space-md) + env(safe-area-inset-bottom));
+  padding-inline: var(--gutter);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-kb-entry);
+  font-weight: var(--weight-display);
+  line-height: 1.02;
+  letter-spacing: var(--tracking-display);
+  color: var(--color-accent);
+}
+
+.text {
+  max-inline-size: 36em;
+  font-size: var(--text-kb-body);
+  line-height: 1.5;
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-sm);
+}
+
+/* Perde hareketi düğmede küçük ölçekte tekrar eder: hover'da beyaz zemin alttan dolar. */
+.cta {
+  position: relative;
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: calc(var(--touch-target) + var(--space-sm));
+  padding-inline: var(--space-md);
+  overflow: hidden;
+  font-family: var(--font-transition);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-heavy);
+  color: var(--color-black);
+  isolation: isolate;
+  background: var(--color-accent);
+  --roll-hover-color: var(--color-black);
+}
+
+.cta::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background: var(--color-white);
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.cta:focus-visible,
+.back:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.back {
+  min-block-size: var(--touch-target);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+/* Daha geniş ekranda pencere ortalanır, düğmeler yan yana durur. */
+@media (min-width: 37.5rem) {
+  .root {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel {
+    max-inline-size: 48rem;
+    padding: var(--space-lg) var(--gutter);
+  }
+
+  .actions {
+    grid-template-columns: auto auto;
+    gap: var(--space-md);
+    align-items: center;
+    justify-content: start;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cta:hover::before {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta::before {
+    transition: none;
+  }
+}

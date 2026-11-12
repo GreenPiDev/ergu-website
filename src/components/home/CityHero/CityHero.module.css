@@ -1,0 +1,32 @@
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--color-carbon);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+
+.canvas[data-ready='true'] {
+  opacity: 1;
+}
+
+/* Vinyet: kenarları hafifçe karartıp gözü merkeze toplar (post-process yerine, maliyetsiz). */
+.root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 75% 70% at 50% 48%,
+    transparent 55%,
+    color-mix(in srgb, var(--color-carbon) 32%, transparent) 100%
+  );
+}

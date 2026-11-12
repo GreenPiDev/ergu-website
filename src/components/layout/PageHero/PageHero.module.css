@@ -1,0 +1,80 @@
+.hero {
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+/* Mobilde solda yan yatmış başlık, sağda sayfanın içeriği durur. */
+.inner {
+  /* --title-em, başlık uzunluğudur ve PageHero tarafından ölçülür. */
+  --page-title-size: min(calc((100svh - var(--header-height) * 2) / var(--title-em, 6)), 34vw);
+
+  position: relative;
+  display: grid;
+  grid-template-rows: repeat(2, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
+  min-block-size: 100svh;
+  padding-block: var(--header-height) var(--hero-padding-end, var(--space-md));
+  padding-inline: var(--gutter);
+  will-change: transform;
+}
+
+.grid {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: var(--gutter);
+  display: none;
+  pointer-events: none;
+}
+
+.gridLine {
+  border-inline-start: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.gridLine:first-child {
+  border-inline-start: 0;
+}
+
+/* Başlık aşağıdan yukarı okunur. Negatif boşluk, üstteki header payını dengeler ve kolonu tam ortalar. */
+.title {
+  position: relative;
+  grid-row: 1 / -1;
+  align-self: center;
+  justify-self: center;
+  /* Dikey yazımda margin-block-start sağ kenara denk gelir, bu yüzden fiziksel özellik kullanılır. */
+  margin-top: calc((var(--header-height) - var(--hero-padding-end, var(--space-md))) * -1);
+  font-family: var(--font-transition);
+  font-size: var(--page-title-size);
+  font-weight: var(--weight-heavy);
+  /* İ'nin noktası ve Ç'nin çengeli harf maskesinde kesilmesin. */
+  line-height: 1.2;
+  color: var(--color-accent);
+  white-space: nowrap;
+  opacity: 0.4;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* İlk kolon başlığın kalınlığı kadardır, kalan genişlik içeriğe kalır. */
+@media (min-width: 37.5rem) {
+  .inner {
+    --page-title-size: min(calc((100svh - var(--header-height) * 2) / var(--title-em, 6)), 24vw);
+
+    grid-template-rows: none;
+  }
+
+  .grid {
+    display: grid;
+  }
+
+  .oneColumn {
+    grid-template-columns: calc(var(--page-title-size) * 1.2 + var(--space-md)) minmax(0, 1fr);
+  }
+
+  .twoColumns {
+    grid-template-columns: calc(var(--page-title-size) * 1.2 + var(--space-md)) repeat(2, minmax(0, 1fr));
+  }
+
+  .title {
+    grid-row: auto;
+  }
+}

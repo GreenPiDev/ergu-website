@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "title": "Company Name | Corporate Website"
+  },
+  "nav": {
+    "label": "Main menu",
+    "items": {
+      "home": "Home",
+      "about": "About",
+      "services": "Services",
+      "projects": "Projects",
+      "contact": "Contact",
+      "knowledgeCenter": "Knowledge Center"
+    }
+  },
+  "language": {
+    "target": "TR",
+    "switch": "Türkçeye geç"
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "homeLink": "Home page",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "close": "Close"
+  },
+  "scrollCue": "Scroll",
+  "sectionRail": {
+    "label": "Navigate between sections"
+  },
+  "device": {
+    "mobile": "Mobile",
+    "tabletPortrait": "Tablet portrait",
+    "tabletLandscape": "Tablet landscape",
+    "desktop": "Desktop"
+  },
+  "demo": {
+    "detectedDevice": "Detected device: {{device}}",
+    "dark": {
+      "eyebrow": "Dark surface",
+      "title": "The header turns white on this section."
+    },
+    "light": {
+      "eyebrow": "Light surface",
+      "title": "The header turns black on this section."
+    }
+  }
+}

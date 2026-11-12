@@ -1,0 +1,108 @@
+/* Liste içinde art arda kullanılınca üst çizgiler satırları ayırır. */
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--touch-target) minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-items: start;
+  min-block-size: var(--touch-target);
+  padding-block: var(--space-sm);
+  border-block-start: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  cursor: pointer;
+}
+
+/* Gerçek input görünmezdir ama kutunun üstünde durur, dokunma ve klavye onundur. */
+.input {
+  position: absolute;
+  inline-size: var(--touch-target);
+  block-size: var(--touch-target);
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.box {
+  position: relative;
+  display: block;
+  inline-size: var(--touch-target);
+  block-size: var(--touch-target);
+  border: 2px solid currentColor;
+}
+
+/* İşaret, kutunun içini dolduran karedir. */
+.box::after {
+  position: absolute;
+  inset: 0.375rem;
+  background: currentColor;
+  content: '';
+  transform: scale(0);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.input:checked + .box::after {
+  transform: none;
+}
+
+.input:focus-visible + .box {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.input:disabled,
+.input:disabled ~ * {
+  cursor: not-allowed;
+}
+
+.input:disabled ~ * {
+  opacity: 0.4;
+}
+
+.marker {
+  display: none;
+}
+
+.copy {
+  display: grid;
+  gap: 0.125rem;
+  min-inline-size: 0;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+/* İşaretlenen satır geri çekilir, okunabilir kontrast korunur. */
+.input:checked ~ .copy {
+  opacity: 0.65;
+}
+
+/* Etiket kutuyla aynı yükseklikte başlar. */
+.label {
+  font-size: var(--text-checkbox-label);
+  font-weight: var(--weight-medium);
+  line-height: 1.15;
+  letter-spacing: var(--tracking-nav);
+}
+
+.description {
+  font-size: var(--text-checkbox-description);
+  line-height: 1.45;
+}
+
+/* Dar ekranda işaret yer kaplamasın diye yalnızca daha geniş ekranlarda görünür. */
+@media (min-width: 37.5rem) {
+  .withMarker {
+    grid-template-columns: var(--touch-target) 2.75rem minmax(0, 1fr);
+  }
+
+  .withMarker .marker {
+    display: block;
+    font-size: var(--text-checkbox-label);
+    font-weight: var(--weight-heavy);
+    line-height: 1.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box::after,
+  .copy {
+    transition: none;
+  }
+}

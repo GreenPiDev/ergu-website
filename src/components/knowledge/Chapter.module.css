@@ -1,0 +1,569 @@
+/* Sol kenardaki başlık yapışık olduğu için bölümde taşmayı kesen özellik kullanılmaz. */
+.chapter {
+  --chapter-accent: var(--surface-fg);
+  --callout-bg: var(--color-accent);
+  --callout-fg: var(--color-black);
+  --hairline: color-mix(in srgb, currentColor 20%, transparent);
+  /* Tüm metin blokları ve görsel satırları aynı sağ sınırda biter. */
+  --entry-measure: calc(var(--text-kb-body) * 58);
+
+  position: relative;
+  display: grid;
+  gap: var(--space-lg);
+  padding-block: calc(var(--header-height) + var(--space-lg)) calc(var(--space-lg) * 2);
+  padding-inline: var(--gutter);
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+.chapter:focus,
+.entry:focus {
+  outline: none;
+}
+
+.chapter[data-surface='dark'] {
+  --chapter-accent: var(--color-accent);
+}
+
+.head {
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
+}
+
+.number {
+  font-family: var(--font-transition);
+  font-size: var(--text-kb-number);
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  color: var(--chapter-accent);
+}
+
+.chapterTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-kb-chapter);
+  font-weight: var(--weight-display);
+  line-height: 0.98;
+  letter-spacing: var(--tracking-display);
+}
+
+/* SplitText'in kelime maskesi satır kutusu kadardır. Pay verilmezse y, ş, p gibi harflerin altı kesilir. */
+.chapterTitle > * {
+  padding-block: 0.15em;
+  margin-block: -0.15em;
+}
+
+/* Telefonda alt şerit ve arama yeterli olduğu için madde dizini yalnızca yan sütunda çıkar. */
+.toc {
+  display: none;
+}
+
+/* Dar ekranda bu görseller maddenin içinde, metnin yanında durur. */
+.asideImages {
+  display: none;
+}
+
+.tocList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tocLink {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: baseline;
+  padding-block: 0.3rem;
+  font-size: var(--text-nav);
+  line-height: 1.3;
+  opacity: 0.55;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+.tocActive {
+  opacity: 1;
+}
+
+.tocCode {
+  flex: none;
+  min-inline-size: 2rem;
+  font-family: var(--font-transition);
+  font-weight: var(--weight-heavy);
+  color: var(--chapter-accent);
+}
+
+.entries {
+  min-inline-size: 0;
+}
+
+.entry {
+  position: relative;
+  display: grid;
+  gap: var(--space-md);
+  padding-block: var(--space-lg);
+  border-block-start: 1px solid var(--hairline);
+  /* Atlamada başlık header'ın altında kalmasın. */
+  scroll-margin-top: calc(var(--header-height) + var(--space-sm));
+}
+
+.entry:first-child {
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
+/* Atlanan maddeyi gösteren sarı çizgi, yalnızca atlama anında görünür. */
+.mark {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(var(--gutter) * -1);
+  inline-size: 0.375rem;
+  visibility: hidden;
+  background: var(--color-accent);
+  opacity: 0;
+  transform-origin: 50% 0;
+}
+
+.code {
+  font-family: var(--font-transition);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-heavy);
+  color: var(--chapter-accent);
+}
+
+.entryTitle {
+  margin-block-start: calc(var(--space-md) * -0.75);
+  font-family: var(--font-display);
+  font-size: var(--text-kb-entry);
+  font-weight: var(--weight-display);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  max-inline-size: var(--entry-measure);
+  font-size: var(--text-kb-lead);
+  font-weight: var(--weight-medium);
+  line-height: 1.35;
+}
+
+.verdict {
+  font-family: var(--font-transition);
+  font-weight: var(--weight-heavy);
+  color: var(--chapter-accent);
+}
+
+.chapter[data-surface='light'] .verdict {
+  padding-inline: 0.3em;
+  color: var(--color-black);
+  background: var(--color-accent);
+  --selection-bg: var(--color-white);
+}
+
+.paragraph {
+  max-inline-size: var(--entry-measure);
+  font-size: var(--text-kb-body);
+  line-height: 1.6;
+  opacity: 0.86;
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.listNumbered,
+.listPlain,
+.steps {
+  display: grid;
+  max-inline-size: var(--entry-measure);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.listNumbered .listItem,
+.listPlain .listItem {
+  display: flex;
+  gap: var(--space-md);
+  align-items: baseline;
+  padding-block: 0.7rem;
+  font-size: var(--text-kb-body);
+  border-block-start: 1px solid var(--hairline);
+}
+
+.listNumber {
+  flex: none;
+  min-inline-size: 1.25rem;
+  font-family: var(--font-transition);
+  font-weight: var(--weight-heavy);
+  color: var(--chapter-accent);
+}
+
+/* Uzun tesis listesi madde madde değil, eğik çizgiyle ayrılmış tek bir yazı bloğudur. */
+.listFlow {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-kb-flow);
+  font-weight: var(--weight-display);
+  line-height: 1.18;
+  list-style: none;
+}
+
+.listFlow .listItem {
+  display: inline;
+}
+
+.listFlow .listItem:not(:last-child)::after {
+  margin-inline: 0.28em;
+  color: var(--color-accent);
+  content: '/';
+}
+
+.steps {
+  max-inline-size: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  gap: 0.25rem var(--space-sm);
+  padding-block: var(--space-md);
+  border-block-start: 1px solid var(--hairline);
+}
+
+.stepNumber {
+  grid-row: span 2;
+  font-family: var(--font-transition);
+  font-size: var(--text-kb-lead);
+  font-weight: var(--weight-heavy);
+  line-height: 1.1;
+}
+
+.stepTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-kb-lead);
+  font-weight: var(--weight-display);
+  line-height: 1.15;
+}
+
+.stepText {
+  max-inline-size: var(--entry-measure);
+  font-size: var(--text-kb-body);
+  line-height: 1.5;
+}
+
+/* Fosforlu kalem: satır kırılsa da her satırın zemini ayrı boyanır. */
+.callout {
+  max-inline-size: var(--entry-measure);
+  font-family: var(--font-display);
+  font-size: var(--text-kb-callout);
+  font-weight: var(--weight-display);
+  line-height: 1.32;
+}
+
+.calloutText {
+  padding: 0.08em 0.25em;
+  color: var(--callout-fg);
+  background: var(--callout-bg);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.more {
+  font-weight: var(--weight-medium);
+}
+
+.seeAlso {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-md);
+  align-items: baseline;
+  font-size: var(--text-nav);
+}
+
+.seeAlsoLabel {
+  font-family: var(--font-transition);
+  font-weight: var(--weight-heavy);
+  color: var(--chapter-accent);
+}
+
+.seeAlsoLink {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--touch-target);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.25em;
+}
+
+.table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.table tr {
+  display: grid;
+  gap: 0.25rem;
+  padding-block: var(--space-sm);
+  border-block-start: 1px solid var(--hairline);
+}
+
+.table th {
+  font-weight: inherit;
+  text-align: start;
+}
+
+.table td {
+  font-size: var(--text-kb-body);
+  line-height: 1.5;
+}
+
+.tableLink {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--touch-target);
+  font-family: var(--font-display);
+  font-size: var(--text-kb-lead);
+  font-weight: var(--weight-display);
+  line-height: 1.15;
+  color: var(--chapter-accent);
+}
+
+/* Dar ekranda metin ve görsel alt alta, daha geniş ekranlarda yan yanadır. */
+.leadRow {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.figure {
+  margin: 0;
+}
+
+/* Dikey görseller sütun genişliğine yayılırsa ekrandan taşar, her biri kendi ölçüsünde sınırlanır. */
+/* Dar ekranda metnin altında tek başına kalan amblem ortalanır. */
+.imageMark {
+  max-inline-size: 11rem;
+  margin-inline: auto;
+}
+
+.imageWide {
+  max-inline-size: none;
+}
+
+.imagePoster {
+  max-inline-size: 26rem;
+}
+
+.imageDocument {
+  max-inline-size: 36rem;
+}
+
+.zoom {
+  display: block;
+  inline-size: 100%;
+}
+
+.image {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.chapterNote {
+  max-inline-size: var(--entry-measure);
+  font-size: var(--text-kb-body);
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+@media (min-width: 48rem) {
+  /* Satır, altındaki paragraflarla aynı genişliktedir, görselin sağ kenarı onlarla hizalanır. */
+  /* --image-width ve --lead-fit için LeadRow bileşenine bakın. */
+  .leadRow {
+    --lead-fit: 1;
+
+    grid-template-columns: minmax(0, 1fr) var(--image-width, 40%);
+    gap: var(--space-md);
+    max-inline-size: var(--entry-measure);
+  }
+
+  /* Üst ve alt hizası satır boşluğuna değil, harflerin kendisine göre olsun. */
+  .leadRow .lead {
+    max-inline-size: none;
+    text-box: trim-both cap alphabetic;
+  }
+
+  /* Satır yüksekliğini metin belirler: görsel akıştan çıkar ve bu yüksekliği oranını bozmadan doldurur. */
+  .leadRow .figure {
+    position: relative;
+    max-inline-size: none;
+    margin-inline: 0;
+  }
+
+  .leadRow .zoom {
+    position: absolute;
+    inset: 0;
+  }
+
+  .leadRow .image {
+    position: absolute;
+    inset: 0;
+    block-size: 100%;
+    object-fit: contain;
+    object-position: 100% 50%;
+  }
+
+  .table thead {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    clip-path: none;
+    font-size: var(--text-nav);
+    opacity: 0.6;
+  }
+
+  .table tr {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: var(--space-md);
+    align-items: center;
+  }
+}
+
+/* Ray sağda durduğu için içerik ondan pay bırakır. */
+@media (min-width: 64rem) {
+  .chapter {
+    grid-template-columns: clamp(15rem, 24vw, 28rem) minmax(0, 1fr);
+    padding-inline-end: calc(var(--gutter) + var(--rail-width) + var(--space-md));
+  }
+
+  .head {
+    position: sticky;
+    inset-block-start: calc(var(--header-height) + var(--space-sm));
+    align-self: start;
+  }
+
+  .head .chapterTitle {
+    font-size: var(--text-kb-chapter-side);
+  }
+
+  .toc {
+    display: block;
+    margin-block-start: var(--space-md);
+  }
+
+  /* Sütun ekran yüksekliğindedir, dizinden geriye kalan alanı görsel doldurur. */
+  .headWithImage {
+    display: flex;
+    flex-direction: column;
+    block-size: calc(100svh - var(--header-height) - var(--space-sm) * 2);
+  }
+
+  .headWithImage > * {
+    flex: none;
+  }
+
+  .headWithImage > .asideImages {
+    position: relative;
+    display: block;
+    flex: 1 1 0;
+    min-block-size: 10rem;
+    margin-block-start: var(--space-md);
+  }
+
+  /* Görseller üst üste durur, okunan maddeninki görünür. Oranı korunur, tıklama alanı görselin kendisidir. */
+  .asideImages .figure {
+    position: absolute;
+    inset: 0;
+    max-inline-size: none;
+    container-type: size;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity var(--duration-base) var(--ease-out),
+      visibility 0s linear var(--duration-base);
+  }
+
+  .asideImages .asideImageActive {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+
+  /* Görsel sütunda yatay olarak ortalanır. */
+  .asideImages .zoom {
+    inline-size: fit-content;
+    margin-inline: auto;
+  }
+
+  .asideImages .image {
+    inline-size: auto;
+    max-inline-size: 100cqi;
+    max-block-size: 100cqb;
+  }
+
+  /* Görsel sol sütuna taşındığı için büyük metin satırın tamamını kullanır. */
+  .entryAsideImage .leadRow {
+    --lead-fit: 0;
+
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .entryAsideImage .leadRow .figure {
+    display: none;
+  }
+
+  .mark {
+    inset-inline-start: calc(var(--space-lg) * -0.5);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tocLink:hover {
+    opacity: 1;
+  }
+
+  .link:hover,
+  .seeAlsoLink:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tocLink,
+  .asideImages .figure {
+    transition: none;
+  }
+}
+
+/* Akan metinler iki yana yaslıdır. Dar sütunda kelime araları açılmasın diye heceleme açıktır. */
+.lead,
+.paragraph,
+.stepText,
+.callout,
+.chapterNote,
+.listFlow,
+.table td {
+  text-align: justify;
+  hyphens: auto;
+}

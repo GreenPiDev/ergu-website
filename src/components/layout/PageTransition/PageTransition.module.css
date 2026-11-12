@@ -1,0 +1,34 @@
+.curtain {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: var(--z-page-transition);
+  /* Mobil tarayıcı çubuğu kaybolduğunda altta boşluk kalmasın. */
+  block-size: 100lvh;
+  color: var(--color-black);
+  background: var(--color-accent);
+  visibility: hidden;
+  will-change: transform;
+}
+
+.content {
+  display: grid;
+  place-items: center;
+  block-size: 100dvh;
+  padding-inline: var(--gutter);
+  text-align: center;
+}
+
+.mask {
+  overflow: hidden;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-transition);
+  font-size: var(--text-page-transition);
+  font-weight: var(--weight-heavy);
+  /* İ'nin noktası ve Ç'nin çengeli maskede kesilmesin. */
+  line-height: 1.2;
+  text-wrap: balance;
+}

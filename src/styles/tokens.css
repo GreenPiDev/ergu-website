@@ -1,0 +1,85 @@
+:root {
+  /* Renk: temel değerler */
+  --color-white: #ffffff;
+  --color-black: #0b0c0d;
+  --color-carbon: #0f1011;
+  --color-paper: #f2f1ed;
+  --color-accent: #f2b01e;
+  /* Bölüm rayının vurgu renkli zeminlerdeki rengi. Vurgu rengi koyuysa beyaz yapılır. */
+  --rail-solid-color: var(--color-black);
+
+  /* Tipografi */
+  --font-sans: 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
+  --font-transition: 'Big Shoulders Stencil Variable', 'Arial Narrow', sans-serif;
+  /* Bilgi merkezi gibi sayfalardaki büyük başlıklar. Dar (condensed) bir fontla değiştirilirse --text-kb-* boyutları büyütülebilir. */
+  --font-display: var(--font-sans);
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-display: 600;
+  --weight-heavy: 800;
+  --text-nav: clamp(0.875rem, 0.82rem + 0.16vw, 1rem);
+  --text-display: clamp(2.5rem, 1.4rem + 5.2vw, 7.5rem);
+  /* Yaklaşık 6,5 em genişliğindeki tek kelime 320 px ekrana sığar. Daha uzun menü adı varsa 13.5vw düşürülür. */
+  --text-page-transition: min(13.5vw, 30svh, 13rem);
+  --text-rail-counter: clamp(1.5rem, 1.1rem + 1.6vw, 3rem);
+  --text-checkbox-label: clamp(1.1875rem, 1.05rem + 0.55vw, 1.625rem);
+  --text-checkbox-description: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
+  --text-scroll-cue: clamp(1.375rem, 1.2rem + 0.5vw, 1.875rem);
+  /* Bilgi merkezi: arama satırı ve dizin hero'ya, kısa ekranlarda da sığsın diye yüksekliğe bağlıdır. */
+  --text-kb-search: min(clamp(1.625rem, 1rem + 3vw, 5rem), 8.5svh);
+  --text-kb-row: min(clamp(1.375rem, 0.9rem + 2.2vw, 3.5rem), 6.2svh);
+  --text-kb-result: min(clamp(1.125rem, 0.9rem + 1.2vw, 2.25rem), 4.4svh);
+  --text-kb-chapter: min(clamp(2.75rem, 1.4rem + 3.2vw, 5.5rem), 13svh);
+  /* Yan sütun ekranın %24'üdür. Bölüm adındaki en uzun tek kelime bu genişliğe sığmalıdır, uzun adlarda küçültülür. */
+  --text-kb-chapter-side: min(clamp(2.25rem, 3.6vw, 4.5rem), 12svh);
+  --text-kb-number: clamp(1.75rem, 1.4rem + 1.2vw, 3rem);
+  --text-kb-entry: clamp(1.625rem, 1.25rem + 1.6vw, 3rem);
+  --text-kb-lead: clamp(1.1875rem, 1.05rem + 0.55vw, 1.625rem);
+  --text-kb-body: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
+  --text-kb-flow: clamp(1.375rem, 1.05rem + 1.4vw, 2.5rem);
+  --text-kb-callout: clamp(1.375rem, 1.1rem + 1.1vw, 2.25rem);
+  --text-kb-counter: min(clamp(4rem, 2rem + 7vw, 10rem), 16svh);
+  --text-kb-note: clamp(1rem, 0.9rem + 0.4vw, 1.375rem);
+  --tracking-nav: -0.005em;
+  --tracking-display: -0.035em;
+
+  /* Boşluk ve düzen */
+  --space-sm: 0.75rem;
+  --space-md: 1.5rem;
+  --space-lg: clamp(2rem, 1.5rem + 2vw, 4rem);
+  --gutter: clamp(1rem, 2.4vw, 2.5rem);
+  --header-height: clamp(4rem, 3.5rem + 1.5vw, 5.5rem);
+  --logo-height: clamp(1.75rem, 1.6rem + 0.4vw, 2.25rem);
+  --nav-gap: clamp(1.25rem, 2.2vw, 3rem);
+  --touch-target: 2.75rem;
+  --rail-width: 4.5rem;
+
+  /* Hareket */
+  --duration-base: 0.45s;
+  --duration-slow: 0.8s;
+  --ease-out: cubic-bezier(0.7, 0, 0.15, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Katmanlar */
+  --z-section-rail: 90;
+  --z-header: 100;
+  --z-lightbox: 900;
+  --z-cursor: 1000;
+  --z-page-transition: 1050;
+  --z-skip-link: 1100;
+
+  /* Scrollbar */
+  --scrollbar-size: 8px;
+  --scrollbar-track: var(--color-carbon);
+  --scrollbar-thumb: var(--color-accent);
+}
+
+[data-surface='dark'] {
+  --surface-bg: var(--color-carbon);
+  --surface-fg: var(--color-white);
+}
+
+[data-surface='light'] {
+  --surface-bg: var(--color-paper);
+  --surface-fg: var(--color-black);
+}

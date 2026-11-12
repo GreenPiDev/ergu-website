@@ -1,0 +1,144 @@
+.header {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: var(--z-header);
+  color: var(--surface-fg);
+  background: transparent;
+  /* Şeffaf alan altındaki içeriğe tıklamayı engellemesin. */
+  pointer-events: none;
+  transition: color var(--duration-base) var(--ease-standard);
+}
+
+.bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  block-size: var(--header-height);
+  padding-block-start: env(safe-area-inset-top);
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+}
+
+.logo,
+.toggle,
+.nav {
+  pointer-events: auto;
+}
+
+.logo {
+  display: inline-grid;
+  place-items: center;
+  min-block-size: var(--touch-target);
+}
+
+.logoImage {
+  grid-area: 1 / 1;
+  inline-size: auto;
+  block-size: var(--logo-height);
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.header[data-surface='dark'] .logoForLight,
+.header[data-surface='light'] .logoForDark {
+  opacity: 0;
+}
+
+.nav,
+.navList {
+  display: flex;
+  align-items: center;
+  gap: var(--nav-gap);
+}
+
+.header[data-device='tabletLandscape'] {
+  --nav-gap: var(--space-sm);
+}
+
+.link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--touch-target);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-nav);
+  white-space: nowrap;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0.55em;
+  block-size: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.active::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.roll {
+  display: inline-grid;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+.roll > span {
+  grid-area: 1 / 1;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.roll > span:last-child {
+  transform: translateY(105%);
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .link:hover .roll > span:first-child {
+    transform: translateY(-105%);
+  }
+
+  .link:hover .roll > span:last-child {
+    transform: translateY(0);
+  }
+}
+
+.toggle {
+  position: relative;
+  inline-size: var(--touch-target);
+  block-size: var(--touch-target);
+  margin-inline-end: -0.5rem;
+}
+
+.toggleLine {
+  position: absolute;
+  inset-block-start: calc(50% - 0.75px);
+  inset-inline-start: 0.5rem;
+  inline-size: 1.75rem;
+  block-size: 1.5px;
+  background: currentColor;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.toggleLine:first-child {
+  transform: translateY(-4px);
+}
+
+.toggleLine:last-child {
+  transform: translateY(4px);
+}
+
+.toggle[data-open='true'] .toggleLine:first-child {
+  transform: rotate(45deg);
+}
+
+.toggle[data-open='true'] .toggleLine:last-child {
+  transform: rotate(-45deg);
+}

@@ -1,0 +1,170 @@
+{
+  "hero": {
+    "searchLabel": "Bilgi merkezinde ara",
+    "placeholder": "Ne arıyorsunuz?",
+    "hint": "Örnek aramalar: tablo, görsel, kontrol listesi…",
+    "clear": "Aramayı temizle",
+    "indexLabel": "Bölümler",
+    "resultsLabel": "Arama sonuçları",
+    "resultCount_one": "{{count}} madde bulundu",
+    "resultCount_other": "{{count}} madde bulundu",
+    "noResults": "Bu terimle bir madde bulamadık.",
+    "noResultsLink": "Bize sorun"
+  },
+  "common": {
+    "seeAlso": "Bkz.",
+    "newTab": "yeni sekmede açılır",
+    "entryIndex": "Bu bölümdeki maddeler",
+    "openImage": "{{title}} görselini büyüt",
+    "note": "[YER TUTUCU] Sayfanın sonunda duran genel uyarı veya sorumluluk notu. Sektöre özel hukuki metin firma onayından geçmelidir."
+  },
+  "images": {
+    "1": "[YER TUTUCU] Küçük amblem görseli",
+    "2": "[YER TUTUCU] Metnin altında tam genişlikte duran şema",
+    "3": "[YER TUTUCU] Dikey tanıtım görseli",
+    "4": "[YER TUTUCU] Teknik belge görseli"
+  },
+  "checklist": {
+    "progress": "{{done}} / {{total}} kriter değerlendirildi",
+    "reset": "Listeyi sıfırla",
+    "complete": {
+      "title": "{{total}} kriterin hepsini değerlendirdiniz",
+      "text": "[YER TUTUCU] Liste tamamlanınca okuyucuyu bir sonraki adıma yönlendiren kısa metin. Kesin bir sonuç vaat etmeden uzman görüşüne veya iletişime davet eder.",
+      "cta": "Bizimle iletişime geçin",
+      "back": "Listeye dön"
+    }
+  },
+  "chapters": {
+    "basics": {
+      "title": "Temeller",
+      "short": "Temeller"
+    },
+    "guide": {
+      "title": "Rehber",
+      "short": "Rehber"
+    },
+    "checklist": {
+      "title": "Kontrol Listesi",
+      "short": "Kontrol"
+    },
+    "faq": {
+      "title": "Sık Sorulan Sorular",
+      "short": "SSS"
+    }
+  },
+  "entries": {
+    "intro": {
+      "title": "Bilgi merkezi nasıl çalışır?",
+      "short": "Giriş",
+      "lead": "Bu sayfa baştan sona okunan bir yazı değil, aranıp açılan bir başvuru kitabıdır. Her madde kendi numarası ve paylaşılabilir adresiyle tek başına okunabilir.",
+      "body": [
+        "Hero'daki arama kutusuna yazmaya başlayınca bölüm satırlarının yerini sonuçlar alır. Arama büyük harf ve aksan farkını yok sayar.",
+        "Bu maddedeki küçük amblem, büyük metnin yanında onun yüksekliğinde durur. Dar ekranda metnin altına geçer."
+      ]
+    },
+    "overview": {
+      "title": "Madde düzeni",
+      "short": "Düzen",
+      "lead": "Her madde bir numara, bir başlık ve öne çıkan bir tanımla başlar. Ayrıntılar paragraf, liste, tablo veya adımlarla devam eder.",
+      "body": [
+        "Geniş görseller metnin altında tam genişlikte durur ve tıklanınca büyür. Metin içindeki dış bağlantılar <docs>bu şekilde</docs> işaretlenir ve yeni sekmede açılır."
+      ],
+      "listIntro": "Numaralı liste, sırası önemli olan maddeler içindir:",
+      "list": [
+        "İlk madde, numarası vurgu renginde yazılır.",
+        "İkinci madde, satırlar ince çizgiyle ayrılır.",
+        "Üçüncü madde, uzun metin satır başından devam eder."
+      ]
+    },
+    "scope": {
+      "title": "Akış listesi",
+      "short": "Akış",
+      "lead": "Uzun ve eşit ağırlıklı listeler madde madde değil, eğik çizgiyle ayrılmış tek bir yazı bloğu olarak gösterilir.",
+      "list": ["Birinci öğe", "İkinci öğe", "Üçüncü öğe", "Dördüncü öğe", "Beşinci öğe", "Altıncı öğe"]
+    },
+    "principle": {
+      "title": "Öne çıkan ifade",
+      "short": "Vurgu",
+      "verdict": "Kısa yanıt",
+      "lead": "Büyük metnin başına, soruya verilen kısa yanıt vurgulu bir etiketle eklenebilir.",
+      "callout": "Fosforlu kalem gibi vurgulanan cümle, maddenin akılda kalması gereken tek fikridir.",
+      "outro": ["Vurgudan sonra gelen paragraflar maddeyi tamamlar. Her maddede en fazla bir vurgu kullanılması önerilir."]
+    },
+    "guideIntro": {
+      "title": "Yan sütundaki görsel",
+      "short": "Yan görsel",
+      "lead": "Geniş ekranda bu maddenin görseli metnin yanında değil, soldaki madde dizininin altında durur ve sütunda kalan alanı doldurur.",
+      "body": [
+        "Görsel yalnızca kendi maddesi okunurken görünür. Okuyucu başka bir maddeye geçince yumuşak bir geçişle kaybolur.",
+        "Telefonda ve dikey tablette yan sütun olmadığı için görsel metnin yanında veya altında durur.",
+        "Bu davranış için maddenin tanımına imageInAside: true eklenir. Aynı bölümde iki görselli madde varsa aralarında en az bir madde bırakılması, ilk görselin ekranda yeterince kalmasını sağlar."
+      ]
+    },
+    "comparison": {
+      "title": "Karşılaştırma tablosu",
+      "short": "Tablo",
+      "lead": "Tablo dar ekranda karta dönüşür. Satır adları ilgili maddeye bağlanabilir.",
+      "columns": ["Seçenek", "Ne zaman uygundur"],
+      "rows": [
+        { "type": "Seçenek A", "use": "[YER TUTUCU] İlk seçeneğin uygun olduğu durumun kısa açıklaması." },
+        { "type": "Seçenek B", "use": "[YER TUTUCU] İkinci seçeneğin uygun olduğu durumun kısa açıklaması." }
+      ]
+    },
+    "optionA": {
+      "title": "Seçenek A nedir?",
+      "short": "Seçenek A",
+      "lead": "Bu madde de görselini yan sütunda gösterir. Belge türündeki görseller büyütülünce ekrana sığdırılmaz, gerçek boyutunda açılır ve kaydırılır.",
+      "body": ["[YER TUTUCU] Seçeneğin ayrıntılı açıklaması."]
+    },
+    "optionB": {
+      "title": "Seçenek B nedir?",
+      "short": "Seçenek B",
+      "lead": "Görseli olmayan bir madde. Numarasız liste ve kapanış cümlesi gösterir.",
+      "listIntro": "Numarasız liste:",
+      "list": ["[YER TUTUCU] Birinci özellik", "[YER TUTUCU] İkinci özellik", "[YER TUTUCU] Üçüncü özellik"],
+      "more": "Kalın yazılan kapanış cümlesi, okuyucuyu bir sonraki adıma yönlendirir."
+    },
+    "criteria": {
+      "title": "Karar vermeden önce kontrol edin",
+      "short": "Kriterler",
+      "lead": "Vurgu renkli bölüm sayfanın karar anıdır. Liste işaretlenebilir, ilerleme sol sütundaki sayaçta görünür ve hepsi işaretlenince iletişime yönlendiren bir pencere açılır.",
+      "steps": [
+        { "title": "Birinci kriter", "text": "[YER TUTUCU] Okuyucunun kendine sorması gereken ilk soru." },
+        { "title": "İkinci kriter", "text": "[YER TUTUCU] Okuyucunun kendine sorması gereken ikinci soru." },
+        { "title": "Üçüncü kriter", "text": "[YER TUTUCU] Okuyucunun kendine sorması gereken üçüncü soru." },
+        { "title": "Dördüncü kriter", "text": "[YER TUTUCU] Okuyucunun kendine sorması gereken dördüncü soru." },
+        { "title": "Beşinci kriter", "text": "[YER TUTUCU] Okuyucunun kendine sorması gereken beşinci soru." }
+      ]
+    },
+    "process": {
+      "title": "Süreç adımları",
+      "short": "Adımlar",
+      "lead": "İşaretlenmeyen, yalnızca okunan adımlar numaralı satırlar olarak gösterilir.",
+      "steps": [
+        { "title": "İhtiyacı belirleyin", "text": "[YER TUTUCU] Birinci adımın açıklaması." },
+        { "title": "Seçenekleri karşılaştırın", "text": "[YER TUTUCU] İkinci adımın açıklaması." },
+        { "title": "Uzmana danışın", "text": "[YER TUTUCU] Üçüncü adımın açıklaması." }
+      ]
+    },
+    "closing": {
+      "title": "Doğru karar, doğru bilgiyle başlar.",
+      "short": "Kapanış",
+      "lead": "[YER TUTUCU] Bölümü kapatan kısa ve büyük yazılmış cümlenin açıklaması."
+    },
+    "faqStart": {
+      "title": "Nereden başlamalıyım?",
+      "short": "Başlangıç",
+      "lead": "[YER TUTUCU] Sık sorulan sorunun kısa yanıtı. Ayrıntı için ilgili maddeye \"Bkz.\" bağlantısıyla gidilir."
+    },
+    "faqDifference": {
+      "title": "Seçenek A ile B arasındaki fark nedir?",
+      "short": "Fark",
+      "lead": "[YER TUTUCU] İki seçeneği karşılaştıran kısa yanıt."
+    },
+    "faqHelp": {
+      "title": "Emin değilsem ne yapmalıyım?",
+      "short": "Yardım",
+      "lead": "[YER TUTUCU] Okuyucuyu kontrol listesine veya iletişime yönlendiren kısa yanıt."
+    }
+  }
+}

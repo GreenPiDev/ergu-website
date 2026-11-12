@@ -1,0 +1,111 @@
+.clip {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.text,
+.hoverText,
+.arrowIcon,
+.arrowHoverIcon {
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.text,
+.hoverText {
+  display: block;
+}
+
+.hoverText {
+  position: absolute;
+  inset: 0;
+  color: var(--roll-hover-color, currentColor);
+  transform: translateY(100%);
+}
+
+.arrow {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  inline-size: 1em;
+  block-size: 1em;
+  overflow: hidden;
+}
+
+.inlineArrow {
+  display: inline-block;
+  margin-inline-start: 0.3em;
+  font-size: 0.8em;
+  line-height: 1;
+  vertical-align: -0.05em;
+}
+
+.arrowIcon,
+.arrowHoverIcon {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.arrowHoverIcon {
+  color: var(--roll-hover-color, currentColor);
+  transform: translate(-100%, 100%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(a, button):hover .text {
+    transform: translateY(-100%);
+  }
+
+  :is(a, button):hover .hoverText,
+  :is(a, button):hover .arrowHoverIcon {
+    transform: none;
+  }
+
+  :is(a, button):hover .arrowIcon {
+    transform: translate(100%, -100%);
+  }
+}
+
+/* Metin içi dış bağlantılarda ok, hover sürdükçe sağ üstten çıkıp sol alttan girmeye devam eder. */
+@keyframes arrowLoopOut {
+  from {
+    transform: none;
+  }
+
+  to {
+    transform: translate(100%, -100%);
+  }
+}
+
+@keyframes arrowLoopIn {
+  from {
+    transform: translate(-100%, 100%);
+  }
+
+  to {
+    transform: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  :is(a, button):hover .inlineArrow .arrowIcon {
+    animation: arrowLoopOut var(--duration-slow) var(--ease-standard) infinite;
+  }
+
+  :is(a, button):hover .inlineArrow .arrowHoverIcon {
+    animation: arrowLoopIn var(--duration-slow) var(--ease-standard) infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text,
+  .hoverText,
+  .arrowIcon,
+  .arrowHoverIcon {
+    transition: none;
+  }
+}
