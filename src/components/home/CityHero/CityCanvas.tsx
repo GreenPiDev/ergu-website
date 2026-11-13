@@ -7,6 +7,7 @@ import config from '../../../content/city-config.json';
 import { type FacilityId, facilityColorToken } from '../../../content/facilities';
 import {
   type Atmosphere,
+  type CameraFocus,
   type CityConfig,
   type Quality,
   CameraDirector,
@@ -15,7 +16,7 @@ import {
   prepareCity,
 } from './cityRuntime';
 import { CityPostFx } from './cityPostFx';
-import { FacilityHighlight } from './cityHighlight';
+import { FacilityHighlight, curtainHeight } from './cityHighlight';
 import { setCursorInteractive } from '../../ui/CustomCursor/cursorEvents';
 import { FACILITY_RECTS, facilityPickBoxes, pickFacility } from './cityLayout';
 
@@ -46,6 +47,8 @@ interface CitySceneProps {
   onReady: () => void;
   /** Işık perdesiyle sınırları gösterilen tesisler (seçili ve fareyle üstünde durulan). */
   facilities: readonly FacilityId[];
+  /** Kameranın uçup çevresinde döndüğü seçili tesis (null: şehrin geneli). */
+  focus: FacilityId | null;
   /** Fare şehirde bir tesisin üstüne gelince tesis, ayrılınca null (yalnızca fare). */
   onHoverFacility: (facility: FacilityId | null) => void;
   /** Şehre tıklanınca (dokunma dahil) altındaki tesis, boş yere tıklanınca null. */
@@ -58,7 +61,15 @@ function facilityColor(id: FacilityId) {
   return new THREE.Color(value || '#ffffff');
 }
 
-function CityScene({ quality, reducedMotion, onReady, facilities, onHoverFacility, onPickFacility }: CitySceneProps) {
+function CityScene({
+  quality,
+  reducedMotion,
+  onReady,
+  facilities,
+  focus,
+  onHoverFacility,
+  onPickFacility,
+}: CitySceneProps) {
   const { gl, scene, camera, size } = useThree();
   const gltf = useLoader(GLTFLoader, MODEL_URL, (loader) => {
     loader.setMeshoptDecoder(MeshoptDecoder);
@@ -102,6 +113,20 @@ function CityScene({ quality, reducedMotion, onReady, facilities, onHoverFacilit
   // `city` bağımlılığı sırayı garanti eder: kutular yerleşim ve bina bölmeden sonra hesaplanır.
   const picks = useMemo(() => (city ? facilityPickBoxes(gltf.scene) : []), [gltf, city]);
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
+
+  // Kamera odağı: tesis sınırı ve kadraja girmesi gereken yükseklik (en yüksek yapı veya ışık perdesi).
+  const focusTargets = useMemo(() => {
+    const targets = new Map<FacilityId, CameraFocus>();
+    for (const { id, boxes } of picks) {
+      const rect = FACILITY_RECTS[id];
+      const height = Math.max(curtainHeight(rect), ...boxes.map((box) => box.max.y));
+      targets.set(id, { ...rect, height });
+    }
+    return targets;
+  }, [picks]);
+  useEffect(() => {
+    director.setFocus(focus ? (focusTargets.get(focus) ?? null) : null, reducedMotion);
+  }, [director, focus, focusTargets, reducedMotion]);
   const pointer = useRef({ ndc: new THREE.Vector2(), inside: false, mouse: false });
   const hovered = useRef<FacilityId | null>(null);
   const handlers = useRef({ onHoverFacility, onPickFacility });
@@ -201,6 +226,7 @@ export default function CityCanvas({
   reducedMotion,
   onReady,
   facilities,
+  focus,
   onHoverFacility,
   onPickFacility,
 }: CityCanvasProps) {
@@ -228,6 +254,7 @@ export default function CityCanvas({
           reducedMotion={reducedMotion}
           onReady={onReady}
           facilities={facilities}
+          focus={focus}
           onHoverFacility={onHoverFacility}
           onPickFacility={onPickFacility}
         />

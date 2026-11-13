@@ -69,7 +69,7 @@ const FRAGMENT = `
   }`;
 
 /** Perdenin yüksekliği tesisin büyüklüğüyle orantılı (metre). Işınlar bunun %35-100'ü boyunda. */
-function curtainHeight(rect: Rect) {
+export function curtainHeight(rect: Rect) {
   const size = Math.max(rect.x1 - rect.x0, rect.z1 - rect.z0);
   return THREE.MathUtils.clamp(size * 0.34, 70, 160);
 }

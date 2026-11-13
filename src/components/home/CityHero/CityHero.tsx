@@ -64,6 +64,7 @@ export function CityHero() {
           reducedMotion={reducedMotion}
           onReady={() => setReady(true)}
           facilities={shown}
+          focus={facility}
           onHoverFacility={setPreview}
           onPickFacility={pickFromCity}
         />

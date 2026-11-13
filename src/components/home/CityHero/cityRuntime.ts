@@ -1646,15 +1646,78 @@ function poseFrom(position: Vec3, target: Vec3, fov: number): Pose {
   return { target: t, dist, el: Math.asin(d.y / dist), az: Math.atan2(d.x, d.z), fov };
 }
 
-/** Ana sayfa kamerası: hero konumunda durur, çok yavaş süzülür ve fareyle hafifçe kayar. */
+/** Kameranın yakın çekimde odaklanacağı tesis: zemin sınırı ve kadraja girmesi gereken yükseklik (metre). */
+export interface CameraFocus {
+  x0: number;
+  x1: number;
+  z0: number;
+  z1: number;
+  /** En yüksek yapı veya ışık perdesi, hangisi yüksekse. */
+  height: number;
+}
+
+// Boşta yörünge hızı (radyan/sn): şehrin çevresinde ~4 dakikada bir tur, dron gibi usul usul. 2.5 katı denendi,
+// kullanıcı eski hıza döndürttü.
+const ORBIT_SPEED = 0.026;
+// Tesisin çevresinde dönüş daha sık: ~2.5 dakikada bir tur (açı hızı yüksek, yakın olduğundan çizgisel hız düşük).
+const FOCUS_ORBIT_SPEED = 0.042;
+// Yörünge açılışta durgun başlar, birkaç saniyede hızlanır: ilk kareler sabit kadraj gibi görünür.
+const ORBIT_EASE_IN = 0.25;
+// Uçuşun yumuşaklığı (sn): hedef, mesafe ve açı yaylı sönümle yeni değerlerine ~3 sn içinde oturur.
+const FLIGHT_SMOOTH = 0.85;
+// Yakın çekimde tesis, hangi açıdan bakılırsa bakılsın kadrajın bu payına sığar (1: kenardan kenara). Mesafe buna göre
+// hesaplanır. Kamera daha yukarıdan bakar, çevredeki kulelerin üstünde kalır.
+const FOCUS_FILL = 0.78;
+// Mesafe sınırları (yatay ekran). Üst sınır hero mesafesinin (~2030 m) altında: büyük tesislerde de kamera yaklaşır,
+// en kötü açıda perdenin tepesi kadraj kenarına değebilir.
+const FOCUS_MIN_DISTANCE = 560;
+const FOCUS_MAX_DISTANCE = 1650;
+const FOCUS_ELEVATION = 38 * DEG;
+// Mesafe hesabında denenen yörünge açıları: tesis dönüşün her anında kadrajda kalır.
+const FOCUS_SAMPLES = 8;
+
+/** Tesis kadrajında bakış noktası: zemin merkezi, yüksek tesislerde (banka kulesi) biraz yukarıda. */
+function focusTarget(focus: CameraFocus) {
+  return { x: (focus.x0 + focus.x1) / 2, y: focus.height * 0.3, z: (focus.z0 + focus.z1) / 2 };
+}
+
+/** Yaylı sönüm (kritik sönümlü): uçuş yarıda değişse de hız korunur, kamera sıçramaz. */
+function smoothDamp(state: { value: number; velocity: number }, goal: number, smooth: number, dt: number) {
+  const omega = 2 / smooth;
+  const x = omega * dt;
+  const decay = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const change = state.value - goal;
+  const temp = (state.velocity + omega * change) * dt;
+  state.velocity = (state.velocity - omega * temp) * decay;
+  state.value = goal + (change + temp) * decay;
+}
+
+/**
+ * Ana sayfa kamerası. Boşta şehrin çevresinde dron gibi yavaşça döner, fareyle hafifçe kayar. Bir tesis seçilince
+ * bulunduğu açıdan o tesise uçar ve çevresinde dönmeye devam eder, seçim kalkınca aynı açıdan şehre geri açılır.
+ */
 export class CameraDirector {
   private readonly camera: THREE.PerspectiveCamera;
-  private readonly current: Pose;
+  private readonly hero: Pose;
   private readonly pointer = new THREE.Vector2();
   private readonly pointerSmooth = new THREE.Vector2();
   private readonly idleOrbit: boolean;
   private readonly parallax: boolean;
-  private drift = 0;
+  // Yörünge açısı hero açısına eklenir (sürekli artar), hız seçime göre yumuşakça değişir.
+  private az = 0;
+  private orbitSpeed = 0;
+  private elapsed = 0;
+  // Uçuşla değişen değerler: hedef (x, y, z), mesafe ve yükseklik açısı.
+  private readonly tx = { value: 0, velocity: 0 };
+  private readonly ty = { value: 0, velocity: 0 };
+  private readonly tz = { value: 0, velocity: 0 };
+  private readonly dist = { value: 0, velocity: 0 };
+  private readonly el = { value: 0, velocity: 0 };
+  private focus: CameraFocus | null = null;
+  // Tesis kadrajının mesafesi ekran oranına bağlı: odak ya da oran değişince yeniden hesaplanır.
+  private focusDistance = 0;
+  private readonly probe = new THREE.PerspectiveCamera();
+  private readonly targetVector = new THREE.Vector3();
   private aspect = POSTER_ASPECT;
 
   constructor(camera: THREE.PerspectiveCamera, config: CityConfig, options: { idleOrbit: boolean; parallax: boolean }) {
@@ -1668,7 +1731,13 @@ export class CameraDirector {
     hero.target.x += Math.cos(hero.az) * side;
     hero.target.z -= Math.sin(hero.az) * side;
     this.camera = camera;
-    this.current = hero;
+    this.hero = hero;
+    this.az = hero.az;
+    this.tx.value = hero.target.x;
+    this.ty.value = hero.target.y;
+    this.tz.value = hero.target.z;
+    this.dist.value = hero.dist;
+    this.el.value = hero.el;
     this.idleOrbit = options.idleOrbit;
     this.parallax = options.parallax;
     this.apply();
@@ -1676,15 +1745,21 @@ export class CameraDirector {
 
   /** Hedefe gerçek uzaklık (dik ekranda geri çekilme dahil). */
   get distance() {
-    return this.current.dist * (this.aspect < 1 ? 1 + (1 - this.aspect) * PORTRAIT_PULLBACK : 1);
+    return this.dist.value * this.pullback;
   }
 
   get target() {
-    return this.current.target;
+    return this.targetVector;
+  }
+
+  /** Dik ekranda geri çekilme çarpanı. */
+  private get pullback() {
+    return this.aspect < 1 ? 1 + (1 - this.aspect) * PORTRAIT_PULLBACK : 1;
   }
 
   setAspect(aspect: number) {
     this.aspect = aspect;
+    if (this.focus) this.focusDistance = this.fitDistance(this.focus);
     this.apply();
   }
 
@@ -1693,31 +1768,119 @@ export class CameraDirector {
     this.pointer.set(x, y);
   }
 
+  /**
+   * Yakın çekim yapılacak tesis (null: şehrin geneli). Hareket azaltılmışsa kamera uçmaz, yeni kadraja geçer.
+   * instant: uçuş olmadan geçiş.
+   */
+  setFocus(focus: CameraFocus | null, instant = false) {
+    this.focus = focus;
+    if (focus) this.focusDistance = this.fitDistance(focus);
+    if (instant) {
+      const goal = this.goal();
+      for (const [state, value] of [
+        [this.tx, goal.x],
+        [this.ty, goal.y],
+        [this.tz, goal.z],
+        [this.dist, goal.dist],
+        [this.el, goal.el],
+      ] as const) {
+        state.value = value;
+        state.velocity = 0;
+      }
+      this.apply();
+    }
+  }
+
+  private goal() {
+    const { focus, hero } = this;
+    if (!focus) return { x: hero.target.x, y: hero.target.y, z: hero.target.z, dist: hero.dist, el: hero.el };
+    return { ...focusTarget(focus), dist: this.focusDistance, el: FOCUS_ELEVATION };
+  }
+
+  /**
+   * Tesisin (zemini ve yüksekliğiyle kutu) yörüngenin her açısında kadrajın FOCUS_FILL payına sığdığı en kısa mesafe.
+   * İkili arama, örnek açılarda kutunun köşeleri ekrana izdüşürülür. Dik ekrandaki geri çekilme sonradan eklendiği
+   * için mesafe ondan arındırılmış döner.
+   */
+  private fitDistance(focus: CameraFocus) {
+    const { probe } = this;
+    probe.fov = coverFov(this.hero.fov, this.aspect);
+    probe.aspect = this.aspect;
+    probe.near = 1;
+    probe.far = 30000;
+    probe.updateProjectionMatrix();
+    const target = focusTarget(focus);
+    const lookAt = new THREE.Vector3(target.x, target.y, target.z);
+    const corner = new THREE.Vector3();
+    const extent = (dist: number) => {
+      let worst = 0;
+      for (let i = 0; i < FOCUS_SAMPLES; i++) {
+        const az = (i / FOCUS_SAMPLES) * Math.PI * 2;
+        probe.position.set(
+          lookAt.x + dist * Math.cos(FOCUS_ELEVATION) * Math.sin(az),
+          lookAt.y + dist * Math.sin(FOCUS_ELEVATION),
+          lookAt.z + dist * Math.cos(FOCUS_ELEVATION) * Math.cos(az),
+        );
+        probe.lookAt(lookAt);
+        probe.updateMatrixWorld();
+        for (const x of [focus.x0, focus.x1])
+          for (const z of [focus.z0, focus.z1])
+            for (const y of [0, focus.height]) {
+              corner.set(x, y, z).project(probe);
+              worst = Math.max(worst, Math.abs(corner.x), Math.abs(corner.y));
+            }
+      }
+      return worst;
+    };
+    // Dik ekranda sınırlar da geri çekilmeyle büyür (telefonda büyük tesisler yine de kadrajdan taşabilir).
+    let near = FOCUS_MIN_DISTANCE * this.pullback;
+    let far = FOCUS_MAX_DISTANCE * this.pullback;
+    if (extent(near) <= FOCUS_FILL) return near / this.pullback;
+    for (let step = 0; step < 18; step++) {
+      const mid = (near + far) / 2;
+      if (extent(mid) > FOCUS_FILL) near = mid;
+      else far = mid;
+    }
+    return far / this.pullback;
+  }
+
   update(delta: number) {
     const dt = Math.min(delta, 0.1);
     this.pointerSmooth.lerp(this.pointer, 1 - Math.exp(-dt * 2.5));
-    if (this.idleOrbit) this.drift = Math.min(this.drift + dt * 0.0045, 0.06);
+    if (this.idleOrbit) {
+      this.elapsed += dt;
+      const speed = (this.focus ? FOCUS_ORBIT_SPEED : ORBIT_SPEED) * Math.min(1, this.elapsed * ORBIT_EASE_IN);
+      this.orbitSpeed += (speed - this.orbitSpeed) * (1 - Math.exp(-dt * 1.5));
+      this.az += this.orbitSpeed * dt;
+    }
+    const goal = this.goal();
+    smoothDamp(this.tx, goal.x, FLIGHT_SMOOTH, dt);
+    smoothDamp(this.ty, goal.y, FLIGHT_SMOOTH, dt);
+    smoothDamp(this.tz, goal.z, FLIGHT_SMOOTH, dt);
+    smoothDamp(this.dist, goal.dist, FLIGHT_SMOOTH * 1.15, dt);
+    smoothDamp(this.el, goal.el, FLIGHT_SMOOTH * 1.15, dt);
     this.apply();
   }
 
   private apply() {
-    const { current, camera } = this;
+    const { camera } = this;
     const dist = this.distance;
     const px = this.parallax ? this.pointerSmooth.x * 0.018 : 0;
     const py = this.parallax ? this.pointerSmooth.y * 0.01 : 0;
-    const az = current.az + this.drift + px;
-    const el = current.el + py;
+    const az = this.az + px;
+    const el = this.el.value + py;
+    const target = this.targetVector.set(this.tx.value, this.ty.value, this.tz.value);
     camera.position.set(
-      current.target.x + dist * Math.cos(el) * Math.sin(az),
-      current.target.y + dist * Math.sin(el),
-      current.target.z + dist * Math.cos(el) * Math.cos(az),
+      target.x + dist * Math.cos(el) * Math.sin(az),
+      target.y + dist * Math.sin(el),
+      target.z + dist * Math.cos(el) * Math.cos(az),
     );
-    camera.fov = coverFov(current.fov, this.aspect);
-    // Parsel zeminleri birbirinden yalnızca 2-5 cm yukarıda. Yakın düzlem kamerada en yakın geometriye (~0.6 x mesafe)
-    // olabildiğince yaklaştırılır, derinlik hassasiyeti artar, zeminler kamera kıpırdadıkça birbirine geçip titremez.
-    camera.near = Math.max(1, dist * 0.35);
+    camera.fov = coverFov(this.hero.fov, this.aspect);
+    // Parsel zeminleri birbirinden yalnızca 2-5 cm yukarıda: yakın düzlem olabildiğince uzakta tutulur, derinlik
+    // hassasiyeti artar. 0.22 x mesafe 2 km'de ~1 mm hassasiyet verir, yakın çekimde çevredeki kuleleri de kesmez.
+    camera.near = Math.max(1, dist * 0.22);
     camera.far = dist + 14000;
-    camera.lookAt(current.target);
+    camera.lookAt(target);
     camera.updateProjectionMatrix();
   }
 }
