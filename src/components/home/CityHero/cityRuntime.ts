@@ -13,6 +13,7 @@ import { HOUSING_FRAGMENT, HOUSING_GLSL, landscapeHousing } from './cityHousing'
 import { KINDERGARTEN_FRAGMENT, KINDERGARTEN_GLSL, landscapeKindergarten } from './cityKindergarten';
 import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
 import { SCHOOL_FRAGMENT, SCHOOL_GLSL, landscapeSchool } from './citySchool';
+import { SCIENCE_FRAGMENT, SCIENCE_GLSL, landscapeScienceCenter } from './cityScienceCenter';
 
 type Vec3 = number[];
 
@@ -1176,6 +1177,7 @@ const LANDSCAPES: Record<string, { key: string; code: string; header: string }> 
   School_Ground: { key: 'city_school_v1', code: SCHOOL_FRAGMENT, header: SCHOOL_GLSL },
   CableCar_Ground: { key: 'city_cablecar_v1', code: CABLECAR_FRAGMENT, header: CABLECAR_GLSL },
   Airport_Field: { key: 'city_airport_v1', code: AIRPORT_FRAGMENT, header: AIRPORT_GLSL },
+  Science_Ground: { key: 'city_science_v1', code: SCIENCE_FRAGMENT, header: SCIENCE_GLSL },
 };
 
 const LIGHT_POINT_HIDE = /^(Infrastructure_StreetLamp_Heads|Roads_TrafficGlow)/;
@@ -1480,6 +1482,9 @@ export function prepareCity(
   // Havalimanı: tek zemin (pistler, taksi yolları, apronlar, kara tarafı), kargo, itfaiye, kule tabanı, radar, körük
   // köprüler, yer araçları, kamyonlar, kara tarafında ağaçlar ve lambalar (zemin rengi aşağıda LANDSCAPES ile).
   const airportLamps = landscapeAirport(cityRoot, TREE_SCALE);
+  // Bilim merkezi yeniden kurulur: laboratuvar kütleleri, hol, kule podyumu, bilim parkı parçaları, araçlar, ağaçlar ve
+  // lambalar (zemin rengi aşağıda LANDSCAPES ile).
+  const scienceLamps = landscapeScienceCenter(cityRoot, TREE_SCALE);
   createLightPoints(cityRoot, thin, [
     ...parkLamps,
     ...kindergartenLamps,
@@ -1489,6 +1494,7 @@ export function prepareCity(
     ...schoolLamps,
     ...cableCarLamps,
     ...airportLamps,
+    ...scienceLamps,
   ]);
   // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
   // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.
