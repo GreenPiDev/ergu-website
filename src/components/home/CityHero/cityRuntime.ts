@@ -1667,6 +1667,10 @@ const NEAR_RATIO = 0.22;
 const NEAR_FADE_DISTANCE = 480;
 const ZOOM_SENSITIVITY = 0.0015;
 const ZOOM_SMOOTH = 0.3;
+// İmlece yakınlaşma: yakınlaşırken imlecin altındaki zemin noktası ekranda yerinde kalır, kamera o noktaya doğru
+// kayar. Ufka yakın bakışta ışın çok uzağa düşer, nokta bakış merkezinden en fazla ZOOM_PAN_REACH x mesafe uzakta
+// sayılır. Uzaklaşırken kayma, yakınlaşma çarpanı 1'e dönerken aynı oranda söner: kamera merkeze doğru geri çekilir.
+const ZOOM_PAN_REACH = 0.9;
 // Sürükleyerek döndürme: piksel başına açı (radyan). Yatay sürükleme yörünge açısını, dikey sürükleme bakış yüksekliğini
 // değiştirir. Yükseklik DRAG_MIN_ELEVATION ile DRAG_MAX_ELEVATION arasında: altında kadrajın üst kenarı ufka yaklaşır ve
 // yakın çekimde çevredeki binalar kameraya girer. Bırakınca dönüş ataletle (DRAG_INERTIA, 1/sn) söner.
@@ -1681,6 +1685,12 @@ const FOCUS_SAMPLES = 8;
 /** Tesis kadrajında bakış noktası: zemin merkezi, yüksek tesislerde (banka kulesi) biraz yukarıda. */
 function focusTarget(focus: CameraFocus) {
   return { x: (focus.x0 + focus.x1) / 2, y: focus.height * 0.3, z: (focus.z0 + focus.z1) / 2 };
+}
+
+/** Yaylı sönümle ilerleyen değer ve hızı. */
+interface DampState {
+  value: number;
+  velocity: number;
 }
 
 /** Yaylı sönüm (kritik sönümlü): uçuş yarıda değişse de hız korunur, kamera sıçramaz. */
@@ -1719,6 +1729,18 @@ export class CameraDirector {
   // Tekerlekle yakınlaşma çarpanı (1: yakınlaşma yok) ve ulaşmak istediği değer.
   private readonly zoom = { value: 1, velocity: 0 };
   private zoomGoal = 1;
+  // İmlece yakınlaşmanın bakış noktasına eklediği kayma (dünya, metre). Yakınlaşmayla aynı yumuşaklıkta oturur,
+  // böylece animasyon boyunca imlecin altındaki nokta yerinde kalır.
+  private readonly pan: readonly [DampState, DampState, DampState] = [
+    { value: 0, velocity: 0 },
+    { value: 0, velocity: 0 },
+    { value: 0, velocity: 0 },
+  ];
+  private readonly panGoal = new THREE.Vector3();
+  private readonly zoomRay = new THREE.Raycaster();
+  private readonly groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  private readonly zoomPoint = new THREE.Vector3();
+  private readonly zoomCenter = new THREE.Vector3();
   // Sürükleme: bu kare biriken açı, bırakıldıktan sonra süren dönüş hızı (radyan/sn), kullanıcının yükseklik payı.
   private dragging = false;
   private dragPending = 0;
@@ -1786,8 +1808,9 @@ export class CameraDirector {
    */
   setFocus(focus: CameraFocus | null, instant = false) {
     this.focus = focus;
-    // Yeni kadraj hesaplanan mesafesiyle gelir, tekerlekle yakınlaşma sıfırlanır.
+    // Yeni kadraj hesaplanan mesafesiyle gelir, tekerlekle yakınlaşma ve imlece kayma sıfırlanır.
     this.zoomGoal = 1;
+    this.panGoal.set(0, 0, 0);
     if (focus) this.focusDistance = this.fitDistance(focus);
     if (instant) {
       const goal = this.goal();
@@ -1798,6 +1821,7 @@ export class CameraDirector {
         [this.dist, goal.dist],
         [this.el, goal.el],
         [this.zoom, 1],
+        ...this.pan.map((state) => [state, 0] as const),
       ] as const) {
         state.value = value;
         state.velocity = 0;
@@ -1810,13 +1834,42 @@ export class CameraDirector {
    * Tekerlek hareketi (piksel, aşağı pozitif): aşağı yakınlaştırır, yukarı uzaklaştırır (kullanıcı isteğiyle ilk halinin
    * tersi). Başlangıç kadrajından ZOOM_MAX'a kadar uzaklaşılabilir. Sınıra dayanınca hareket kullanılmaz (false döner):
    * en yakındayken aşağı hareket sayfayı kaydırır, ziyaretçi hero'da takılmaz.
+   * ndc: imlecin ekran konumu (-1..1). Verilirse yakınlaşma imlecin altındaki noktaya doğru yapılır.
    */
-  zoomBy(deltaY: number) {
-    const floor = Math.max(ZOOM_MIN, ZOOM_FLOOR / Math.max(ZOOM_FLOOR, this.goal().dist));
+  zoomBy(deltaY: number, ndc?: THREE.Vector2) {
+    const goal = this.goal();
+    const floor = Math.max(ZOOM_MIN, ZOOM_FLOOR / Math.max(ZOOM_FLOOR, goal.dist));
     if (deltaY > 0 && this.zoomGoal <= floor + 1e-3) return false;
     if (deltaY < 0 && this.zoomGoal >= ZOOM_MAX - 1e-3) return false;
-    this.zoomGoal = THREE.MathUtils.clamp(this.zoomGoal * Math.exp(-deltaY * ZOOM_SENSITIVITY), floor, ZOOM_MAX);
+    const previous = this.zoomGoal;
+    const next = THREE.MathUtils.clamp(previous * Math.exp(-deltaY * ZOOM_SENSITIVITY), floor, ZOOM_MAX);
+    this.zoomGoal = next;
+    if (next < previous) {
+      if (ndc) this.panToward(ndc, goal, next / previous);
+    } else if (next >= 1 || previous >= 1) {
+      this.panGoal.set(0, 0, 0);
+    } else {
+      // Uzaklaşma: kayma, logaritmik yakınlaşma ölçeğinde 1'e kalan yol oranında küçülür (1'de sıfır).
+      this.panGoal.multiplyScalar(Math.log(next) / Math.log(previous));
+    }
     return true;
+  }
+
+  /**
+   * Bakış noktasını imlecin altındaki zemin noktasına doğru kaydırır. Kamera ve bakış noktası birlikte o nokta
+   * etrafında k oranında ölçeklenince nokta ekranda yerinde kalır: yeni merkez = P + (merkez - P) x k.
+   */
+  private panToward(ndc: THREE.Vector2, goal: { x: number; y: number; z: number; dist: number }, k: number) {
+    this.zoomRay.setFromCamera(ndc, this.camera);
+    const point = this.zoomRay.ray.intersectPlane(this.groundPlane, this.zoomPoint);
+    if (!point) return;
+    const center = this.zoomCenter.set(goal.x, goal.y, goal.z).add(this.panGoal);
+    // Ufka yakın ışınlar çok uzağa düşer: nokta merkezden belirli bir uzaklıkla sınırlanır.
+    const reach = goal.dist * this.zoomGoal * this.pullback * ZOOM_PAN_REACH;
+    const offset = point.sub(center);
+    if (offset.length() > reach) offset.setLength(reach);
+    // Yeni merkez = P + (merkez - P) x k = merkez + (P - merkez) x (1 - k)
+    this.panGoal.addScaledVector(offset, 1 - k);
   }
 
   /** Sürükleme başlar: otomatik dönüş durur, önceki sürüklemenin ataleti ve görünüm sıfırlama dönüşü kesilir. */
@@ -1832,6 +1885,7 @@ export class CameraDirector {
    */
   resetView(instant = false) {
     this.zoomGoal = 1;
+    this.panGoal.set(0, 0, 0);
     this.elevationOffset = 0;
     this.dragVelocity = 0;
     this.dragPending = 0;
@@ -1844,6 +1898,10 @@ export class CameraDirector {
       this.azimuthReturn = null;
       this.zoom.value = 1;
       this.zoom.velocity = 0;
+      for (const state of this.pan) {
+        state.value = 0;
+        state.velocity = 0;
+      }
       this.apply();
     } else {
       this.azimuthReturn = { goal, velocity: 0 };
@@ -1960,6 +2018,9 @@ export class CameraDirector {
     smoothDamp(this.dist, goal.dist, FLIGHT_SMOOTH * 1.15, dt);
     smoothDamp(this.el, goal.el, FLIGHT_SMOOTH * 1.15, dt);
     smoothDamp(this.zoom, this.zoomGoal, ZOOM_SMOOTH, dt);
+    smoothDamp(this.pan[0], this.panGoal.x, ZOOM_SMOOTH, dt);
+    smoothDamp(this.pan[1], this.panGoal.y, ZOOM_SMOOTH, dt);
+    smoothDamp(this.pan[2], this.panGoal.z, ZOOM_SMOOTH, dt);
     this.apply();
   }
 
@@ -1970,7 +2031,11 @@ export class CameraDirector {
     const py = this.parallax ? this.pointerSmooth.y * 0.01 : 0;
     const az = this.az + px;
     const el = this.el.value + py;
-    const target = this.targetVector.set(this.tx.value, this.ty.value, this.tz.value);
+    const target = this.targetVector.set(
+      this.tx.value + this.pan[0].value,
+      this.ty.value + this.pan[1].value,
+      this.tz.value + this.pan[2].value,
+    );
     camera.position.set(
       target.x + dist * Math.cos(el) * Math.sin(az),
       target.y + dist * Math.sin(el),

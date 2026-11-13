@@ -216,11 +216,12 @@ function CityScene({
     };
     // Tekerlekle yakınlaşma yalnızca sayfa en üstteyken. Kullanılan hareket sayfayı kaydırmaz: tarayıcıya
     // preventDefault, Lenis'e kendi okuduğu `lenisStopPropagation` işareti (Lenis 1.3, defaultPrevented'a bakmaz).
-    // Aşağı hareket yakınlaştırır. En yakın noktada aşağı hareket kullanılmaz, sayfa kaymaya devam eder.
+    // Aşağı hareket imlecin altındaki noktaya yakınlaştırır, yukarı hareket merkeze doğru uzaklaştırır. En yakın noktada
+    // aşağı hareket kullanılmaz, sayfa kaymaya devam eder.
     const onWheel = (event: WheelEvent & { lenisStopPropagation?: boolean }) => {
       if (window.scrollY > 1) return;
       const scale = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1;
-      if (!director.zoomBy(event.deltaY * scale)) return;
+      if (!director.zoomBy(event.deltaY * scale, toNdc(event, new THREE.Vector2()))) return;
       event.preventDefault();
       event.lenisStopPropagation = true;
     };
