@@ -1,5 +1,6 @@
 // Bina kütleleri: birim küp ([-1, 1]) içinde kurulan kutu ve eğimli çatı geometrileri. Tesislerdeki küçük parçalar
-// (oyun ekipmanı, palet, tank) için dünya koordinatında köşe renkli katılar (PropBuilder). Şehir binaları (diversifyBuildings)
+// (oyun ekipmanı, palet, tank, amfi basamağı) için dünya koordinatında köşe renkli katılar (PropBuilder) ve tesis otoparkları
+// için park etmiş araç örnekleri (parkedVehicles). Şehir binaları (diversifyBuildings)
 // ve tesis yapıları (cityKindergarten.ts) aynı kütleleri kullanır, cephe shader'ı (CITY_FACE) hepsine aynı işçiliği verir.
 import * as THREE from 'three';
 
@@ -166,6 +167,23 @@ export class PropBuilder {
     return this;
   }
 
+  /**
+   * Yay dilimi (amfi basamağı): (cx, cz) merkezli, r0..r1 yarıçaplı, a0..a1 açılı (x ekseninden z eksenine doğru) halka
+   * parçası, y0..y1 yüksekliğinde. Yay `segments` düz parçayla kurulur.
+   */
+  sector(cx: number, cz: number, r0: number, r1: number, a0: number, a1: number, y0: number, y1: number, color: string, segments = 8) {
+    const c = new THREE.Color(color);
+    const at = (r: number, a: number, y: number) => new THREE.Vector3(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r);
+    for (let i = 0; i < segments; i++) {
+      const t0 = a0 + ((a1 - a0) * i) / segments;
+      const t1 = a0 + ((a1 - a0) * (i + 1)) / segments;
+      // Bu sıra yukarıdan bakınca saat yönünün tersine (box ile aynı yön).
+      const ring = (y: number) => [at(r0, t0, y), at(r0, t1, y), at(r1, t1, y), at(r1, t0, y)];
+      this.solid(ring(y0), ring(y1), c);
+    }
+    return this;
+  }
+
   /** Silindir: y ekseninde dik (silo, direk) veya z ekseninde yatık (tank). (cx, cy, cz) taban veya uç merkezidir. */
   cylinder(cx: number, cy: number, cz: number, radius: number, length: number, axis: 'y' | 'z', color: string, segments = 12) {
     const c = new THREE.Color(color);
@@ -197,4 +215,33 @@ export class PropBuilder {
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(this.colors, 3));
     return geometry;
   }
+}
+
+// ------------------------------------------------------------------ park etmiş araçlar
+
+/** Aracın dünya konumu (x, z) ve y ekseni etrafında dönüşü. */
+export type VehicleSpot = [number, number, number];
+
+/**
+ * Tesis otoparkları için şehrin park etmiş araçlarından örnek (Traffic_Vehicles_<kind>_Parked): geometri, malzeme, ölçek ve
+ * yükseklik aynı kalır. Adı Traffic_<prefix>_<kind>_Parked olur: trafik, LOD ve insanlar onu park etmiş araç olarak tanır.
+ */
+export function parkedVehicles(cityRoot: THREE.Object3D, kind: string, prefix: string, spots: VehicleSpot[]) {
+  const source = cityRoot.getObjectByName(`Traffic_Vehicles_${kind}_Parked`);
+  if (!(source instanceof THREE.InstancedMesh) || source.count === 0 || !spots.length) return null;
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const quaternion = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const up = new THREE.Vector3(0, 1, 0);
+  source.getMatrixAt(0, matrix);
+  matrix.premultiply(source.matrixWorld).decompose(position, quaternion, scale);
+  const mesh = new THREE.InstancedMesh(source.geometry, source.material, spots.length);
+  mesh.name = `Traffic_${prefix}_${kind}_Parked`;
+  mesh.userData = { ...source.userData };
+  spots.forEach(([x, z, yaw], index) =>
+    mesh.setMatrixAt(index, matrix.compose(new THREE.Vector3(x, position.y, z), quaternion.setFromAxisAngle(up, yaw), scale)),
+  );
+  mesh.instanceMatrix.needsUpdate = true;
+  return mesh;
 }

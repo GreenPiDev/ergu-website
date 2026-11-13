@@ -13,8 +13,8 @@
 //   substrat bölmeleri, pompa evi, CO2 tankı. Kuzey ve doğu kenarında rüzgâr kıran ağaçlar, avlu ve yollar boyunca lambalar.
 // Yerleşim planı aşağıdaki sabitlerde tek yerde tanımlanır. GLSL ve TypeScript tarafı aynı ölçüleri kullanır.
 import * as THREE from 'three';
-import { MassBuilder, PropBuilder } from './cityMass';
-import { type TreeSpot, hash2, replantTrees } from './cityTrees';
+import { MassBuilder, PropBuilder, type VehicleSpot, parkedVehicles } from './cityMass';
+import { type TreeSpot, crownRadius, hash2, replantTrees } from './cityTrees';
 
 interface Box {
   x0: number;
@@ -400,29 +400,10 @@ function buildingMeshes(source: THREE.Material) {
 
 // ------------------------------------------------------------------ araçlar
 
-/** Otoparka arabalar, rampaya kamyonlar: şehrin park etmiş araçlarının geometrisi, malzemesi, ölçeği ve yüksekliği. */
+/** Otoparka arabalar, rampaya kamyonlar: şehrin park etmiş araçlarından örneklenir (parkedVehicles). */
 function vehicleMeshes(cityRoot: THREE.Object3D) {
-  const meshes: THREE.InstancedMesh[] = [];
-  const matrix = new THREE.Matrix4();
-  const position = new THREE.Vector3();
-  const quaternion = new THREE.Quaternion();
-  const scale = new THREE.Vector3();
-  const up = new THREE.Vector3(0, 1, 0);
-  const place = (sourceName: string, spots: [number, number, number][]) => {
-    const source = cityRoot.getObjectByName(sourceName);
-    if (!(source instanceof THREE.InstancedMesh) || source.count === 0 || !spots.length) return;
-    source.getMatrixAt(0, matrix);
-    matrix.premultiply(source.matrixWorld).decompose(position, quaternion, scale);
-    const mesh = new THREE.InstancedMesh(source.geometry, source.material, spots.length);
-    mesh.name = sourceName.replace(/^Traffic_Vehicles_/, 'Traffic_Greenhouse_');
-    mesh.userData = { ...source.userData };
-    spots.forEach(([x, z, yaw], index) =>
-      mesh.setMatrixAt(index, matrix.compose(new THREE.Vector3(x, position.y, z), quaternion.setFromAxisAngle(up, yaw), scale)),
-    );
-    meshes.push(mesh);
-  };
   const colors = ['White', 'Silver', 'Graphite', 'Blue'];
-  const cars: [number, number, number][][] = colors.map(() => []);
+  const cars: VehicleSpot[][] = colors.map(() => []);
   ROWS.forEach((row, r) => {
     for (let k = 0; ; k++) {
       const x = PARKING.x0 + BAY * (k + 0.5);
@@ -435,10 +416,10 @@ function vehicleMeshes(cityRoot: THREE.Object3D) {
       cars[color].push([x, (row.z0 + row.z1) / 2, (row.facing * Math.PI) / 2]);
     }
   });
-  colors.forEach((color, i) => place(`Traffic_Vehicles_Cars_${color}_Parked`, cars[i]));
+  const meshes = colors.map((color, i) => parkedVehicles(cityRoot, `Cars_${color}`, 'Greenhouse', cars[i]));
   // Kamyonlar arkası rampaya dayalı, kasa uzunluğu ~12.3 m.
-  place('Traffic_Vehicles_Trucks_Parked', DOCKS.map((x) => [x, CANOPY.z0 + 6.7, Math.PI / 2] as [number, number, number]));
-  return meshes;
+  meshes.push(parkedVehicles(cityRoot, 'Trucks', 'Greenhouse', DOCKS.map((x) => [x, CANOPY.z0 + 6.7, Math.PI / 2])));
+  return meshes.filter((mesh) => mesh !== null);
 }
 
 // ------------------------------------------------------------------ ağaçlar ve lambalar
@@ -526,24 +507,6 @@ function greenhouseLamps(): number[] {
 }
 
 // ------------------------------------------------------------------ kurulum
-
-/** Boy çarpanı 1 olan ağacın tepe yarıçapı (replantTrees'te 0.75-1.3 ile çarpılır): şehrin ağaç geometrisi ve örnek ölçeği. */
-function crownRadius(cityRoot: THREE.Object3D, treeScale: number) {
-  let radius = 0;
-  for (const name of ['Greens_Trees', 'Greens_Trees_Olive']) {
-    const mesh = cityRoot.getObjectByName(name);
-    if (!(mesh instanceof THREE.InstancedMesh) || mesh.count === 0) continue;
-    // Örnekler y ekseninde rastgele döner: tepe yarıçapı köşelerin eksene en büyük yatay uzaklığıdır.
-    const position = mesh.geometry.getAttribute('position');
-    let reach = 0;
-    for (let i = 0; i < position.count; i++) reach = Math.max(reach, Math.hypot(position.getX(i), position.getZ(i)));
-    const matrix = new THREE.Matrix4();
-    mesh.getMatrixAt(0, matrix);
-    const scale = new THREE.Vector3().setFromMatrixScale(matrix.premultiply(mesh.matrixWorld));
-    radius = Math.max(radius, reach * scale.x * treeScale);
-  }
-  return radius || 6.5;
-}
 
 /** Mesh'in bu alandaki üçgenlerini siler (dizinden çıkarır). Ana serayla ortak mesh'ler (iskelet, ürün) için. */
 function dropTriangles(mesh: THREE.Mesh, area: Box) {

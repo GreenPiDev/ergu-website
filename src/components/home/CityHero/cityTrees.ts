@@ -1,5 +1,5 @@
-// Peyzajı yeniden düzenlenen alanlarda (park, kreş) ağaçlar plana göre yeniden dikilir: alandaki rastgele ağaçlar gizlenir
-// (ölçekleri sıfırlanır), yeni ağaçlar aynı ağaç geometrisi ve malzemesiyle örneklenir.
+// Peyzajı yeniden düzenlenen alanlarda (park, kreş, sera, kültür merkezi) ağaçlar plana göre yeniden dikilir: alandaki
+// rastgele ağaçlar gizlenir (ölçekleri sıfırlanır), yeni ağaçlar aynı ağaç geometrisi ve malzemesiyle örneklenir.
 import * as THREE from 'three';
 
 export const hash2 = (a: number, b: number) => {
@@ -67,4 +67,22 @@ export function replantTrees(cityRoot: THREE.Object3D, { prefix, inside, spots, 
     trees.instanceMatrix.needsUpdate = true;
     (mesh.parent ?? cityRoot).add(trees);
   });
+}
+
+/** Boy çarpanı 1 olan ağacın tepe yarıçapı (replantTrees'te 0.75-1.3 ile çarpılır): şehrin ağaç geometrisi ve örnek ölçeği. */
+export function crownRadius(cityRoot: THREE.Object3D, treeScale: number) {
+  let radius = 0;
+  for (const name of ['Greens_Trees', 'Greens_Trees_Olive']) {
+    const mesh = cityRoot.getObjectByName(name);
+    if (!(mesh instanceof THREE.InstancedMesh) || mesh.count === 0) continue;
+    // Örnekler y ekseninde rastgele döner: tepe yarıçapı köşelerin eksene en büyük yatay uzaklığıdır.
+    const position = mesh.geometry.getAttribute('position');
+    let reach = 0;
+    for (let i = 0; i < position.count; i++) reach = Math.max(reach, Math.hypot(position.getX(i), position.getZ(i)));
+    const matrix = new THREE.Matrix4();
+    mesh.getMatrixAt(0, matrix);
+    const scale = new THREE.Vector3().setFromMatrixScale(matrix.premultiply(mesh.matrixWorld));
+    radius = Math.max(radius, reach * scale.x * treeScale);
+  }
+  return radius || 6.5;
 }

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { arrangeCity } from './cityLayout';
 import { MASS_VARIANTS, type MassVariant } from './cityMass';
 import { type VertexPatch, createPeople } from './cityPeople';
+import { CULTURAL_FRAGMENT, CULTURAL_GLSL, landscapeCulturalCenter } from './cityCulturalCenter';
 import { GREENHOUSE_FRAGMENT, GREENHOUSE_GLSL, landscapeGreenhouse } from './cityGreenhouse';
 import { KINDERGARTEN_FRAGMENT, KINDERGARTEN_GLSL, landscapeKindergarten } from './cityKindergarten';
 import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
@@ -1166,6 +1167,7 @@ const LANDSCAPES: Record<string, { key: string; code: string; header: string }> 
   Park_Ground: { key: 'city_park_v1', code: PARK_FRAGMENT, header: PARK_GLSL },
   Kindergarten_Ground: { key: 'city_kindergarten_v1', code: KINDERGARTEN_FRAGMENT, header: KINDERGARTEN_GLSL },
   Greenhouse_Ground_Site: { key: 'city_greenhouse_v1', code: GREENHOUSE_FRAGMENT, header: GREENHOUSE_GLSL },
+  Cultural_Ground: { key: 'city_cultural_v1', code: CULTURAL_FRAGMENT, header: CULTURAL_GLSL },
 };
 
 const LIGHT_POINT_HIDE = /^(Infrastructure_StreetLamp_Heads|Roads_TrafficGlow)/;
@@ -1456,7 +1458,9 @@ export function prepareCity(
   const kindergartenLamps = landscapeKindergarten(cityRoot, TREE_SCALE);
   // Sera şubesi yeniden kurulur: cam sera, binalar, araçlar (trafikten sonra, park etmiş araçlardan), ağaçlar ve lambalar.
   const greenhouseLamps = landscapeGreenhouse(cityRoot, TREE_SCALE);
-  createLightPoints(cityRoot, thin, [...parkLamps, ...kindergartenLamps, ...greenhouseLamps]);
+  // Kültür merkezi yeniden kurulur: opera küçülüp kayar, müze, kütüphane, amfi, servis avlusu araçları, ağaçlar ve lambalar.
+  const culturalLamps = landscapeCulturalCenter(cityRoot, TREE_SCALE);
+  createLightPoints(cityRoot, thin, [...parkLamps, ...kindergartenLamps, ...greenhouseLamps, ...culturalLamps]);
   // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
   // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.
   createPeople(cityRoot);
