@@ -48,6 +48,7 @@
   "home": {
     "facilities": {
       "label": "Çalışma alanları",
+      "reset": "Görünümü sıfırla",
       "items": {
         "hospital": "Hastane",
         "school": "Okul",

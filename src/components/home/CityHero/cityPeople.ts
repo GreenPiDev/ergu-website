@@ -5,8 +5,9 @@
 import * as THREE from 'three';
 import { FACILITY_RECTS, type Rect } from './cityLayout';
 
-// Gerçek boy ~1.72 m. Ağaçlar gibi hafif iri: yukarıdan uzaktan da okunur (otomobiller gerçek ölçüde ~4.4 m).
-const PEOPLE_SCALE = 1.3;
+// Gerçek boy ~1.72 m. Maket gibi iri (~3.4 m): hero mesafesinde ~5, yakın çekimde ~15 piksel. 1.3 katında (~3 piksel)
+// kullanıcıya fazla küçük geldi. Araçlar da aynı nedenle büyütülür (cityRuntime.ts, VEHICLE_SCALE).
+const PEOPLE_SCALE = 2;
 // Doluluk haritasının hücresi (metre) ve kapsadığı alan (şehir blokları ve tesisler).
 const CELL = 2;
 const GRID = { minX: -1500, minZ: -1450, sizeX: 3100, sizeZ: 2600 };
@@ -35,8 +36,18 @@ const HELMET = '#353b26';
 const OFFICER = '#2f3524';
 
 // İçtima nizamı (metre): bölük 8 sütun x 6 sıra, aralar omuz omuza ve kol boyu. Bölükler yan yana, aralarında boşluk.
-// Komutan nizamın önündeki şeritte ağır ağır gidip gelir.
-const PARADE = { columns: 8, rows: 6, columnStep: 1.3, rowStep: 1.6, companyGap: 5, maxCompanies: 8, margin: 4, frontLane: 9 };
+// Komutan nizamın önündeki şeritte ağır ağır gidip gelir. Aralıklar insan ölçeğiyle orantılı (1.3 ölçekte 1.3 ve 1.6 m).
+const PARADE_STEP = PEOPLE_SCALE / 1.3;
+const PARADE = {
+  columns: 8,
+  rows: 6,
+  columnStep: 1.3 * PARADE_STEP,
+  rowStep: 1.6 * PARADE_STEP,
+  companyGap: 5 * PARADE_STEP,
+  maxCompanies: 8,
+  margin: 4,
+  frontLane: 9 * PARADE_STEP,
+};
 
 /** Tekrarlanabilir rastgele sayı: her yüklemede aynı kalabalık. */
 function random(seed: number) {

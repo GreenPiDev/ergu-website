@@ -1,5 +1,9 @@
-/* Hero'nun altında, şehrin üstünde tek satır, sağa yaslı. Altta koyulaşan bant yazıyı okunaklı tutar. */
+/* Hero'nun altında, şehrin üstünde tek satır: solda görünümü sıfırla, sağa yaslı lokasyonlar. Altta koyulaşan bant
+   yazıyı okunaklı tutar. */
 .root {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 1.5vw, 2rem);
   position: absolute;
   inset-inline: 0;
   inset-block-end: 0;
@@ -16,6 +20,8 @@
 }
 
 .list {
+  flex: 1 1 auto;
+  min-inline-size: 0;
   display: flex;
   /* safe: satır sığmazsa sağa yaslama soldaki butonları ekran dışına itmez, satır kayar. */
   justify-content: safe flex-end;
@@ -66,6 +72,20 @@
   background: color-mix(in srgb, var(--facility-color, var(--color-accent)) 16%, transparent);
   color: var(--color-white);
   font-weight: 500;
+}
+
+/* Görünümü sıfırla: yalnızca ikon, kare (dokunma alanı kadar). Lokasyon butonlarıyla aynı çerçeve, hover'da vurgu rengi.
+   Dar ekranda solda sabit kalır, satır yanında kayar. */
+.reset {
+  flex: none;
+  justify-content: center;
+  inline-size: var(--touch-target);
+  padding-inline: 0;
+}
+
+.icon {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
 }
 
 @media (hover: hover) and (pointer: fine) {

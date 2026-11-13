@@ -1230,6 +1230,9 @@ interface Lane {
 }
 
 const TREE_SCALE = 1.35;
+// Araçların gerçek ölçüye göre büyütülmesi (otomobil ~4.4 m): yoldakiler ~6.2 m (hero mesafesinde ~9 piksel), otoparktakiler
+// park yerlerine sığsın diye daha az. Gerçek ölçüde kullanıcıya fazla küçük geldi.
+const VEHICLE_SCALE = { moving: 1.4, parked: 1.25 };
 
 // Sokak lambası başlıkları ve yol ışıkları bu mesafeden piksel altında kalıp görünmüyordu. Örnekli kutular yerine sabit
 // piksel boyutlu, yumuşak kenarlı noktalar olarak çizilir (bloom bunları parlatır). size: piksel, glow: parlaklık,
@@ -1381,6 +1384,19 @@ function createTraffic(cityRoot: THREE.Object3D): Traffic {
   });
   const matrix = new THREE.Matrix4();
   const xAxis = new THREE.Vector3();
+  /**
+   * Araçlar gerçek ölçüden büyütülür (maket gibi): yoldakiler daha çok, otoparktakiler park yerlerinde birbirine girmesin
+   * diye daha az. Araç modelinin merkezi gövdenin ortasında, büyütülen araç büyüme payı kadar kaldırılır (yere gömülmez).
+   */
+  const enlarge = (source: THREE.InstancedMesh, base: THREE.Matrix4, factor: number) => {
+    source.geometry.computeBoundingBox();
+    const bottom = -(source.geometry.boundingBox?.min.y ?? 0);
+    const result = base.clone();
+    const height = bottom * new THREE.Vector3().setFromMatrixColumn(base, 1).length();
+    result.multiply(new THREE.Matrix4().makeScale(factor, factor, factor));
+    result.elements[13] += height * (factor - 1);
+    return result;
+  };
   const hash = (a: number, b: number) => {
     const value = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
     return value - Math.floor(value);
@@ -1400,7 +1416,7 @@ function createTraffic(cityRoot: THREE.Object3D): Traffic {
       const headsX = Math.abs(xAxis.x) > Math.abs(xAxis.z);
       const road = roads.find((item) => x >= item.x0 && x <= item.x1 && z >= item.z0 && z <= item.z1 && lanes[item.lane].alongX === headsX);
       if (!road) {
-        parked.push(matrix.clone());
+        parked.push(enlarge(source, matrix, VEHICLE_SCALE.parked));
         continue;
       }
       const lane = lanes[road.lane];
@@ -1410,7 +1426,7 @@ function createTraffic(cityRoot: THREE.Object3D): Traffic {
       // Aynı şeritteki araçlar aynı hızda gider, birbirinin içinden geçmez.
       const laneSpeed = 9 + 5 * hash(road.lane, Math.round(side));
       moving.push({
-        matrix: matrix.clone(),
+        matrix: enlarge(source, matrix, VEHICLE_SCALE.moving),
         lane: road.lane,
         offset: (lane.alongX ? x : z) - lane.start,
         speed: direction * laneSpeed * (truck ? 0.8 : 1),
@@ -1749,6 +1765,8 @@ export class CameraDirector {
   private dragPending = 0;
   private dragVelocity = 0;
   private elevationOffset = 0;
+  // Görünümü sıfırlarken yörünge açısının döndüğü hedef (hero açısının en yakın turu) ve dönüş hızı.
+  private azimuthReturn: { goal: number; velocity: number } | null = null;
   // Tesis kadrajının mesafesi ekran oranına bağlı: odak ya da oran değişince yeniden hesaplanır.
   private focusDistance = 0;
   private readonly probe = new THREE.PerspectiveCamera();
@@ -1842,10 +1860,35 @@ export class CameraDirector {
     return true;
   }
 
-  /** Sürükleme başlar: otomatik dönüş durur, önceki sürüklemenin ataleti kesilir. */
+  /** Sürükleme başlar: otomatik dönüş durur, önceki sürüklemenin ataleti ve görünüm sıfırlama dönüşü kesilir. */
   beginDrag() {
     this.dragging = true;
     this.dragVelocity = 0;
+    this.azimuthReturn = null;
+  }
+
+  /**
+   * İlk kadraja dönüş: yakınlaşma ve bakış yüksekliği sıfırlanır, kamera en kısa yönden hero açısına süzülür, sonra
+   * otomatik dönüş yeniden yavaşça başlar. Odak (seçili tesis) ayrıca kaldırılır (setFocus). instant: süzülmeden.
+   */
+  resetView(instant = false) {
+    this.zoomGoal = 1;
+    this.elevationOffset = 0;
+    this.dragVelocity = 0;
+    this.dragPending = 0;
+    this.orbitSpeed = 0;
+    this.elapsed = 0;
+    const turn = Math.PI * 2;
+    const goal = this.hero.az + Math.round((this.az - this.hero.az) / turn) * turn;
+    if (instant) {
+      this.az = goal;
+      this.azimuthReturn = null;
+      this.zoom.value = 1;
+      this.zoom.velocity = 0;
+      this.apply();
+    } else {
+      this.azimuthReturn = { goal, velocity: 0 };
+    }
   }
 
   /** Sürükleme hareketi (piksel). Sağa sürüklemek şehri sağa, aşağı sürüklemek kamerayı yukarı taşır (dünyayı tutup çevirmek gibi). */
@@ -1923,6 +1966,17 @@ export class CameraDirector {
   update(delta: number) {
     const dt = Math.min(delta, 0.1);
     this.pointerSmooth.lerp(this.pointer, 1 - Math.exp(-dt * 2.5));
+    // Görünüm sıfırlanırken açı yaylı sönümle hero açısına döner, otomatik dönüş beklemede.
+    if (this.azimuthReturn) {
+      const state = { value: this.az, velocity: this.azimuthReturn.velocity };
+      smoothDamp(state, this.azimuthReturn.goal, FLIGHT_SMOOTH, dt);
+      this.az = state.value;
+      this.azimuthReturn.velocity = state.velocity;
+      if (Math.abs(this.azimuthReturn.goal - this.az) < 1e-3 && Math.abs(state.velocity) < 1e-3) {
+        this.azimuthReturn = null;
+        this.elapsed = 0;
+      }
+    }
     // Sürüklenirken açı doğrudan elle değişir, hız son karelerden ölçülür. Bırakınca o hızla sönerek döner.
     if (this.dragging) {
       this.az += this.dragPending;
@@ -1935,7 +1989,7 @@ export class CameraDirector {
     this.dragPending = 0;
     if (this.idleOrbit) {
       this.elapsed += dt;
-      const auto = this.dragging ? 0 : this.focus ? FOCUS_ORBIT_SPEED : ORBIT_SPEED;
+      const auto = this.dragging || this.azimuthReturn ? 0 : this.focus ? FOCUS_ORBIT_SPEED : ORBIT_SPEED;
       const speed = auto * Math.min(1, this.elapsed * ORBIT_EASE_IN);
       this.orbitSpeed += (speed - this.orbitSpeed) * (1 - Math.exp(-dt * 1.5));
       this.az += this.orbitSpeed * dt;

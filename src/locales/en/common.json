@@ -48,6 +48,7 @@
   "home": {
     "facilities": {
       "label": "Areas of work",
+      "reset": "Reset view",
       "items": {
         "hospital": "Hospital",
         "school": "School",

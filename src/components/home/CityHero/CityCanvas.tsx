@@ -49,6 +49,8 @@ interface CitySceneProps {
   facilities: readonly FacilityId[];
   /** Kameranın uçup çevresinde döndüğü seçili tesis (null: şehrin geneli). */
   focus: FacilityId | null;
+  /** Her artışta kamera ilk kadraja döner (görünümü sıfırla butonu). 0: hiç sıfırlanmadı. */
+  resetSignal: number;
   /** Fare şehirde bir tesisin üstüne gelince tesis, ayrılınca null (yalnızca fare). */
   onHoverFacility: (facility: FacilityId | null) => void;
   /** Şehre tıklanınca (dokunma dahil) altındaki tesis, boş yere tıklanınca null. */
@@ -67,6 +69,7 @@ function CityScene({
   onReady,
   facilities,
   focus,
+  resetSignal,
   onHoverFacility,
   onPickFacility,
 }: CitySceneProps) {
@@ -127,6 +130,9 @@ function CityScene({
   useEffect(() => {
     director.setFocus(focus ? (focusTargets.get(focus) ?? null) : null, reducedMotion);
   }, [director, focus, focusTargets, reducedMotion]);
+  useEffect(() => {
+    if (resetSignal > 0) director.resetView(reducedMotion);
+  }, [director, resetSignal, reducedMotion]);
   const pointer = useRef({ ndc: new THREE.Vector2(), inside: false, mouse: false });
   // Sürükleyerek döndürme (yalnızca fare: dokunmada sayfa kaydırması korunur). Basılan nokta eşiği aşınca sürükleme
   // başlar, sürüklemeden sonraki tıklama seçim sayılmaz.
@@ -286,6 +292,7 @@ export default function CityCanvas({
   onReady,
   facilities,
   focus,
+  resetSignal,
   onHoverFacility,
   onPickFacility,
 }: CityCanvasProps) {
@@ -314,6 +321,7 @@ export default function CityCanvas({
           onReady={onReady}
           facilities={facilities}
           focus={focus}
+          resetSignal={resetSignal}
           onHoverFacility={onHoverFacility}
           onPickFacility={onPickFacility}
         />

@@ -31,6 +31,12 @@ export function CityHero() {
   const [facility, setFacility] = useState<FacilityId | null>(null);
   // Fareyle üstünde durulan buton: perdesi seçili perdeyle birlikte açılır, seçimi değiştirmez.
   const [preview, setPreview] = useState<FacilityId | null>(null);
+  // Görünümü sıfırla: seçim kalkar, kamera ilk kadraja döner (yakınlaşma, sürükleme ve yörünge açısı sıfırlanır).
+  const [resetSignal, setResetSignal] = useState(0);
+  const resetView = useCallback(() => {
+    setFacility(null);
+    setResetSignal((value) => value + 1);
+  }, []);
   const { t } = useTranslation();
   // Şehirde fareyle tesisin üstüne gelince perde açılır ve imlecin yanında tesisin adı, tesisin renginde yazar.
   // Butonlarda etiket yok: adı zaten butonda yazıyor.
@@ -79,11 +85,12 @@ export function CityHero() {
           onReady={() => setReady(true)}
           facilities={shown}
           focus={facility}
+          resetSignal={resetSignal}
           onHoverFacility={hoverFromCity}
           onPickFacility={pickFromCity}
         />
       </Suspense>
-      <FacilityBar selected={facility} onSelect={setFacility} onPreview={setPreview} />
+      <FacilityBar selected={facility} onSelect={setFacility} onPreview={setPreview} onReset={resetView} />
     </div>
   );
 }
