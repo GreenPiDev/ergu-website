@@ -9,7 +9,7 @@
 - [ ] `CLAUDE.md` ve bu dosyadaki köşeli parantezli alanları doldur.
 - [ ] `package.json` içindeki `name` alanını ve `index.html` başlığını değiştir.
 - [ ] `pnpm install` çalıştır (workspace kökünden).
-- [ ] `public/` altındaki `logo-for-dark-surface.svg`, `logo-for-light-surface.svg` ve `favicon.svg` dosyalarını firma logolarıyla değiştir. Logo oranı farklıysa `Header.tsx` içindeki `width` ve `height` değerlerini, `tokens.css` içindeki `--logo-height` değerini güncelle.
+- [ ] (Header logosu yapıldı, `favicon.svg` bekliyor) `public/` altındaki `logo-for-dark-surface.svg`, `logo-for-light-surface.svg` ve `favicon.svg` dosyalarını firma logolarıyla değiştir. Logo oranı farklıysa `Header.tsx` içindeki `width` ve `height` değerlerini, `tokens.css` içindeki `--logo-height` değerini güncelle.
 - [ ] `src/styles/tokens.css` içindeki renkleri kurumsal kimliğe göre güncelle.
 - [ ] Sayfa geçişi perdesini kontrol et: rengi `--color-accent`, yazısı siyah. Vurgu rengi koyuysa `PageTransition.module.css` içindeki yazı rengini açık yap. Yazı fontu `--font-transition`, sektöre uymuyorsa değiştir ve Türkçe harfleri kontrol et.
 - [ ] `src/locales/{tr,en}/common.json` içindeki site başlığını ve menü metinlerini güncelle.
@@ -18,6 +18,11 @@
 - [ ] `src/pages/DemoPage.tsx` ve `src/pages/SectionPage.tsx` geçici sayfalarını gerçek sayfalarla değiştir (`PageHero` kalır), `src/router.tsx` içindeki yolları güncelle.
 
 ## Yapılanlar
+
+### Header: firma logosu
+
+- Header logosu `public/sirket-logosu.png` (açık zemin) ve ondan üretilen `public/sirket-logosu-dark.png` (koyu zemin, siyah kısımlar beyaz, turuncu ikon korunur). `Header.tsx` içindeki boyut 300×108, `--logo-height` `clamp(2.5rem, 2.2rem + 0.8vw, 3.25rem)`.
+- Eski yer tutucu `logo-for-*-surface.svg` dosyaları kullanılmıyor, silinmedi. `favicon.svg` henüz yer tutucu.
 
 ### Ana sayfa: tam ekran 3D şehir hero'su (v2, renkli alacakaranlık)
 

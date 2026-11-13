@@ -11,8 +11,8 @@ import { LanguageSwitch } from './LanguageSwitch';
 import { MobileMenu } from './MobileMenu';
 
 const MOBILE_MENU_ID = 'mobile-menu';
-const LOGO_FOR_DARK = '/logo-for-dark-surface.svg';
-const LOGO_FOR_LIGHT = '/logo-for-light-surface.svg';
+const LOGO_FOR_DARK = '/sirket-logosu-dark.png';
+const LOGO_FOR_LIGHT = '/sirket-logosu.png';
 
 export function Header() {
   const { t } = useTranslation();
@@ -73,8 +73,8 @@ export function Header() {
           aria-label={t('a11y.homeLink')}
           onClick={closeMenu}
         >
-          <img className={`${styles.logoImage} ${styles.logoForDark}`} src={LOGO_FOR_DARK} width={160} height={48} alt="" />
-          <img className={`${styles.logoImage} ${styles.logoForLight}`} src={LOGO_FOR_LIGHT} width={160} height={48} alt="" />
+          <img className={`${styles.logoImage} ${styles.logoForDark}`} src={LOGO_FOR_DARK} width={300} height={108} alt="" />
+          <img className={`${styles.logoImage} ${styles.logoForLight}`} src={LOGO_FOR_LIGHT} width={300} height={108} alt="" />
         </Link>
 
         {isNavCollapsed ? (
