@@ -3,7 +3,7 @@
 // 2 m'lik doluluk haritası çıkarılır (çatılar ve tabanı geniş yapılar dolu sayılır). İnsanlar iki örneklenmiş mesh'tir
 // (gövde: kıyafet rengi, baş: ten rengi), hareketleri shader'da, gölge düşürmez, kalite düşükse seyreltilir (`thinnable`).
 import * as THREE from 'three';
-import { FACILITY_RECTS, ROAD_CUTS, type Rect } from './cityLayout';
+import { AIRPORT_LANDSIDE, FACILITY_RECTS, ROAD_CUTS, type Rect } from './cityLayout';
 
 // Gerçek boy ~1.72 m. Maket gibi iri (~3.4 m): hero mesafesinde ~5, yakın çekimde ~15 piksel. 1.3 katında (~3 piksel)
 // kullanıcıya fazla küçük geldi. Araçlar da aynı nedenle büyütülür (cityRuntime.ts, VEHICLE_SCALE).
@@ -415,7 +415,11 @@ export function createPeople(cityRoot: THREE.Object3D) {
   // arasında gidip gelir. Bir kısmı uzun duraklar (bekleyen, sohbet eden), yerinden pek ayrılmaz.
   const zones = [
     ...blocks.map((rect) => ({ rect, areaPerPerson: BLOCK_AREA_PER_PERSON })),
-    ...Object.values(FACILITY_RECTS).map((rect) => ({ rect, areaPerPerson: FACILITY_AREA_PER_PERSON })),
+    // Havalimanının perdesi bütün sahayı sarar, yolcular yalnızca kara tarafında gezinir.
+    ...Object.values({ ...FACILITY_RECTS, airport: AIRPORT_LANDSIDE }).map((rect) => ({
+      rect,
+      areaPerPerson: FACILITY_AREA_PER_PERSON,
+    })),
   ];
   for (const { rect, areaPerPerson } of zones) {
     const free: number[] = [];

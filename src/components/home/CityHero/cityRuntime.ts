@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { arrangeCity } from './cityLayout';
 import { MASS_VARIANTS, type MassVariant } from './cityMass';
 import { type VertexPatch, createPeople } from './cityPeople';
+import { AIRPORT_FRAGMENT, AIRPORT_GLSL, landscapeAirport } from './cityAirport';
+import { CABLECAR_FRAGMENT, CABLECAR_GLSL, landscapeCableCar } from './cityCableCar';
 import { CULTURAL_FRAGMENT, CULTURAL_GLSL, landscapeCulturalCenter } from './cityCulturalCenter';
 import { GREENHOUSE_FRAGMENT, GREENHOUSE_GLSL, landscapeGreenhouse } from './cityGreenhouse';
 import { HOUSING_FRAGMENT, HOUSING_GLSL, landscapeHousing } from './cityHousing';
@@ -1172,6 +1174,8 @@ const LANDSCAPES: Record<string, { key: string; code: string; header: string }> 
   Cultural_Ground: { key: 'city_cultural_v1', code: CULTURAL_FRAGMENT, header: CULTURAL_GLSL },
   Housing_Ground: { key: 'city_housing_v1', code: HOUSING_FRAGMENT, header: HOUSING_GLSL },
   School_Ground: { key: 'city_school_v1', code: SCHOOL_FRAGMENT, header: SCHOOL_GLSL },
+  CableCar_Ground: { key: 'city_cablecar_v1', code: CABLECAR_FRAGMENT, header: CABLECAR_GLSL },
+  Airport_Field: { key: 'city_airport_v1', code: AIRPORT_FRAGMENT, header: AIRPORT_GLSL },
 };
 
 const LIGHT_POINT_HIDE = /^(Infrastructure_StreetLamp_Heads|Roads_TrafficGlow)/;
@@ -1470,6 +1474,12 @@ export function prepareCity(
   // Okul yeniden kurulur: derslik blokları, spor salonu, yemekhane, tribün, otopark araçları, ağaçlar ve lambalar (zemin
   // rengi aşağıda LANDSCAPES ile).
   const schoolLamps = landscapeSchool(cityRoot, TREE_SCALE);
+  // Teleferik aktarma istasyonunun bloğu: istasyon altında bilet salonu ve kule, kabin garajı, otobüs cebi ve taksiler,
+  // ağaçlar ve lambalar (zemin rengi aşağıda LANDSCAPES ile).
+  const cableCarLamps = landscapeCableCar(cityRoot, TREE_SCALE);
+  // Havalimanı: tek zemin (pistler, taksi yolları, apronlar, kara tarafı), kargo, itfaiye, kule tabanı, radar, körük
+  // köprüler, yer araçları, kamyonlar, kara tarafında ağaçlar ve lambalar (zemin rengi aşağıda LANDSCAPES ile).
+  const airportLamps = landscapeAirport(cityRoot, TREE_SCALE);
   createLightPoints(cityRoot, thin, [
     ...parkLamps,
     ...kindergartenLamps,
@@ -1477,6 +1487,8 @@ export function prepareCity(
     ...culturalLamps,
     ...housingLamps,
     ...schoolLamps,
+    ...cableCarLamps,
+    ...airportLamps,
   ]);
   // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
   // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.

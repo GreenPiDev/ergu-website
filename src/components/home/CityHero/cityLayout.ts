@@ -538,9 +538,15 @@ export function arrangeCity(cityRoot: THREE.Object3D) {
   cityRoot.updateMatrixWorld(true);
 }
 
+// Havalimanının bütün sahası (GLB'deki Airport_Airfield zemininin sınırı) ve yolcuların gezindiği kara tarafı: terminal
+// önü kaldırımı ve otoparklar. Pistlerde, apronda ve çimde insan dolaşmaz.
+const AIRPORT_SITE: Rect = { x0: -320, x1: 1500, z0: -1320, z1: -598 };
+export const AIRPORT_LANDSIDE: Rect = { x0: 430, x1: 1070, z0: -723, z1: -600 };
+
 /**
  * Tesislerin şehirdeki sınırları (yerleşimden sonraki dünya koordinatı, metre). Lokasyon butonları bu dikdörtgenlerin
- * çevresinde ışık perdesi açar. Havalimanında yalnızca terminal, apron ve otoparklar, konutta mahalle merkezinin sırası.
+ * çevresinde ışık perdesi açar. Havalimanında bütün hava sahası (pistler, apronlar, hangarlar, kule, otoparklar), konutta
+ * mahalle merkezinin sırası.
  */
 export const FACILITY_RECTS: Record<FacilityId, Rect> = {
   hospital: HOSPITAL_SITE,
@@ -553,7 +559,7 @@ export const FACILITY_RECTS: Record<FacilityId, Rect> = {
   militaryCampus: MILITARY_SITE,
   culturalCenter: blocks('A', 'A', 4, 4),
   scienceCenter: blocks('E', 'F', 1, 3),
-  airport: { x0: 430, x1: 1070, z0: -901, z1: -612 },
+  airport: AIRPORT_SITE,
 };
 
 // Seçim kutuları perdeyle aynı payla (cityHighlight CURTAIN_OFFSET) sınırın dışına taşar.
@@ -562,8 +568,10 @@ const PICK_PAD = 4;
 // Tek kutu bütün bloğu kulenin boyuna çıkarıyor, çevredeki kulelerin üstüne gelmek de tesisi seçiyordu.
 const PICK_MIN_HEIGHT = 14;
 const PICK_BASE_HEIGHT = 30;
-// Boy hesabına girmeyenler: zemin ve yol katmanları, kablolar ve şehrin dışı. Havalimanı ve teleferik yapıları girer.
-const PICK_SKIP = /^(Roads_|Runtime_|Terrain_|Sea_|Coast_|River_|Riverside_|Hill_|Greens_Forest|Energy_|CableCar_(Cables|Gondolas)|Bridge)/;
+// Boy hesabına girmeyenler: zemin ve yol katmanları, kablolar ve şehrin dışı. Havalimanı yapıları girer. Teleferiğin üç
+// istasyonu tek mesh'te: birleşik kutunun ortası havalimanı sahasına düşüp orada 86 m'lik görünmez bir duvar açıyordu.
+const PICK_SKIP =
+  /^(Roads_|Runtime_|Terrain_|Sea_|Coast_|River_|Riverside_|Hill_|Greens_Forest|Energy_|CableCar_(Cables|Gondolas|Stations|Station_Roofs|Structure|Plazas)$|Bridge)/;
 
 export interface FacilityPick {
   id: FacilityId;
