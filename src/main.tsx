@@ -1,4 +1,7 @@
 import '@fontsource-variable/big-shoulders-stencil';
+// Şehir hero'sundaki lokasyon butonları (400 normal, 500 seçili).
+import '@fontsource/barlow/400.css';
+import '@fontsource/barlow/500.css';
 import '@fontsource-variable/geist';
 import 'lenis/dist/lenis.css';
 import './styles/tokens.css';

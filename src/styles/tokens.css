@@ -5,12 +5,25 @@
   --color-carbon: #0f1011;
   --color-paper: #f2f1ed;
   --color-accent: #f2b01e;
+  /* Şehir hero'sundaki lokasyon perdeleri ve butonlarının çizgisi. Toplamalı karışımla parladıkları için doygun ve açık. */
+  --color-facility-hospital: #ff4b5c;
+  --color-facility-school: #ffb627;
+  --color-facility-kindergarten: #ff7eb6;
+  --color-facility-bank: #2fe0c8;
+  --color-facility-cable-car: #38c6ff;
+  --color-facility-housing: #ff8a3d;
+  --color-facility-greenhouse: #4fdc6a;
+  --color-facility-military-campus: #c8e04a;
+  --color-facility-cultural-center: #c66bff;
+  --color-facility-science-center: #4f7dff;
+  --color-facility-airport: #e8eef8;
   /* Bölüm rayının vurgu renkli zeminlerdeki rengi. Vurgu rengi koyuysa beyaz yapılır. */
   --rail-solid-color: var(--color-black);
 
   /* Tipografi */
   --font-sans: 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
   --font-transition: 'Big Shoulders Stencil Variable', 'Arial Narrow', sans-serif;
+  --font-facility: 'Barlow', 'Arial Narrow', sans-serif;
   /* Bilgi merkezi gibi sayfalardaki büyük başlıklar. Dar (condensed) bir fontla değiştirilirse --text-kb-* boyutları büyütülebilir. */
   --font-display: var(--font-sans);
   --weight-regular: 400;
@@ -40,6 +53,8 @@
   --text-kb-callout: clamp(1.375rem, 1.1rem + 1.1vw, 2.25rem);
   --text-kb-counter: min(clamp(4rem, 2rem + 7vw, 10rem), 16svh);
   --text-kb-note: clamp(1rem, 0.9rem + 0.4vw, 1.375rem);
+  --text-facility: clamp(0.8125rem, 0.7rem + 0.28vw, 1.0625rem);
+  --tracking-facility: 0.01em;
   --tracking-nav: -0.005em;
   --tracking-display: -0.035em;
 

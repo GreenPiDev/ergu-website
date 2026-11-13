@@ -1,38 +1,44 @@
-// Şehir parkının peyzajı (Park_Ground, x 220..640, z 186..391). Modeldeki park tek renkli bir çim dikdörtgeni, köşeden
-// köşeye üç düz yol, kenarsız bir gölet ve rastgele serpiştirilmiş ağaçlardan oluşuyordu. Model değişmeden, açılışta ve
+// Şehir parkının peyzajı (modelde Park_Ground x 220..640, z 186..391, yerleşimde PARK_SHIFT_X kadar doğuya taşınır).
+// Modeldeki park tek renkli bir çim dikdörtgeni, köşeden köşeye üç düz yol, kenarsız bir gölet ve rastgele serpiştirilmiş ağaçlardan oluşuyordu. Model değişmeden, açılışta ve
 // shader'da yeniden düzenlenir: çevre gezinti yolu, göleti saran halka yol, kıvrılan patikalar, taş kenarlı ve sazlıklı
 // gölet, pavyon önünde desenli meydan ve çiçek tarhları, biçme şeritli çim ve çayır lekeleri, çevre yolu boyunca ağaç
 // dizisi ve çayırlarda korular, yollar boyunca park lambaları.
 // Yerleşim planı aşağıdaki sabitlerle tek yerde tanımlanır. GLSL ve TypeScript tarafı aynı mesafe fonksiyonlarını kullanır,
 // ağaçlar ve lambalar shader'ın çizdiği yollara göre yerleşir.
 import * as THREE from 'three';
+import { PARK_SHIFT_X } from './cityLayout';
+
+// Plan modeldeki konuma göre yazıldı, park yerleşimde hastanenin eski yerine taşınır (cityLayout.ts).
+const sx = (x: number) => x + PARK_SHIFT_X;
 
 const PARK = {
-  center: [430, 288.5],
+  center: [sx(430), 288.5],
   // Çevre yolunun merkez çizgisi: parkın kenarından 10 m içeride, köşeleri yuvarlatılmış dikdörtgen.
   loopHalf: [200, 92.5],
   loopRadius: 24,
   loopWidth: 4.8,
-  pond: [400, 300],
+  pond: [sx(400), 300],
   pondRadius: [68, 39],
   // Halka yol kıyıdan bu kadar uzakta.
   ringOffset: 13,
   ringWidth: 4.4,
-  plaza: [270, 220],
+  plaza: [sx(270), 220],
   plazaRadius: 20,
   spokeWidth: 3.6,
-  courts: [560, 632, 200, 218],
-  bounds: [220, 640, 186, 391],
+  courts: [sx(560), sx(632), 200, 218],
+  bounds: [sx(220), sx(640), 186, 391],
 };
 
 // Gölden çevre yoluna (ve pavyon meydanına) kıvrılarak giden patikalar: hedef nokta ve kavis payı.
-const SPOKES: [number, number, number][] = [
-  [270, 220, 0.1],
-  [237, 374, -0.12],
-  [623, 374, 0.1],
-  [548, 196, -0.1],
-  [440, 381, 0.08],
-];
+const SPOKES: [number, number, number][] = (
+  [
+    [270, 220, 0.1],
+    [237, 374, -0.12],
+    [623, 374, 0.1],
+    [548, 196, -0.1],
+    [440, 381, 0.08],
+  ] as [number, number, number][]
+).map(([x, z, bend]) => [sx(x), z, bend]);
 
 const f = (value: number) => value.toFixed(2);
 const v2 = ([x, y]: number[]) => `vec2(${f(x)}, ${f(y)})`;

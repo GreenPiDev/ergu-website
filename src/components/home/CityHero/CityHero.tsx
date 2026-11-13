@@ -1,5 +1,7 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { FacilityId } from '../../../content/facilities';
 import { useIsMobile, usePrefersReducedMotion } from '../../../hooks/useDevice';
+import { FacilityBar } from '../FacilityBar/FacilityBar';
 import type { Quality } from './cityRuntime';
 import styles from './CityHero.module.css';
 
@@ -24,6 +26,18 @@ export function CityHero() {
   const [ready, setReady] = useState(false);
   const [onScreen, setOnScreen] = useState(true);
   const [tabVisible, setTabVisible] = useState(true);
+  const [facility, setFacility] = useState<FacilityId | null>(null);
+  // Fareyle üstünde durulan buton: perdesi seçili perdeyle birlikte açılır, seçimi değiştirmez.
+  const [preview, setPreview] = useState<FacilityId | null>(null);
+  // Şehirde tesise tıklamak butonla aynı: seçer, seçili olana yeniden tıklamak veya boş yere tıklamak seçimi kaldırır.
+  const pickFromCity = useCallback(
+    (picked: FacilityId | null) => setFacility((current) => (picked === null || picked === current ? null : picked)),
+    [],
+  );
+  const shown = useMemo(
+    () => [facility, preview].filter((id, index, list): id is FacilityId => id !== null && list.indexOf(id) === index),
+    [facility, preview],
+  );
 
   // Yalnızca ekranda ve sekme açıkken çizilir.
   useEffect(() => {
@@ -49,8 +63,12 @@ export function CityHero() {
           quality={getQuality(isMobile)}
           reducedMotion={reducedMotion}
           onReady={() => setReady(true)}
+          facilities={shown}
+          onHoverFacility={setPreview}
+          onPickFacility={pickFromCity}
         />
       </Suspense>
+      <FacilityBar selected={facility} onSelect={setFacility} onPreview={setPreview} />
     </div>
   );
 }

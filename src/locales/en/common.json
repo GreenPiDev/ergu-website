@@ -44,5 +44,23 @@
       "eyebrow": "Light surface",
       "title": "The header turns black on this section."
     }
+  },
+  "home": {
+    "facilities": {
+      "label": "Areas of work",
+      "items": {
+        "hospital": "Hospital",
+        "school": "School",
+        "kindergarten": "Kindergarten",
+        "bank": "Bank",
+        "cableCar": "Cable Car",
+        "housing": "Housing",
+        "greenhouse": "Greenhouse",
+        "militaryCampus": "Military Campus",
+        "culturalCenter": "Cultural Centre",
+        "scienceCenter": "Science Centre",
+        "airport": "Airport"
+      }
+    }
   }
 }

@@ -2,6 +2,7 @@
 // Post-process (MSAA'lı HDR hedef + bloom) kaldırıldı: kare süresini ikiye katlayıp fare hareketinde kasma yapıyordu.
 // Çizim doğrudan tuvale, tarayıcının kendi antialias'ıyla yapılır, vinyet CSS ile verilir.
 import * as THREE from 'three';
+import { arrangeCity } from './cityLayout';
 import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
 
 type Vec3 = number[];
@@ -266,9 +267,9 @@ export function createAtmosphere(
 
 const QUAD_VERTEX = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
 
-// Yükseklik haritasına girmeyenler: su, ışıklar, cam, kablolar, hareket edenler ve mesafeyle gizlenen ince nesneler.
+// Yükseklik haritasına girmeyenler: çalışma anında eklenenler (ışık perdesi), su, ışıklar, cam, kablolar, hareket edenler ve mesafeyle gizlenen ince nesneler.
 const HEIGHT_SKIP_NAME =
-  /^(Vehicles_|Traffic_|Roads_TrafficGlow|Infrastructure_|Energy_(WindTurbines|Pylons|PowerLines|Busbars)|CableCar_(Gondolas|Cables)|Bridge_StayCables|Military_UtilityTrucks|Greens_Shrubs)/;
+  /^(Runtime_|Vehicles_|Traffic_|Roads_TrafficGlow|Infrastructure_|Energy_(WindTurbines|Pylons|PowerLines|Busbars)|CableCar_(Gondolas|Cables)|Bridge_StayCables|Military_UtilityTrucks|Greens_Shrubs)/;
 const HEIGHT_SKIP_MATERIAL = /^(Water|Light_|Glass_|Cable_)/;
 
 // Sokak lambasının zemine düşürdüğü ışık havuzunun yarıçapı (metre).
@@ -1493,6 +1494,8 @@ export function prepareCity(
   const thin = quality === 'low' ? 0.35 : quality === 'medium' ? 0.6 : 1;
 
   cityUniforms.uCloudTex.value ??= cloudTexture();
+  // Tesisler kameradan görünecek yerlere taşınır. Bina bölme, trafik, park ve ışıklar yeni yerleşimi okur, bu yüzden ilk adım.
+  arrangeCity(cityRoot);
   diversifyBuildings(cityRoot);
 
   cityRoot.updateMatrixWorld(true);

@@ -44,5 +44,23 @@
       "eyebrow": "Açık zemin",
       "title": "Bu bölümde header siyah görünür."
     }
+  },
+  "home": {
+    "facilities": {
+      "label": "Çalışma alanları",
+      "items": {
+        "hospital": "Hastane",
+        "school": "Okul",
+        "kindergarten": "Kreş",
+        "bank": "Banka",
+        "cableCar": "Teleferik",
+        "housing": "Konut",
+        "greenhouse": "Sera",
+        "militaryCampus": "Askerî Kampüs",
+        "culturalCenter": "Kültür Merkezi",
+        "scienceCenter": "Bilim Merkezi",
+        "airport": "Havalimanı"
+      }
+    }
   }
 }

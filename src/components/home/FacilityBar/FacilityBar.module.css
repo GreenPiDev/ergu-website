@@ -1,0 +1,93 @@
+/* Hero'nun altında, şehrin üstünde tek satır, sağa yaslı. Altta koyulaşan bant yazıyı okunaklı tutar. */
+.root {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 2;
+  /* Bant ve satırın boş kısmı şehri örtmez: altındaki tesisler fareyle seçilebilir, yalnızca butonlar tıklanır. */
+  pointer-events: none;
+  padding-block: var(--space-lg) calc(var(--space-md) + env(safe-area-inset-bottom));
+  padding-inline: calc(var(--gutter) + env(safe-area-inset-left)) calc(var(--gutter) + env(safe-area-inset-right));
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-carbon) 72%, transparent) 0%,
+    transparent 100%
+  );
+}
+
+.list {
+  display: flex;
+  /* safe: satır sığmazsa sağa yaslama soldaki butonları ekran dışına itmez, satır kayar. */
+  justify-content: safe flex-end;
+  gap: clamp(0.375rem, 0.5vw, 0.625rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  pointer-events: none;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.list > li {
+  flex: none;
+}
+
+/* Köşesiz ince çerçeve (sitenin geri kalanı gibi). Seçili butonun çerçevesi ve zemini lokasyonun renginde
+   (--facility-color, FacilityBar.tsx): perdeyle aynı renk. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--touch-target);
+  padding-inline: clamp(0.625rem, 0.9vw, 1rem);
+  border: 1px solid color-mix(in srgb, var(--color-white) 26%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--color-carbon) 35%, transparent);
+  color: color-mix(in srgb, var(--color-white) 74%, transparent);
+  font-family: var(--font-facility);
+  font-size: var(--text-facility);
+  font-weight: 400;
+  letter-spacing: var(--tracking-facility);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard);
+}
+
+.button[aria-pressed='true'] {
+  border-color: var(--facility-color, var(--color-accent));
+  background: color-mix(in srgb, var(--facility-color, var(--color-accent)) 16%, transparent);
+  color: var(--color-white);
+  font-weight: 500;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:hover {
+    border-color: var(--facility-color, var(--color-accent));
+    color: var(--color-white);
+  }
+}
+
+/* Dar ekranda satır kayar: soldan başlar, kenarlar soluklaşır. */
+@media (max-width: 1180px) {
+  .list {
+    justify-content: flex-start;
+    /* Kayan satır parmakla sürüklenebilsin. */
+    pointer-events: auto;
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--space-md), #000 calc(100% - var(--space-md)), transparent 100%);
+    padding-inline: var(--space-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

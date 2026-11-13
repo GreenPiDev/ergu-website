@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { gsap, useGSAP } from '../../../animations/gsap';
 import { REDUCED_MOTION_QUERY, useHasFinePointer } from '../../../hooks/useDevice';
 import styles from './CustomCursor.module.css';
+import { CURSOR_INTERACTIVE_EVENT } from './cursorEvents';
 
 const INTERACTIVE_SELECTOR = 'a, button, [role="button"], label, summary';
 // Vurgu renkli bölümlerde vurgu renkli halka kaybolur, orada `--rail-solid-color` ile çizilir.
@@ -106,6 +107,15 @@ function CursorElements() {
       updateAppearance();
     };
 
+    // 3D sahne gibi DOM dışı tıklanabilir alanlar (cursorEvents.ts).
+    const handleExternalInteractive = (event: Event) => {
+      const interactive = event instanceof CustomEvent && event.detail === true;
+      if (interactive) accentRing.classList.remove(styles.onAccent);
+      if (interactive === isInteractive) return;
+      isInteractive = interactive;
+      updateAppearance();
+    };
+
     const handlePointerPress = (pressed: boolean) => {
       isPressed = pressed;
       updateAppearance();
@@ -120,6 +130,7 @@ function CursorElements() {
     window.addEventListener('pointerover', handlePointerOver, { passive: true });
     window.addEventListener('pointerdown', handlePointerDown, { passive: true });
     window.addEventListener('pointerup', handlePointerUp, { passive: true });
+    window.addEventListener(CURSOR_INTERACTIVE_EVENT, handleExternalInteractive);
     root.addEventListener('mouseleave', handleLeave);
 
     return () => {
@@ -128,6 +139,7 @@ function CursorElements() {
       window.removeEventListener('pointerover', handlePointerOver);
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener(CURSOR_INTERACTIVE_EVENT, handleExternalInteractive);
       root.removeEventListener('mouseleave', handleLeave);
     };
   });
