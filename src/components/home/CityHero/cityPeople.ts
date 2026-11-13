@@ -25,7 +25,7 @@ const SIDEWALK_INSET_MAX = 3.4;
 const SKIP = /^(Runtime_|Traffic_(?!.*_Parked$)|Vehicles_|Greens_|Roads_Asphalt|Roads_Markings|Roads_Medians|Roads_Traffic|Terrain_|Sea_|Coast_|River_|Riverside_|Bridges|Infrastructure_Ships|Infrastructure_StreetLamp|Airport_Lights|CableCar_(Cables|Gondolas))/;
 const GROUND = /(Ground|Sidewalk|Plaza|Paving|Pavement|Airfield|Court|Promenade|Field)/;
 // Düz ama üstünde yürünmeyen yüzeyler.
-const WATER = /^(Park_Pond|Residential_Pools|Greenhouse_Basin|Cultural_Fountain)/;
+const WATER = /^(Park_Pond|Residential_Pools|Greenhouse_Basin|Cultural_Fountain|Housing_Pool|Housing_Beds)/;
 // Park etmiş araçlar engel eşiğinden alçak (~2.2 m) ama üstlerinde insan durmaz: yükseklikten bağımsız dolu sayılır.
 const PARKED = /^Traffic_.*_Parked$/;
 
