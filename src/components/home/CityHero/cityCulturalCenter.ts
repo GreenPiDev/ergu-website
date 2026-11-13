@@ -323,9 +323,15 @@ function sculpture(props: PropBuilder, x: number, z: number, kind: number) {
   }
 }
 
-function propsGeometry() {
+function propsGeometry(columns: [number, number, number][], skylights: [number, number, number, number, number][]) {
   const props = new PropBuilder();
   const y = GROUND_Y;
+
+  // Kabuğun tepe ışığı bantları: eğriyi izleyen 3 m'lik cam paneller (x boyunca eğik plaka), aralarında derz.
+  for (const [x0, y0, x1, y1, z] of skylights) props.ramp(x0, y0, x1, y1, z - 1.2, z + 1.2, 0.15, TONE.glass);
+
+  // Operanın revakı: kabuğun saçağını taşıyan ince beyaz sütunlar (boyu kabuğun alt yüzüne kadar).
+  for (const [x, z, top] of columns) props.cylinder(x, y, z, 0.35, top - y, 'y', TONE.white, 8);
 
   // Açık hava amfisi: üç dilim (aralarında merdiven boşluğu), her basamak yerden yükselir.
   const wedges: [number, number][] = [
@@ -533,6 +539,56 @@ function tint(mesh: THREE.Mesh, color: (r: number, g: number, b: number) => [num
   colors.needsUpdate = true;
 }
 
+/**
+ * Mesh'lerin üst ve alt yüzlerinin 1 m'lik ızgarası (dünya koordinatı, alan `area`). Her mesh ayrı katman: hücrede en yüksek
+ * ve en alçak nokta. Üçgen köşelerinin yanında ağırlık merkezi ve kenar ortaları da örneklenir (üçgenler ~2-4 m).
+ */
+function heightGrid(area: Box, meshes: THREE.Mesh[]) {
+  const pad = 6;
+  const x0 = Math.floor(area.x0 - pad);
+  const z0 = Math.floor(area.z0 - pad);
+  const w = Math.ceil(area.x1 + pad) - x0;
+  const h = Math.ceil(area.z1 + pad) - z0;
+  const high = meshes.map(() => new Float32Array(w * h).fill(-Infinity));
+  const low = meshes.map(() => new Float32Array(w * h).fill(Infinity));
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  const p = new THREE.Vector3();
+  meshes.forEach((mesh, layer) => {
+    const position = mesh.geometry.getAttribute('position');
+    const index = mesh.geometry.index;
+    const count = index ? index.count : position.count;
+    const vertex = (k: number) => (index ? index.getX(k) : k);
+    for (let k = 0; k < count; k += 3) {
+      a.fromBufferAttribute(position, vertex(k)).applyMatrix4(mesh.matrixWorld);
+      b.fromBufferAttribute(position, vertex(k + 1)).applyMatrix4(mesh.matrixWorld);
+      c.fromBufferAttribute(position, vertex(k + 2)).applyMatrix4(mesh.matrixWorld);
+      // Üçgenin içinde 4×4 barisentrik örnek: hücreler boşluksuz dolar.
+      for (let i = 0; i <= 4; i++) {
+        for (let j = 0; j <= 4 - i; j++) {
+          p.set(0, 0, 0).addScaledVector(a, i / 4).addScaledVector(b, j / 4).addScaledVector(c, (4 - i - j) / 4);
+          const gx = Math.floor(p.x - x0);
+          const gz = Math.floor(p.z - z0);
+          if (gx < 0 || gz < 0 || gx >= w || gz >= h) continue;
+          const cell = gz * w + gx;
+          high[layer][cell] = Math.max(high[layer][cell], p.y);
+          low[layer][cell] = Math.min(low[layer][cell], p.y);
+        }
+      }
+    }
+  });
+  return {
+    at(x: number, z: number, layer: number) {
+      const gx = Math.floor(x - x0);
+      const gz = Math.floor(z - z0);
+      if (gx < 0 || gz < 0 || gx >= w || gz >= h) return null;
+      const cell = gz * w + gx;
+      return Number.isFinite(high[layer][cell]) ? { high: high[layer][cell], low: low[layer][cell] } : null;
+    },
+  };
+}
+
 const REPLACED = /^Cultural_(Plaza_Paving|Exhibition_Halls|Roofs|Skylights)$/;
 const OWN = /^Cultural_(Galleries|MuseumLink|TempHall|Library|Props)$/;
 
@@ -588,14 +644,82 @@ export function landscapeCulturalCenter(cityRoot: THREE.Object3D, treeScale: num
     part.position.set(x, GROUND_Y + (part.position.y - GROUND_Y) * OPERA.scale, z);
     part.scale.multiplyScalar(OPERA.scale);
   }
-  // Kabuk saf beyazdan sıcak taş beyazına. Lobi mavimsi köşe rengiyle cam giydirme olarak işlenir (FACADE_FRAGMENT).
-  tint(shell, (r, g, b) => [r * 0.9, g * 0.87, b * 0.82]);
+  // Kabuk: sırtlar açık taş beyazı, alçak kenarlar ve alt yüz koyu ve sıcak (heykelsi derinlik, köşe renginden).
+  // Alt yüz modelde üst yüzden koyu renkli katmandır.
+  shell.updateMatrixWorld(true);
+  const shellBox = new THREE.Box3().setFromObject(shell);
+  const shellPoint = new THREE.Vector3();
+  const span = Math.max(shellBox.max.y - shellBox.min.y, 1);
+  const shellY = shell.geometry.getAttribute('position');
+  let vertex = 0;
+  tint(shell, (r, g, b) => {
+    const k = (shellPoint.fromBufferAttribute(shellY, vertex++).applyMatrix4(shell.matrixWorld).y - shellBox.min.y) / span;
+    const under = r < 0.8 ? 0.72 : 1;
+    const light = (0.72 + 0.3 * Math.sqrt(k)) * under;
+    return [r * 0.93 * light, g * 0.88 * light, b * (under < 1 ? 0.74 : 0.8) * light];
+  });
+  // Salon tamburu bakır tonunda, kanatlar (en açık köşeler) beyaz kalır.
+  tint(hall, (r, g, b) => (r > 0.93 ? [r, g, b] : [r * 0.66, g * 0.46, b * 0.34]));
+  // Lobi mavimsi köşe rengiyle cam giydirme olarak işlenir (FACADE_FRAGMENT).
   tint(lobby, () => [0.55, 0.66, 0.78]);
+  // Kabuğun ve salonun üst ve alt yüzü 1 m'lik ızgaraya bir kez rasterlanır (ışın atmak 4320 üçgende ~200 ms tutuyordu).
+  shell.updateMatrixWorld(true);
+  hall.updateMatrixWorld(true);
+  const grid = heightGrid(SHELL, [shell, hall]);
+  // Revak sütunları: lobi ile kabuk kenarının ortasındaki çizgide ~9 m arayla, boy kabuğun alt yüzüne kadar.
+  const columns: [number, number, number][] = [];
+  const ring = { x0: (SHELL.x0 + LOBBY.x0) / 2, x1: (SHELL.x1 + LOBBY.x1) / 2, z0: (SHELL.z0 + LOBBY.z0) / 2, z1: (SHELL.z1 + LOBBY.z1) / 2 };
+  const along = (a: number, b: number) => {
+    const n = Math.round((b - a) / 9);
+    return Array.from({ length: n + 1 }, (_, i) => a + ((b - a) * i) / n);
+  };
+  const spots = [
+    ...along(ring.x0, ring.x1).flatMap((x) => [[x, ring.z0], [x, ring.z1]]),
+    ...along(ring.z0, ring.z1).slice(1, -1).flatMap((z) => [[ring.x0, z], [ring.x1, z]]),
+  ];
+  for (const [x, z] of spots) {
+    // Ana girişin önü (aks) açık kalır.
+    if (z === ring.z1 && Math.abs(x - AXIS.x) < AXIS.half) continue;
+    const cell = grid.at(x, z, 0);
+    if (cell) columns.push([x, z, cell.low]);
+  }
+  // Tepe ışığı bantları: kabuğun üst yüzünde x boyunca 5 bant, salonun üstü atlanır.
+  const skylights: [number, number, number, number, number][] = [];
+  // Bandın iki kenarı ve ortası örneklenir (kabuk z'de de eğik, panel kenarı gömülmesin). Salona 2 m pay.
+  const top = (x: number, z: number) => {
+    let y = -Infinity;
+    for (const dz of [-1.2, 0, 1.2]) {
+      const cell = grid.at(x, z + dz, 0);
+      if (!cell || grid.at(x - 2, z + dz, 1) || grid.at(x + 2, z + dz, 1) || grid.at(x, z + dz * 2.5, 1)) return null;
+      y = Math.max(y, cell.high);
+    }
+    return y + 0.12;
+  };
+  for (let i = 0; i < 5; i++) {
+    const z = SHELL.z0 + 14 + ((SHELL.z1 - SHELL.z0 - 28) * i) / 4;
+    let prev: [number, number | null] = [SHELL.x0 + 7, top(SHELL.x0 + 7, z)];
+    let run: [number, number, number, number, number][] = [];
+    // Kesintisiz dizi 3 panelden kısaysa atılır (salonun kenarında tek kalan paneller).
+    const flush = () => {
+      if (run.length >= 3) skylights.push(...run);
+      run = [];
+    };
+    for (let x = SHELL.x0 + 10; x <= SHELL.x1 - 7; x += 3) {
+      const h = top(x, z);
+      const [px, ph] = prev;
+      // Derz: panel 0.4 m kısa kesilir. Kabuğun dik kenarlarında (~22° üstü) bant biter.
+      if (h !== null && ph !== null && Math.abs(h - ph) < 1.2) {
+        run.push([px + 0.2, ph + ((h - ph) * 0.2) / 3, x - 0.2, h - ((h - ph) * 0.2) / 3, z]);
+      } else flush();
+      prev = [x, h];
+    }
+    flush();
+  }
   fountain.position.set(FOUNTAIN.x, fountain.position.y, FOUNTAIN.z);
 
   const parent = ground.parent ?? cityRoot;
   // Parçalar salonun satin malzemesini paylaşır (köşe renkli, kreşteki oyun ekipmanları gibi).
-  const props = new THREE.Mesh(propsGeometry(), hall.material);
+  const props = new THREE.Mesh(propsGeometry(columns, skylights), hall.material);
   props.name = 'Cultural_Props';
   // Yeni parçalar zemin katmanlamasına girmez (layerGround yalnızca düz, çok renkli mesh'leri kaldırır).
   props.userData = { groundLayered: true };
