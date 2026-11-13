@@ -3,6 +3,7 @@
 // Çizim doğrudan tuvale, tarayıcının kendi antialias'ıyla yapılır, vinyet CSS ile verilir.
 import * as THREE from 'three';
 import { arrangeCity } from './cityLayout';
+import { type VertexPatch, createPeople } from './cityPeople';
 import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
 
 type Vec3 = number[];
@@ -859,11 +860,18 @@ function patchMaterial(
   block?: { include: string; code: string; header?: string },
   grade = true,
 ) {
+  // Kendi köşe hareketini taşıyan malzemeler (insanlar, cityPeople.ts) ortak yamaya bunu ekler, program ayrı önbelleklenir.
+  const vertexPatch = material.userData.vertexPatch as VertexPatch | undefined;
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, cityUniforms);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\n${VERT_DECL}`)
+      .replace('#include <common>', `#include <common>\n${VERT_DECL}${vertexPatch?.header ?? ''}`)
       .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>\n${VERT_BODY}`);
+    if (vertexPatch) {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <beginnormal_vertex>', vertexPatch.normal)
+        .replace('#include <begin_vertex>', vertexPatch.position);
+    }
     let fragment = shader.fragmentShader
       .replace('#include <common>', `#include <common>\n${FRAG_COMMON}${block?.header ?? ''}`)
       .replace('#include <aomap_fragment>', LIGHT_FRAGMENT);
@@ -871,7 +879,7 @@ function patchMaterial(
     if (grade) fragment = fragment.replace('#include <lights_physical_fragment>', GRADE_FRAGMENT);
     shader.fragmentShader = fragment;
   };
-  material.customProgramCacheKey = () => cacheKey;
+  material.customProgramCacheKey = () => (vertexPatch ? `${cacheKey}_${vertexPatch.key}` : cacheKey);
   material.needsUpdate = true;
 }
 
@@ -1503,6 +1511,9 @@ export function prepareCity(
   // Park peyzajı: ağaçlar yeniden dikilir, park lambaları ışık noktalarına katılır.
   const parkLamps = landscapePark(cityRoot, TREE_SCALE);
   createLightPoints(cityRoot, thin, parkLamps);
+  // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
+  // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.
+  createPeople(cityRoot);
   // Şehir içi ağaçlar gerçek ölçüde bu mesafeden nokta gibi kalıyor, maketlerdeki gibi iri tutulur (orman aynı kalır).
   for (const name of ['Greens_Trees', 'Greens_Trees_Olive']) {
     const trees = cityRoot.getObjectByName(name);
