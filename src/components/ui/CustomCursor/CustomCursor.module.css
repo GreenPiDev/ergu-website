@@ -42,3 +42,43 @@
   background: color-mix(in srgb, var(--rail-solid-color) 12%, transparent);
   border-color: var(--rail-solid-color);
 }
+
+/* İmlecin yanındaki etiket (şehirde tesis adı): kutu yok. Halkadan tesis renginde ince bir çizgi çıkar, ucunda ad
+   çerçevesiz, büyük harf ve açık aralıklı yazar (haritadaki işaret gibi). Okunurluğu yumuşak gölge sağlar. Çizginin
+   rengi etiketi gönderenden gelir (--cursor-label-color). Sağ kenarda etiket sola geçer, çizgi de yazının sağına. */
+.label {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: var(--z-cursor);
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  color: var(--color-white);
+  font-family: var(--font-facility);
+  font-size: var(--text-facility);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--color-carbon) 85%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-carbon) 90%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.label::before {
+  content: '';
+  flex: none;
+  inline-size: 22px;
+  block-size: 1px;
+  background: var(--cursor-label-color, var(--color-accent));
+  box-shadow: 0 0 6px var(--cursor-label-color, var(--color-accent));
+}
+
+.label.labelFlipped {
+  flex-direction: row-reverse;
+}

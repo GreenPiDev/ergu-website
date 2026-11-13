@@ -1,7 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { FacilityId } from '../../../content/facilities';
+import { useTranslation } from 'react-i18next';
+import { type FacilityId, facilityColorToken } from '../../../content/facilities';
 import { useIsMobile, usePrefersReducedMotion } from '../../../hooks/useDevice';
 import { FacilityBar } from '../FacilityBar/FacilityBar';
+import { setCursorLabel } from '../../ui/CustomCursor/cursorEvents';
 import type { Quality } from './cityRuntime';
 import styles from './CityHero.module.css';
 
@@ -29,6 +31,18 @@ export function CityHero() {
   const [facility, setFacility] = useState<FacilityId | null>(null);
   // Fareyle üstünde durulan buton: perdesi seçili perdeyle birlikte açılır, seçimi değiştirmez.
   const [preview, setPreview] = useState<FacilityId | null>(null);
+  const { t } = useTranslation();
+  // Şehirde fareyle tesisin üstüne gelince perde açılır ve imlecin yanında tesisin adı, tesisin renginde yazar.
+  // Butonlarda etiket yok: adı zaten butonda yazıyor.
+  const hoverFromCity = useCallback(
+    (hovered: FacilityId | null) => {
+      setPreview(hovered);
+      setCursorLabel(
+        hovered ? { text: t(`home.facilities.items.${hovered}`), color: `var(${facilityColorToken(hovered)})` } : null,
+      );
+    },
+    [t],
+  );
   // Şehirde tesise tıklamak butonla aynı: seçer, seçili olana yeniden tıklamak veya boş yere tıklamak seçimi kaldırır.
   const pickFromCity = useCallback(
     (picked: FacilityId | null) => setFacility((current) => (picked === null || picked === current ? null : picked)),
@@ -65,7 +79,7 @@ export function CityHero() {
           onReady={() => setReady(true)}
           facilities={shown}
           focus={facility}
-          onHoverFacility={setPreview}
+          onHoverFacility={hoverFromCity}
           onPickFacility={pickFromCity}
         />
       </Suspense>
