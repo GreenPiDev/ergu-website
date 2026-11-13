@@ -91,7 +91,8 @@ const SWAPS: Swap[] = [
 ];
 
 // Ara sokakları kesilen bölgeler: tesis tek parça zemine oturur. Askerî şeridin içine uzanan kampüs içi yollar da kesilir.
-const ROAD_CUTS: Rect[] = [SCHOOL_SITE, HOSPITAL_SITE, blocks('G', 'H', 4, 4)];
+// Kaldırım mesh'i eski bloklarıyla kalır, insanlar (cityPeople.ts) bu bölgelerde tek blok çevresinde yürür.
+export const ROAD_CUTS: Rect[] = [SCHOOL_SITE, HOSPITAL_SITE, blocks('G', 'H', 4, 4)];
 
 /** Sera şubesi: kaynak dikdörtgendeki sera parçaları kaydırılarak boşaltılan bloğa taşınır. */
 const GREENHOUSE_PARTS: { from: Rect; dx: number; dz: number }[] = [

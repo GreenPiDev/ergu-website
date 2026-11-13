@@ -10,6 +10,7 @@ import { GREENHOUSE_FRAGMENT, GREENHOUSE_GLSL, landscapeGreenhouse } from './cit
 import { HOUSING_FRAGMENT, HOUSING_GLSL, landscapeHousing } from './cityHousing';
 import { KINDERGARTEN_FRAGMENT, KINDERGARTEN_GLSL, landscapeKindergarten } from './cityKindergarten';
 import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
+import { SCHOOL_FRAGMENT, SCHOOL_GLSL, landscapeSchool } from './citySchool';
 
 type Vec3 = number[];
 
@@ -1170,6 +1171,7 @@ const LANDSCAPES: Record<string, { key: string; code: string; header: string }> 
   Greenhouse_Ground_Site: { key: 'city_greenhouse_v1', code: GREENHOUSE_FRAGMENT, header: GREENHOUSE_GLSL },
   Cultural_Ground: { key: 'city_cultural_v1', code: CULTURAL_FRAGMENT, header: CULTURAL_GLSL },
   Housing_Ground: { key: 'city_housing_v1', code: HOUSING_FRAGMENT, header: HOUSING_GLSL },
+  School_Ground: { key: 'city_school_v1', code: SCHOOL_FRAGMENT, header: SCHOOL_GLSL },
 };
 
 const LIGHT_POINT_HIDE = /^(Infrastructure_StreetLamp_Heads|Roads_TrafficGlow)/;
@@ -1465,7 +1467,17 @@ export function prepareCity(
   // Konut bölgesinin mahalle merkezi yeniden kurulur: konak, spor salonu, çarşılı konut, semt pazarı, otopark araçları,
   // ağaçlar ve lambalar (zemin rengi aşağıda LANDSCAPES ile).
   const housingLamps = landscapeHousing(cityRoot, TREE_SCALE);
-  createLightPoints(cityRoot, thin, [...parkLamps, ...kindergartenLamps, ...greenhouseLamps, ...culturalLamps, ...housingLamps]);
+  // Okul yeniden kurulur: derslik blokları, spor salonu, yemekhane, tribün, otopark araçları, ağaçlar ve lambalar (zemin
+  // rengi aşağıda LANDSCAPES ile).
+  const schoolLamps = landscapeSchool(cityRoot, TREE_SCALE);
+  createLightPoints(cityRoot, thin, [
+    ...parkLamps,
+    ...kindergartenLamps,
+    ...greenhouseLamps,
+    ...culturalLamps,
+    ...housingLamps,
+    ...schoolLamps,
+  ]);
   // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
   // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.
   createPeople(cityRoot);
@@ -1641,12 +1653,18 @@ const FOCUS_FILL = 0.78;
 const FOCUS_MIN_DISTANCE = 560;
 const FOCUS_MAX_DISTANCE = 1650;
 const FOCUS_ELEVATION = 38 * DEG;
-// Fare tekerleğiyle yakınlaşma: mesafe çarpanı 1 (başlangıç kadrajı, en uzak) ile ZOOM_MIN arasında, kamera hedefe
-// ZOOM_FLOOR metreden fazla yaklaşmaz. Node'da gerçek modelle tarandı: 410 m'de okulun ve teleferiğin çevresindeki
-// binalar dönüşün bazı açılarında yakın düzlemin önüne giriyordu, 450 m'den itibaren hiçbir tesiste girmiyor. Tekerleğin bir
-// çentiği (~100 px) mesafeyi ~%14 değiştirir, yakınlaşma yaylı sönümle oturur.
-const ZOOM_MIN = 0.3;
-const ZOOM_FLOOR = 480;
+// Fare tekerleğiyle yakınlaşma: mesafe çarpanı ZOOM_MAX (en uzak) ile ZOOM_MIN (en yakın) arasında, 1 başlangıç
+// kadrajıdır. Kamera hedefe ZOOM_FLOOR metreden fazla yaklaşmaz. Eski sabit yakın düzlemle (0.22 x mesafe) 410 m'de
+// okulun ve teleferiğin çevresindeki binalar yakın düzlemin önüne giriyordu. Yakın düzlem artık NEAR_FADE_DISTANCE'ın
+// altında mesafeyle birlikte küçülür, bu yüzden taban 360 m'ye indi. Uzaklaşma ZOOM_MAX ile sınırlı: daha ötesinde
+// gölge kutusu (focusShadows, en fazla 2600 m) şehri kaplamaz. Tekerleğin bir çentiği (~100 px) mesafeyi ~%14
+// değiştirir, yakınlaşma yaylı sönümle oturur.
+const ZOOM_MIN = 0.18;
+const ZOOM_MAX = 1.4;
+const ZOOM_FLOOR = 360;
+// Yakın düzlem oranı (x mesafe) ve oranın küçülmeye başladığı mesafe.
+const NEAR_RATIO = 0.22;
+const NEAR_FADE_DISTANCE = 480;
 const ZOOM_SENSITIVITY = 0.0015;
 const ZOOM_SMOOTH = 0.3;
 // Sürükleyerek döndürme: piksel başına açı (radyan). Yatay sürükleme yörünge açısını, dikey sürükleme bakış yüksekliğini
@@ -1790,14 +1808,14 @@ export class CameraDirector {
 
   /**
    * Tekerlek hareketi (piksel, aşağı pozitif): aşağı yakınlaştırır, yukarı uzaklaştırır (kullanıcı isteğiyle ilk halinin
-   * tersi). Sınıra dayanınca hareket kullanılmaz (false döner): en yakındayken aşağı hareket sayfayı kaydırır,
-   * ziyaretçi hero'da takılmaz.
+   * tersi). Başlangıç kadrajından ZOOM_MAX'a kadar uzaklaşılabilir. Sınıra dayanınca hareket kullanılmaz (false döner):
+   * en yakındayken aşağı hareket sayfayı kaydırır, ziyaretçi hero'da takılmaz.
    */
   zoomBy(deltaY: number) {
     const floor = Math.max(ZOOM_MIN, ZOOM_FLOOR / Math.max(ZOOM_FLOOR, this.goal().dist));
     if (deltaY > 0 && this.zoomGoal <= floor + 1e-3) return false;
-    if (deltaY < 0 && this.zoomGoal >= 0.999) return false;
-    this.zoomGoal = THREE.MathUtils.clamp(this.zoomGoal * Math.exp(-deltaY * ZOOM_SENSITIVITY), floor, 1);
+    if (deltaY < 0 && this.zoomGoal >= ZOOM_MAX - 1e-3) return false;
+    this.zoomGoal = THREE.MathUtils.clamp(this.zoomGoal * Math.exp(-deltaY * ZOOM_SENSITIVITY), floor, ZOOM_MAX);
     return true;
   }
 
@@ -1960,8 +1978,9 @@ export class CameraDirector {
     );
     camera.fov = coverFov(this.hero.fov, this.aspect);
     // Parsel zeminleri birbirinden yalnızca 2-5 cm yukarıda: yakın düzlem olabildiğince uzakta tutulur, derinlik
-    // hassasiyeti artar. 0.22 x mesafe 2 km'de ~1 mm hassasiyet verir, yakın çekimde çevredeki kuleleri de kesmez.
-    camera.near = Math.max(1, dist * 0.22);
+    // hassasiyeti artar. 0.22 x mesafe 2 km'de ~1 mm hassasiyet verir. NEAR_FADE_DISTANCE'ın altında oran mesafeyle
+    // küçülür (360 m'de ~0.165): yakın çekimde çevredeki kuleler kesilmez.
+    camera.near = Math.max(1, dist * NEAR_RATIO * Math.min(1, dist / NEAR_FADE_DISTANCE));
     camera.far = dist + 14000;
     camera.lookAt(target);
     camera.updateProjectionMatrix();

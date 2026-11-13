@@ -3,7 +3,7 @@
 // 2 m'lik doluluk haritası çıkarılır (çatılar ve tabanı geniş yapılar dolu sayılır). İnsanlar iki örneklenmiş mesh'tir
 // (gövde: kıyafet rengi, baş: ten rengi), hareketleri shader'da, gölge düşürmez, kalite düşükse seyreltilir (`thinnable`).
 import * as THREE from 'three';
-import { FACILITY_RECTS, type Rect } from './cityLayout';
+import { FACILITY_RECTS, ROAD_CUTS, type Rect } from './cityLayout';
 
 // Gerçek boy ~1.72 m. Maket gibi iri (~3.4 m): hero mesafesinde ~5, yakın çekimde ~15 piksel. 1.3 katında (~3 piksel)
 // kullanıcıya fazla küçük geldi. Araçlar da aynı nedenle büyütülür (cityRuntime.ts, VEHICLE_SCALE).
@@ -182,7 +182,11 @@ function buildGrid(cityRoot: THREE.Object3D) {
   return grid;
 }
 
-/** Kaldırım blokları: kaldırım mesh'indeki dörtgenler (her biri bir blok). */
+/**
+ * Kaldırım blokları: kaldırım mesh'indeki dörtgenler (her biri bir blok). Ara sokakları kesilen bölgelerde (okul, hastane)
+ * kaldırım eski bloklarıyla kalır: o blokların çevresinde yürüyenler kesilen sokağın çizgisinde tesisin binalarının içinden
+ * geçiyordu. Bu bölgelerin içindeki bloklar atılır, yerine bölgenin kendisi tek blok olarak eklenir.
+ */
 function sidewalkBlocks(cityRoot: THREE.Object3D): Rect[] {
   const sidewalks = cityRoot.getObjectByName('Roads_Sidewalks');
   if (!(sidewalks instanceof THREE.Mesh)) return [];
@@ -197,7 +201,9 @@ function sidewalkBlocks(cityRoot: THREE.Object3D): Rect[] {
     if (rect.x1 - rect.x0 < 20 || rect.z1 - rect.z0 < 20) return;
     blocks.set(`${rect.x0.toFixed(0)},${rect.x1.toFixed(0)},${rect.z0.toFixed(0)},${rect.z1.toFixed(0)}`, rect);
   });
-  return [...blocks.values()];
+  const inside = (r: Rect, cut: Rect) => r.x0 >= cut.x0 - 1 && r.x1 <= cut.x1 + 1 && r.z0 >= cut.z0 - 1 && r.z1 <= cut.z1 + 1;
+  const kept = [...blocks.values()].filter((rect) => !ROAD_CUTS.some((cut) => inside(rect, cut)));
+  return [...kept, ...ROAD_CUTS];
 }
 
 /** Basit insan: gövde (bacaklar ve gövde tek konik) ve baş. Taban y = 0, boy ~1.72 m. */
