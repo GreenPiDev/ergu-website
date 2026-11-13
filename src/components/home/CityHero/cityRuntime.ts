@@ -1673,6 +1673,22 @@ const FOCUS_FILL = 0.78;
 const FOCUS_MIN_DISTANCE = 560;
 const FOCUS_MAX_DISTANCE = 1650;
 const FOCUS_ELEVATION = 38 * DEG;
+// Fare tekerleğiyle yakınlaşma: mesafe çarpanı 1 (başlangıç kadrajı, en uzak) ile ZOOM_MIN arasında, kamera hedefe
+// ZOOM_FLOOR metreden fazla yaklaşmaz. Node'da gerçek modelle tarandı: 410 m'de okulun ve teleferiğin çevresindeki
+// binalar dönüşün bazı açılarında yakın düzlemin önüne giriyordu, 450 m'den itibaren hiçbir tesiste girmiyor. Tekerleğin bir
+// çentiği (~100 px) mesafeyi ~%14 değiştirir, yakınlaşma yaylı sönümle oturur.
+const ZOOM_MIN = 0.3;
+const ZOOM_FLOOR = 480;
+const ZOOM_SENSITIVITY = 0.0015;
+const ZOOM_SMOOTH = 0.3;
+// Sürükleyerek döndürme: piksel başına açı (radyan). Yatay sürükleme yörünge açısını, dikey sürükleme bakış yüksekliğini
+// değiştirir. Yükseklik DRAG_MIN_ELEVATION ile DRAG_MAX_ELEVATION arasında: altında kadrajın üst kenarı ufka yaklaşır ve
+// yakın çekimde çevredeki binalar kameraya girer. Bırakınca dönüş ataletle (DRAG_INERTIA, 1/sn) söner.
+const DRAG_AZIMUTH_SPEED = 0.0035;
+const DRAG_ELEVATION_SPEED = 0.0025;
+const DRAG_MIN_ELEVATION = 22 * DEG;
+const DRAG_MAX_ELEVATION = 70 * DEG;
+const DRAG_INERTIA = 3.5;
 // Mesafe hesabında denenen yörünge açıları: tesis dönüşün her anında kadrajda kalır.
 const FOCUS_SAMPLES = 8;
 
@@ -1714,6 +1730,14 @@ export class CameraDirector {
   private readonly dist = { value: 0, velocity: 0 };
   private readonly el = { value: 0, velocity: 0 };
   private focus: CameraFocus | null = null;
+  // Tekerlekle yakınlaşma çarpanı (1: yakınlaşma yok) ve ulaşmak istediği değer.
+  private readonly zoom = { value: 1, velocity: 0 };
+  private zoomGoal = 1;
+  // Sürükleme: bu kare biriken açı, bırakıldıktan sonra süren dönüş hızı (radyan/sn), kullanıcının yükseklik payı.
+  private dragging = false;
+  private dragPending = 0;
+  private dragVelocity = 0;
+  private elevationOffset = 0;
   // Tesis kadrajının mesafesi ekran oranına bağlı: odak ya da oran değişince yeniden hesaplanır.
   private focusDistance = 0;
   private readonly probe = new THREE.PerspectiveCamera();
@@ -1745,7 +1769,7 @@ export class CameraDirector {
 
   /** Hedefe gerçek uzaklık (dik ekranda geri çekilme dahil). */
   get distance() {
-    return this.dist.value * this.pullback;
+    return this.dist.value * this.zoom.value * this.pullback;
   }
 
   get target() {
@@ -1774,6 +1798,8 @@ export class CameraDirector {
    */
   setFocus(focus: CameraFocus | null, instant = false) {
     this.focus = focus;
+    // Yeni kadraj hesaplanan mesafesiyle gelir, tekerlekle yakınlaşma sıfırlanır.
+    this.zoomGoal = 1;
     if (focus) this.focusDistance = this.fitDistance(focus);
     if (instant) {
       const goal = this.goal();
@@ -1783,6 +1809,7 @@ export class CameraDirector {
         [this.tz, goal.z],
         [this.dist, goal.dist],
         [this.el, goal.el],
+        [this.zoom, 1],
       ] as const) {
         state.value = value;
         state.velocity = 0;
@@ -1791,10 +1818,48 @@ export class CameraDirector {
     }
   }
 
+  /**
+   * Tekerlek hareketi (piksel, aşağı pozitif): aşağı yakınlaştırır, yukarı uzaklaştırır (kullanıcı isteğiyle ilk halinin
+   * tersi). Sınıra dayanınca hareket kullanılmaz (false döner): en yakındayken aşağı hareket sayfayı kaydırır,
+   * ziyaretçi hero'da takılmaz.
+   */
+  zoomBy(deltaY: number) {
+    const floor = Math.max(ZOOM_MIN, ZOOM_FLOOR / Math.max(ZOOM_FLOOR, this.goal().dist));
+    if (deltaY > 0 && this.zoomGoal <= floor + 1e-3) return false;
+    if (deltaY < 0 && this.zoomGoal >= 0.999) return false;
+    this.zoomGoal = THREE.MathUtils.clamp(this.zoomGoal * Math.exp(-deltaY * ZOOM_SENSITIVITY), floor, 1);
+    return true;
+  }
+
+  /** Sürükleme başlar: otomatik dönüş durur, önceki sürüklemenin ataleti kesilir. */
+  beginDrag() {
+    this.dragging = true;
+    this.dragVelocity = 0;
+  }
+
+  /** Sürükleme hareketi (piksel). Sağa sürüklemek şehri sağa, aşağı sürüklemek kamerayı yukarı taşır (dünyayı tutup çevirmek gibi). */
+  dragBy(dx: number, dy: number) {
+    this.dragPending -= dx * DRAG_AZIMUTH_SPEED;
+    const base = this.focus ? FOCUS_ELEVATION : this.hero.el;
+    this.elevationOffset = THREE.MathUtils.clamp(
+      this.elevationOffset + dy * DRAG_ELEVATION_SPEED,
+      DRAG_MIN_ELEVATION - base,
+      DRAG_MAX_ELEVATION - base,
+    );
+  }
+
+  /** Sürükleme biter: dönüş ataletle yavaşlar, otomatik dönüş yumuşakça geri gelir. */
+  endDrag() {
+    this.dragging = false;
+    if (!this.idleOrbit) this.dragVelocity = 0;
+  }
+
   private goal() {
     const { focus, hero } = this;
-    if (!focus) return { x: hero.target.x, y: hero.target.y, z: hero.target.z, dist: hero.dist, el: hero.el };
-    return { ...focusTarget(focus), dist: this.focusDistance, el: FOCUS_ELEVATION };
+    const el = (base: number) =>
+      THREE.MathUtils.clamp(base + this.elevationOffset, DRAG_MIN_ELEVATION, DRAG_MAX_ELEVATION);
+    if (!focus) return { x: hero.target.x, y: hero.target.y, z: hero.target.z, dist: hero.dist, el: el(hero.el) };
+    return { ...focusTarget(focus), dist: this.focusDistance, el: el(FOCUS_ELEVATION) };
   }
 
   /**
@@ -1847,9 +1912,20 @@ export class CameraDirector {
   update(delta: number) {
     const dt = Math.min(delta, 0.1);
     this.pointerSmooth.lerp(this.pointer, 1 - Math.exp(-dt * 2.5));
+    // Sürüklenirken açı doğrudan elle değişir, hız son karelerden ölçülür. Bırakınca o hızla sönerek döner.
+    if (this.dragging) {
+      this.az += this.dragPending;
+      if (dt > 0) this.dragVelocity += (this.dragPending / dt - this.dragVelocity) * 0.5;
+    } else if (this.dragVelocity !== 0) {
+      this.az += this.dragVelocity * dt;
+      this.dragVelocity *= Math.exp(-dt * DRAG_INERTIA);
+      if (Math.abs(this.dragVelocity) < 1e-4) this.dragVelocity = 0;
+    }
+    this.dragPending = 0;
     if (this.idleOrbit) {
       this.elapsed += dt;
-      const speed = (this.focus ? FOCUS_ORBIT_SPEED : ORBIT_SPEED) * Math.min(1, this.elapsed * ORBIT_EASE_IN);
+      const auto = this.dragging ? 0 : this.focus ? FOCUS_ORBIT_SPEED : ORBIT_SPEED;
+      const speed = auto * Math.min(1, this.elapsed * ORBIT_EASE_IN);
       this.orbitSpeed += (speed - this.orbitSpeed) * (1 - Math.exp(-dt * 1.5));
       this.az += this.orbitSpeed * dt;
     }
@@ -1859,6 +1935,7 @@ export class CameraDirector {
     smoothDamp(this.tz, goal.z, FLIGHT_SMOOTH, dt);
     smoothDamp(this.dist, goal.dist, FLIGHT_SMOOTH * 1.15, dt);
     smoothDamp(this.el, goal.el, FLIGHT_SMOOTH * 1.15, dt);
+    smoothDamp(this.zoom, this.zoomGoal, ZOOM_SMOOTH, dt);
     this.apply();
   }
 

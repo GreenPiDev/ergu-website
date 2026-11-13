@@ -128,6 +128,9 @@ function CityScene({
     director.setFocus(focus ? (focusTargets.get(focus) ?? null) : null, reducedMotion);
   }, [director, focus, focusTargets, reducedMotion]);
   const pointer = useRef({ ndc: new THREE.Vector2(), inside: false, mouse: false });
+  // Sürükleyerek döndürme (yalnızca fare: dokunmada sayfa kaydırması korunur). Basılan nokta eşiği aşınca sürükleme
+  // başlar, sürüklemeden sonraki tıklama seçim sayılmaz.
+  const drag = useRef({ id: -1, startX: 0, startY: 0, lastX: 0, lastY: 0, active: false, moved: false });
   const hovered = useRef<FacilityId | null>(null);
   const handlers = useRef({ onHoverFacility, onPickFacility });
   useEffect(() => {
@@ -158,7 +161,37 @@ function CityScene({
       const rect = element.getBoundingClientRect();
       return target.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     };
+    const DRAG_THRESHOLD = 5;
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' || event.button !== 0) return;
+      // Sürükleme sayfada metin seçmesin.
+      event.preventDefault();
+      element.setPointerCapture(event.pointerId);
+      drag.current = { id: event.pointerId, startX: event.clientX, startY: event.clientY, lastX: event.clientX, lastY: event.clientY, active: true, moved: false };
+    };
+    const onUp = (event: PointerEvent) => {
+      const state = drag.current;
+      if (!state.active || event.pointerId !== state.id) return;
+      state.active = false;
+      if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
+      if (state.moved) director.endDrag();
+    };
     const onMove = (event: PointerEvent) => {
+      const state = drag.current;
+      if (state.active && event.pointerId === state.id) {
+        if (!state.moved && Math.hypot(event.clientX - state.startX, event.clientY - state.startY) > DRAG_THRESHOLD) {
+          state.moved = true;
+          state.lastX = event.clientX;
+          state.lastY = event.clientY;
+          director.beginDrag();
+          setHovered(null);
+        }
+        if (state.moved) {
+          director.dragBy(event.clientX - state.lastX, event.clientY - state.lastY);
+          state.lastX = event.clientX;
+          state.lastY = event.clientY;
+        }
+      }
       toNdc(event, pointer.current.ndc);
       pointer.current.inside = true;
       pointer.current.mouse = event.pointerType === 'mouse';
@@ -167,17 +200,42 @@ function CityScene({
       pointer.current.inside = false;
       setHovered(null);
     };
-    const onClick = (event: MouseEvent) => handlers.current.onPickFacility(pickAt(toNdc(event, new THREE.Vector2())));
+    const onClick = (event: MouseEvent) => {
+      // Sürüklemenin sonundaki bırakma tıklama değildir: seçim değişmez.
+      if (drag.current.moved) {
+        drag.current.moved = false;
+        return;
+      }
+      handlers.current.onPickFacility(pickAt(toNdc(event, new THREE.Vector2())));
+    };
+    // Tekerlekle yakınlaşma yalnızca sayfa en üstteyken. Kullanılan hareket sayfayı kaydırmaz: tarayıcıya
+    // preventDefault, Lenis'e kendi okuduğu `lenisStopPropagation` işareti (Lenis 1.3, defaultPrevented'a bakmaz).
+    // Aşağı hareket yakınlaştırır. En yakın noktada aşağı hareket kullanılmaz, sayfa kaymaya devam eder.
+    const onWheel = (event: WheelEvent & { lenisStopPropagation?: boolean }) => {
+      if (window.scrollY > 1) return;
+      const scale = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1;
+      if (!director.zoomBy(event.deltaY * scale)) return;
+      event.preventDefault();
+      event.lenisStopPropagation = true;
+    };
+    element.addEventListener('pointerdown', onDown);
+    element.addEventListener('pointerup', onUp);
+    element.addEventListener('pointercancel', onUp);
     element.addEventListener('pointermove', onMove, { passive: true });
     element.addEventListener('pointerleave', onLeave);
     element.addEventListener('click', onClick);
+    element.addEventListener('wheel', onWheel, { passive: false });
     return () => {
+      element.removeEventListener('wheel', onWheel);
+      element.removeEventListener('pointerdown', onDown);
+      element.removeEventListener('pointerup', onUp);
+      element.removeEventListener('pointercancel', onUp);
       element.removeEventListener('pointermove', onMove);
       element.removeEventListener('pointerleave', onLeave);
       element.removeEventListener('click', onClick);
       setHovered(null);
     };
-  }, [gl, pickAt, setHovered]);
+  }, [gl, pickAt, setHovered, director]);
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -197,7 +255,8 @@ function CityScene({
     city.update(reducedMotion ? 0 : delta, director.distance);
     highlight.update(Math.min(delta, 0.1), reducedMotion);
     // Kamera süzülürken fare dursa da altındaki tesis değişebilir: her karede yeniden bakılır (11 tesis, birkaç kutu).
-    if (pointer.current.inside && pointer.current.mouse) setHovered(pickAt(pointer.current.ndc));
+    // Sürüklerken tesis vurgulanmaz, etiket çıkmaz.
+    if (pointer.current.inside && pointer.current.mouse && !drag.current.moved) setHovered(pickAt(pointer.current.ndc));
     // İlk gerçek kareler ekrandayken poster solar.
     if (++frames.current === 3) onReady();
   });
