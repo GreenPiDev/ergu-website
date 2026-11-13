@@ -7,6 +7,7 @@
 // ağaçlar ve lambalar shader'ın çizdiği yollara göre yerleşir.
 import * as THREE from 'three';
 import { PARK_SHIFT_X } from './cityLayout';
+import { hash2, replantTrees } from './cityTrees';
 
 // Plan modeldeki konuma göre yazıldı, park yerleşimde hastanenin eski yerine taşınır (cityLayout.ts).
 const sx = (x: number) => x + PARK_SHIFT_X;
@@ -175,10 +176,7 @@ function treeAllowed(x: number, z: number, pathClearance: number) {
   return pathDistance(x, z) > pathClearance;
 }
 
-const hash = (a: number, b: number) => {
-  const value = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
-  return value - Math.floor(value);
-};
+const hash = hash2;
 
 function inPark(x: number, z: number) {
   const [x0, x1, z0, z1] = PARK.bounds;
@@ -259,53 +257,7 @@ function parkLamps(): number[] {
 export function landscapePark(cityRoot: THREE.Object3D, treeScale: number): number[] {
   const done = cityRoot.userData.parkLamps as number[] | undefined;
   if (done) return done;
-  const matrix = new THREE.Matrix4();
-  const position = new THREE.Vector3();
-  const quaternion = new THREE.Quaternion();
-  const scale = new THREE.Vector3();
-  const zero = new THREE.Matrix4().makeScale(0, 0, 0);
-  // Örnek matrisleri mesh'in yerel uzayındadır, plan dünya koordinatındadır (cityRoot.updateMatrixWorld önceden çağrılır).
-  const sources: { mesh: THREE.InstancedMesh; sample: THREE.Matrix4 | null }[] = [];
-  for (const name of ['Greens_Trees', 'Greens_Trees_Olive']) {
-    const mesh = cityRoot.getObjectByName(name);
-    if (!(mesh instanceof THREE.InstancedMesh)) continue;
-    let sample: THREE.Matrix4 | null = null;
-    for (let i = 0; i < mesh.count; i++) {
-      mesh.getMatrixAt(i, matrix);
-      position.setFromMatrixPosition(matrix).applyMatrix4(mesh.matrixWorld);
-      if (!inPark(position.x, position.z)) continue;
-      sample ??= matrix.clone();
-      mesh.setMatrixAt(i, zero);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-    sources.push({ mesh, sample });
-  }
-
-  const spots = plantTrees();
-  sources.forEach(({ mesh, sample }, sourceIndex) => {
-    if (!sample) return;
-    sample.decompose(position, quaternion, scale);
-    const baseY = position.y;
-    const toLocal = mesh.matrixWorld.clone().invert();
-    const local = new THREE.Vector3();
-    const mine = spots.filter((_, index) => index % sources.length === sourceIndex);
-    const trees = new THREE.InstancedMesh(mesh.geometry, mesh.material, mine.length);
-    trees.name = `Park_${mesh.name}`;
-    trees.userData = { castShadow: mesh.userData.castShadow };
-    trees.position.copy(mesh.position);
-    trees.quaternion.copy(mesh.quaternion);
-    trees.scale.copy(mesh.scale);
-    mine.forEach(([x, z], index) => {
-      const size = treeScale * (0.75 + 0.55 * hash(x, z));
-      local.set(x, 0, z).applyMatrix4(toLocal);
-      local.y = baseY;
-      quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), hash(z, x) * Math.PI * 2);
-      trees.setMatrixAt(index, matrix.compose(local, quaternion, scale.clone().multiplyScalar(size)));
-    });
-    trees.instanceMatrix.needsUpdate = true;
-    (mesh.parent ?? cityRoot).add(trees);
-  });
-
+  replantTrees(cityRoot, { prefix: 'Park', inside: inPark, spots: plantTrees(), treeScale });
   const lamps = parkLamps();
   cityRoot.userData.parkLamps = lamps;
   return lamps;

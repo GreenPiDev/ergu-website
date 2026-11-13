@@ -3,7 +3,10 @@
 // Çizim doğrudan tuvale, tarayıcının kendi antialias'ıyla yapılır, vinyet CSS ile verilir.
 import * as THREE from 'three';
 import { arrangeCity } from './cityLayout';
+import { MASS_VARIANTS, type MassVariant } from './cityMass';
 import { type VertexPatch, createPeople } from './cityPeople';
+import { GREENHOUSE_FRAGMENT, GREENHOUSE_GLSL, landscapeGreenhouse } from './cityGreenhouse';
+import { KINDERGARTEN_FRAGMENT, KINDERGARTEN_GLSL, landscapeKindergarten } from './cityKindergarten';
 import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
 
 type Vec3 = number[];
@@ -664,6 +667,11 @@ const FACADE_FRAGMENT = `#include <emissivemap_fragment>
     // Yüksek binalar taş ve beton tonlarında, bir bölümü tamamen cam giydirme kule. Adı olan (örneksiz) yapılar modeldeki
     // kendi rengini korur, mavimsi olanlar cam sayılır.
     float tk = h12(vec2(bkey * 53.1, 7.3));
+    // Tesis yapıları (cityKindergarten.ts) duvar ve çatı rengini kendisi seçer: bütün kanatlar aynı binanın parçası gibi
+    // okunur. x: duvar paleti, y: çatı paleti (aşağıdaki eşiklerle aynı ölçek).
+    #ifdef CITY_PALETTE
+      tk = CITY_PALETTE.x;
+    #endif
     float tall = inst ? smoothstep(18.0, 30.0, vHalf.y * 2.0) : 0.0;
     vec3 low = tk < 0.3 ? vec3(0.8, 0.77, 0.71) : tk < 0.48 ? vec3(0.82, 0.7, 0.5) : tk < 0.62 ? vec3(0.76, 0.5, 0.4)
       : tk < 0.75 ? vec3(0.58, 0.68, 0.54) : tk < 0.88 ? vec3(0.56, 0.66, 0.78) : vec3(0.8, 0.6, 0.32);
@@ -706,6 +714,9 @@ const FACADE_FRAGMENT = `#include <emissivemap_fragment>
     float ra = max(max(fwidth(rcell.x), fwidth(rcell.y)), 1e-4);
     float mottling = vnoise(vWPos.xz * 0.11);
     float rk2 = h12(vec2(bkey * 19.9, 8.1));
+    #ifdef CITY_PALETTE
+      rk2 = CITY_PALETTE.y;
+    #endif
     if (inst && vKind > 0.5) {
       // Eğimli çatı yüzü (gerçek geometri): kiremit veya arduvaz.
       vec3 rc = rk2 < 0.5 ? vec3(0.52, 0.19, 0.1) : rk2 < 0.86 ? vec3(0.42, 0.19, 0.12) : vec3(0.22, 0.24, 0.28);
@@ -958,98 +969,6 @@ function layerGround(mesh: THREE.Mesh) {
 
 // ------------------------------------------------------------------ bina kütleleri
 
-type Triple = [number, number, number];
-
-/** Birim küp ([-1, 1]) içinde bina kütlesi kurar. Örnek ölçeği bunu gerçek ölçüye taşır. */
-class MassBuilder {
-  private readonly positions: number[] = [];
-  private readonly normals: number[] = [];
-  private readonly colors: number[] = [];
-  private readonly faces: number[] = [];
-  private readonly kinds: number[] = [];
-  private readonly indices: number[] = [];
-
-  /** Köşeler herhangi bir sırada verilebilir, yüz `outward` yönüne bakacak şekilde çevrilir. */
-  private polygon(points: Triple[], outward: Triple, face: [number, number, number, number], kind: number, shade?: number) {
-    const [a, b, c] = points.map((point) => new THREE.Vector3(...point));
-    const normal = b.clone().sub(a).cross(c.clone().sub(a)).normalize();
-    const ordered = normal.dot(new THREE.Vector3(...outward)) < 0 ? [...points].reverse() : points;
-    if (ordered !== points) normal.negate();
-    const start = this.positions.length / 3;
-    for (const point of ordered) {
-      this.positions.push(...point);
-      this.normals.push(normal.x, normal.y, normal.z);
-      // Modeldeki kutunun köşe renkleri: duvar dipte 0.58, tepede 1 (basit temas gölgesi), çatı 0.82.
-      const tone = shade ?? 0.58 + 0.42 * ((point[1] + 1) / 2);
-      this.colors.push(tone, tone, tone);
-      this.faces.push(...face);
-      this.kinds.push(kind);
-    }
-    for (let i = 1; i < ordered.length - 1; i++) this.indices.push(start, start + i, start + i + 1);
-  }
-
-  /** Dört duvar ve istenirse düz üst yüz. */
-  box(x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, top = true) {
-    const face: [number, number, number, number] = [(x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2];
-    this.polygon([[x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0]], [1, 0, 0], face, 0);
-    this.polygon([[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]], [-1, 0, 0], face, 0);
-    this.polygon([[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], [0, 0, 1], face, 0);
-    this.polygon([[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]], [0, 0, -1], face, 0);
-    if (top) this.polygon([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], [0, 1, 0], face, 0, 0.82);
-    return this;
-  }
-
-  /** Tam tabana oturan eğimli çatı. Mahya `alongX` ekseninde, yarı uzunluğu `ridge` (1: beşik çatı, küçükse kırma çatı). */
-  pitchedRoof(y0: number, y1: number, alongX: boolean, ridge: number) {
-    // Mahya x ekseninde kabul edilip kurulur, gerekirse x ve z yer değiştirir.
-    const at = (x: number, y: number, z: number): Triple => (alongX ? [x, y, z] : [z, y, x]);
-    const out = (x: number, y: number, z: number): Triple => (alongX ? [x, y, z] : [z, y, x]);
-    const face: [number, number, number, number] = [0, 0, 1, 1];
-    this.polygon([at(-1, y0, 1), at(1, y0, 1), at(ridge, y1, 0), at(-ridge, y1, 0)], out(0, 0.5, 1), face, 1, 0.82);
-    this.polygon([at(-1, y0, -1), at(1, y0, -1), at(ridge, y1, 0), at(-ridge, y1, 0)], out(0, 0.5, -1), face, 1, 0.82);
-    // Uçlar: kırma çatıda eğimli kiremit yüz, beşik çatıda düşey kalkan duvarı.
-    const gable = ridge >= 1;
-    this.polygon([at(1, y0, -1), at(1, y0, 1), at(ridge, y1, 0)], out(1, 0.5, 0), face, gable ? 0 : 1, gable ? 1 : 0.82);
-    this.polygon([at(-1, y0, -1), at(-1, y0, 1), at(-ridge, y1, 0)], out(-1, 0.5, 0), face, gable ? 0 : 1, gable ? 1 : 0.82);
-    return this;
-  }
-
-  build(): THREE.BufferGeometry {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(this.positions, 3));
-    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(this.normals, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(this.colors, 3));
-    geometry.setAttribute('aFace', new THREE.Float32BufferAttribute(this.faces, 4));
-    geometry.setAttribute('aKind', new THREE.Float32BufferAttribute(this.kinds, 1));
-    geometry.setIndex(this.indices);
-    return geometry;
-  }
-}
-
-// Kütle çeşitleri. Hepsi birim küpün içinde kalır, yani binanın kapladığı alan ve yüksekliği değişmez.
-const MASS_VARIANTS = {
-  plain: () => new MassBuilder().box(-1, 1, -1, 1, -1, 1),
-  // Asansör ve tesisat kulesi olan düz çatı.
-  penthouse: () => new MassBuilder().box(-1, 1, -1, 0.9, -1, 1).box(-0.5, 0.2, 0.9, 1, -0.35, 0.45),
-  penthouseB: () => new MassBuilder().box(-1, 1, -1, 0.88, -1, 1).box(0.05, 0.6, 0.88, 1, -0.6, 0.1).box(-0.7, -0.3, 0.88, 0.95, 0.2, 0.7),
-  // Yukarı doğru daralan kuleler.
-  setback: () => new MassBuilder().box(-1, 1, -1, 0.3, -1, 1).box(-0.72, 0.72, 0.3, 1, -0.72, 0.72),
-  setbackTriple: () =>
-    new MassBuilder().box(-1, 1, -1, 0.05, -1, 1).box(-0.78, 0.78, 0.05, 0.62, -0.78, 0.78).box(-0.5, 0.5, 0.62, 1, -0.5, 0.5),
-  // Geniş alçak taban üstünde kenara yaslı blok.
-  podiumA: () => new MassBuilder().box(-1, 1, -1, -0.35, -1, 1).box(-0.9, 0.15, -0.35, 1, -0.9, 0.9),
-  podiumB: () => new MassBuilder().box(-1, 1, -1, -0.45, -1, 1).box(-0.9, 0.9, -0.45, 1, -0.15, 0.9),
-  // L planlı blok: iki kanat farklı yükseklikte.
-  ell: () => new MassBuilder().box(-1, 0.1, -1, 1, -1, 1).box(0.1, 1, -1, 0.4, -1, 0.1),
-  // Eğimli çatılı evler: kırma ve beşik çatı, mahya uzun kenar boyunca.
-  hipX: () => new MassBuilder().box(-1, 1, -1, 0.4, -1, 1, false).pitchedRoof(0.4, 1, true, 0.4),
-  hipZ: () => new MassBuilder().box(-1, 1, -1, 0.4, -1, 1, false).pitchedRoof(0.4, 1, false, 0.4),
-  gableX: () => new MassBuilder().box(-1, 1, -1, 0.45, -1, 1, false).pitchedRoof(0.45, 1, true, 1),
-  gableZ: () => new MassBuilder().box(-1, 1, -1, 0.45, -1, 1, false).pitchedRoof(0.45, 1, false, 1),
-} as const;
-
-type MassVariant = keyof typeof MASS_VARIANTS;
-
 const massGeometries = new Map<MassVariant, THREE.BufferGeometry>();
 
 function pickVariant(halfX: number, halfY: number, halfZ: number, a: number, b: number, allowPitched = true): MassVariant {
@@ -1242,6 +1161,13 @@ const LIGHT_POINT_SOURCES: Record<string, { size: number; glow: number; pool: nu
   Infrastructure_StreetLamp_Heads: { size: 3.4, glow: 1, pool: 1 },
   Roads_TrafficGlow: { size: 2.3, glow: 0.55, pool: 0.05 },
 };
+// Rengi tamamen dünya konumundan çizilen zeminler: mesh adı → shader.
+const LANDSCAPES: Record<string, { key: string; code: string; header: string }> = {
+  Park_Ground: { key: 'city_park_v1', code: PARK_FRAGMENT, header: PARK_GLSL },
+  Kindergarten_Ground: { key: 'city_kindergarten_v1', code: KINDERGARTEN_FRAGMENT, header: KINDERGARTEN_GLSL },
+  Greenhouse_Ground_Site: { key: 'city_greenhouse_v1', code: GREENHOUSE_FRAGMENT, header: GREENHOUSE_GLSL },
+};
+
 const LIGHT_POINT_HIDE = /^(Infrastructure_StreetLamp_Heads|Roads_TrafficGlow)/;
 
 const LIGHT_POINT_VERTEX = `attribute float aSize; attribute float aGlow;
@@ -1526,7 +1452,11 @@ export function prepareCity(
   const traffic = createTraffic(cityRoot);
   // Park peyzajı: ağaçlar yeniden dikilir, park lambaları ışık noktalarına katılır.
   const parkLamps = landscapePark(cityRoot, TREE_SCALE);
-  createLightPoints(cityRoot, thin, parkLamps);
+  // Kreş yeniden kurulur: bina, oyun ekipmanları, ağaçlar ve lambalar (zemin rengi aşağıda LANDSCAPES ile).
+  const kindergartenLamps = landscapeKindergarten(cityRoot, TREE_SCALE);
+  // Sera şubesi yeniden kurulur: cam sera, binalar, araçlar (trafikten sonra, park etmiş araçlardan), ağaçlar ve lambalar.
+  const greenhouseLamps = landscapeGreenhouse(cityRoot, TREE_SCALE);
+  createLightPoints(cityRoot, thin, [...parkLamps, ...kindergartenLamps, ...greenhouseLamps]);
   // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
   // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.
   createPeople(cityRoot);
@@ -1566,15 +1496,17 @@ export function prepareCity(
       object.updateMatrix();
       const materials: THREE.Material[] = Array.isArray(object.material) ? object.material : [object.material];
       for (const material of materials) {
-        if (object.name === 'Park_Ground' && material instanceof THREE.MeshStandardMaterial) {
-          // Park zemini kendi malzemesini alır, ortak mat malzeme (başka mesh'te zaten yamanmış olabilir) diğer zeminlerde
-          // değişmeden kalır. İkinci hazırlıkta (StrictMode) klon yeniden klonlanmaz.
-          const park = material.name === 'Park_Ground_Landscape' ? material : material.clone();
-          park.name = 'Park_Ground_Landscape';
-          object.material = park;
-          if (!patched.has(park)) {
-            patched.add(park);
-            patchMaterial(park, 'city_park_v1', { include: '#include <color_fragment>', code: PARK_FRAGMENT, header: PARK_GLSL });
+        const landscape = LANDSCAPES[object.name];
+        if (landscape && material instanceof THREE.MeshStandardMaterial) {
+          // Peyzajı yeniden çizilen zeminler (park, kreş, sera) kendi malzemesini alır, ortak mat malzeme (başka mesh'te zaten
+          // yamanmış olabilir) diğer zeminlerde değişmeden kalır. İkinci hazırlıkta (StrictMode) klon yeniden klonlanmaz.
+          const name = `${object.name}_Landscape`;
+          const ground = material.name === name ? material : material.clone();
+          ground.name = name;
+          object.material = ground;
+          if (!patched.has(ground)) {
+            patched.add(ground);
+            patchMaterial(ground, landscape.key, { include: '#include <color_fragment>', code: landscape.code, header: landscape.header });
           }
           continue;
         }

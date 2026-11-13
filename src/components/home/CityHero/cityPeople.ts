@@ -22,10 +22,12 @@ const FACILITY_AREA_PER_PERSON = 650;
 const SIDEWALK_INSET_MIN = 1.4;
 const SIDEWALK_INSET_MAX = 3.4;
 
-const SKIP = /^(Runtime_|Traffic_|Vehicles_|Greens_|Roads_Asphalt|Roads_Markings|Roads_Medians|Roads_Traffic|Terrain_|Sea_|Coast_|River_|Riverside_|Bridges|Infrastructure_Ships|Infrastructure_StreetLamp|Airport_Lights|CableCar_(Cables|Gondolas))/;
+const SKIP = /^(Runtime_|Traffic_(?!.*_Parked$)|Vehicles_|Greens_|Roads_Asphalt|Roads_Markings|Roads_Medians|Roads_Traffic|Terrain_|Sea_|Coast_|River_|Riverside_|Bridges|Infrastructure_Ships|Infrastructure_StreetLamp|Airport_Lights|CableCar_(Cables|Gondolas))/;
 const GROUND = /(Ground|Sidewalk|Plaza|Paving|Pavement|Airfield|Court|Promenade|Field)/;
 // Düz ama üstünde yürünmeyen yüzeyler.
-const WATER = /^(Park_Pond|Residential_Pools)/;
+const WATER = /^(Park_Pond|Residential_Pools|Greenhouse_Basin)/;
+// Park etmiş araçlar engel eşiğinden alçak (~2.2 m) ama üstlerinde insan durmaz: yükseklikten bağımsız dolu sayılır.
+const PARKED = /^Traffic_.*_Parked$/;
 
 // Kıyafet renkleri: koyu ve nötr ağırlıklı, aralarda canlı tonlar. Ten renkleri ayrı.
 const CLOTHES = ['#1d2433', '#2b2b2e', '#e9e6df', '#c9b79a', '#7b2d2d', '#d6a531', '#2f6f73', '#4d5a3a', '#8a8f98', '#3c4f7a', '#b4472c', '#f1f1ee'];
@@ -155,10 +157,11 @@ function buildGrid(cityRoot: THREE.Object3D) {
   for (const mesh of meshes) {
     if (GROUND.test(mesh.name) && !WATER.test(mesh.name)) continue;
     const water = WATER.test(mesh.name);
+    const parked = PARKED.test(mesh.name);
     const mark = (x0: number, x1: number, z0: number, z1: number, top: number) =>
       grid.forEach(x0, x1, z0, z1, (cell) => {
         const ground = Number.isNaN(grid.ground[cell]) ? 1 : grid.ground[cell];
-        if (water || top > ground + OBSTACLE_HEIGHT) grid.blocked[cell] = 1;
+        if (water || parked || top > ground + OBSTACLE_HEIGHT) grid.blocked[cell] = 1;
       });
     if (mesh instanceof THREE.InstancedMesh) {
       // Örneklenmiş yapılar (bina parçaları, çatı ekipmanı): her örneğin sınır kutusu.
