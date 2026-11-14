@@ -14,6 +14,11 @@ const LABEL_OFFSET = 28;
 const LABEL_EDGE_MARGIN = 16;
 // Halkalar büyük halleriyle çizilir, normalde küçültülür. Tersi olursa büyürken bulanıklaşır.
 const RING_REST_SCALE = 0.72;
+// 3D sahne gibi her karede değişen tuvallerin üstünde `difference` karışımı kareyi uzatır, imleç takılır. Bu alanlarda
+// (`data-cursor-blend="off"`, ana sayfa hero'su; zemin koyu) imleç düz beyaz çizilir. Geliştirmede `?blend=1` karışımı
+// her yerde açık tutar (karşılaştırma için).
+const PLAIN_SURFACE_SELECTOR = '[data-cursor-blend="off"]';
+const FORCE_BLEND = import.meta.env.DEV && new URLSearchParams(window.location.search).get('blend') === '1';
 
 /** `quickTo`, iki özelliğe açılan `scale` kısayolunu çalıştırmaz, eksenler ayrı ayrı sürülür. */
 function quickScale(element: HTMLElement, duration: number, ease: string) {
@@ -129,6 +134,9 @@ function CursorElements() {
     const handlePointerOver = (event: PointerEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       const interactive = target !== null && target.closest(INTERACTIVE_SELECTOR) !== null;
+      const plain = !FORCE_BLEND && target !== null && target.closest(PLAIN_SURFACE_SELECTOR) !== null;
+      dot.classList.toggle(styles.noBlend, plain);
+      ring.classList.toggle(styles.noBlend, plain);
 
       // Renk geçişsiz değişir. Halka yalnızca tıklanabilir alanda göründüğü için fark edilmez.
       if (interactive) accentRing.classList.toggle(styles.onAccent, target.closest(ACCENT_SURFACE_SELECTOR) !== null);

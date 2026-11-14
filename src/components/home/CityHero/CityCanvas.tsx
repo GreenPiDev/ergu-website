@@ -20,16 +20,13 @@ import { FacilityHighlight, curtainHeight } from './cityHighlight';
 import { setCursorInteractive } from '../../ui/CustomCursor/cursorEvents';
 import { FACILITY_RECTS, facilityPickBoxes, pickFacility } from './cityLayout';
 import { CityPerfProbe } from './CityPerfProbe';
+import { CITY_DEBUG, applyCityDebug } from './cityDebug';
 
 const CITY_CONFIG: CityConfig = config;
 const HERO_POSITION = new THREE.Vector3().fromArray(CITY_CONFIG.hero.position);
 const MODEL_URL = '/models/smart_city.glb';
 // 0 başlangıç görünümü (cityRuntime içindeki BASE_LOOK: alacakaranlık), 1 mavi saat.
 const TIME_OF_DAY = 0;
-// Geliştirmede `?fx=0` post-process'i kapatır (kare süresini karşılaştırmak için).
-const FX_DISABLED = import.meta.env.DEV && new URLSearchParams(window.location.search).get('fx') === '0';
-// Geliştirmede `?perf=1` konsola kare ölçümü yazar (CityPerfProbe).
-const PERF_PROBE = import.meta.env.DEV && new URLSearchParams(window.location.search).get('perf') === '1';
 
 /** Bloom ve renk düzeltme. Öncelikli useFrame çizimi R3F'ten devralır: sahneyi çizer, sonra efektleri uygular. */
 function PostFx({ quality }: { quality: Quality }) {
@@ -84,7 +81,7 @@ function CityScene({
   // Şehir ve kamera sahneye ışık eklemez, ışıklar efektte kurulup temizlenir (StrictMode çift çalıştırır).
   const { city, director } = useMemo(
     () => ({
-      city: prepareCity(gltf.scene, CITY_CONFIG, { quality }),
+      city: prepareCity(gltf.scene, CITY_CONFIG, { quality, people: CITY_DEBUG.people }),
       director: new CameraDirector(camera as THREE.PerspectiveCamera, CITY_CONFIG, {
         idleOrbit: !reducedMotion,
         parallax: !reducedMotion,
@@ -100,6 +97,8 @@ function CityScene({
   }, [highlight, facilities]);
 
   useEffect(() => {
+    // Geliştirmedeki ölçüm anahtarı (`?grounds=0`); production'da bir şey yapmaz.
+    applyCityDebug(gltf.scene);
     // Yükseklik haritası (ortam gölgesi) ışıklar kurulmadan önce, şehir sahneye eklendikten sonra bir kez çizilir.
     const heightField = bakeHeightField(gl, scene, gltf.scene, quality);
     const atmosphere = createAtmosphere(gl, scene, gltf.scene, { quality, timeOfDay: TIME_OF_DAY });
@@ -283,8 +282,9 @@ function CityScene({
     <>
       <primitive object={gltf.scene} />
       <primitive object={highlight.object} />
-      {quality !== 'low' && !FX_DISABLED && <PostFx quality={quality} />}
-      {PERF_PROBE && <CityPerfProbe />}
+      {quality !== 'low' && CITY_DEBUG.postFx && <PostFx quality={quality} />}
+      {/* DEV koşulu doğrudan burada: derleyici production'da ölçüm kodunu paketten çıkarır. */}
+      {import.meta.env.DEV && CITY_DEBUG.perfProbe && <CityPerfProbe />}
     </>
   );
 }
@@ -314,8 +314,9 @@ export default function CityCanvas({
       className={className}
       data-ready={ready}
       frameloop={active ? 'always' : 'never'}
-      // Retina'da 1.75 piksel sayısını 2.6 katına çıkarıp kare süresini 30 ms üstüne taşıyordu, MSAA ile 1.25 yeterli.
-      dpr={[1, 1.25]}
+      // Retina'da 1.75 piksel sayısını 2.6 katına çıkarıp kare süresini 30 ms üstüne taşıyordu. 1.25'te de imleç diğer
+      // sayfalardaki kadar akıcı değildi, MSAA ile 1 (kullanıcı kararı).
+      dpr={[1, CITY_DEBUG.highDpr ? 1.25 : 1]}
       shadows={quality !== 'low' ? 'soft' : false}
       gl={{
         antialias: quality !== 'low',

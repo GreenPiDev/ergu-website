@@ -1456,7 +1456,7 @@ interface CityUserData {
 export function prepareCity(
   cityRoot: THREE.Object3D,
   config: CityConfig,
-  { quality }: { quality: Quality },
+  { quality, people = true }: { quality: Quality; people?: boolean },
 ): PreparedCity {
   const lodObjects: THREE.Object3D[] = [];
   const patched = new Set<THREE.Material>();
@@ -1517,7 +1517,8 @@ export function prepareCity(
   ]);
   // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
   // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.
-  createPeople(cityRoot);
+  // Ana sayfada kapalı (kullanıcı kararı: imleç akıcılığı), geliştirmede `?people=1` ile açılır.
+  if (people) createPeople(cityRoot);
   // Şehir içi ağaçlar gerçek ölçüde bu mesafeden nokta gibi kalıyor, maketlerdeki gibi iri tutulur (orman aynı kalır).
   for (const name of ['Greens_Trees', 'Greens_Trees_Olive']) {
     const trees = cityRoot.getObjectByName(name);

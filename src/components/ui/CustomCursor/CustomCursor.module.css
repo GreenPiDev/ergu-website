@@ -17,6 +17,12 @@
   mix-blend-mode: difference;
 }
 
+/* 3D sahne gibi her karede değişen tuvallerin üstünde karışım kareyi uzatır, orada düz beyaz (`data-cursor-blend="off"`). */
+.dot.noBlend,
+.ring.noBlend {
+  mix-blend-mode: normal;
+}
+
 .dot {
   inline-size: 6px;
   block-size: 6px;

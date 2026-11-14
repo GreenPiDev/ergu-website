@@ -74,7 +74,8 @@ export function CityHero() {
   }, []);
 
   return (
-    <div ref={wrapRef} className={styles.root}>
+    // Hero'da özel imleç karışımsız çizilir: 3D tuvalin üstündeki karışım kareyi uzatıyordu (CustomCursor).
+    <div ref={wrapRef} className={styles.root} data-cursor-blend="off">
       <Suspense fallback={null}>
         <CityCanvas
           className={styles.canvas}
