@@ -9,8 +9,12 @@ import { AIRPORT_FRAGMENT, AIRPORT_GLSL, landscapeAirport } from './cityAirport'
 import { CABLECAR_FRAGMENT, CABLECAR_GLSL, landscapeCableCar } from './cityCableCar';
 import { CULTURAL_FRAGMENT, CULTURAL_GLSL, landscapeCulturalCenter } from './cityCulturalCenter';
 import { GREENHOUSE_FRAGMENT, GREENHOUSE_GLSL, landscapeGreenhouse } from './cityGreenhouse';
+import { HOSPITAL_FRAGMENT, HOSPITAL_GLSL, landscapeHospital } from './cityHospital';
+import { TECHNOPARK_FRAGMENT, TECHNOPARK_GLSL, landscapeTechnopark } from './cityTechnopark';
 import { HOUSING_FRAGMENT, HOUSING_GLSL, landscapeHousing } from './cityHousing';
+import { chunkInstances, chunkThinCount } from './cityChunks';
 import { KINDERGARTEN_FRAGMENT, KINDERGARTEN_GLSL, landscapeKindergarten } from './cityKindergarten';
+import { MILITARY_FRAGMENT, MILITARY_GLSL, landscapeMilitaryCampus } from './cityMilitaryCampus';
 import { PARK_FRAGMENT, PARK_GLSL, landscapePark } from './cityPark';
 import { SCHOOL_FRAGMENT, SCHOOL_GLSL, landscapeSchool } from './citySchool';
 import { SCIENCE_FRAGMENT, SCIENCE_GLSL, landscapeScienceCenter } from './cityScienceCenter';
@@ -1178,6 +1182,9 @@ const LANDSCAPES: Record<string, { key: string; code: string; header: string }> 
   CableCar_Ground: { key: 'city_cablecar_v1', code: CABLECAR_FRAGMENT, header: CABLECAR_GLSL },
   Airport_Field: { key: 'city_airport_v1', code: AIRPORT_FRAGMENT, header: AIRPORT_GLSL },
   Science_Ground: { key: 'city_science_v1', code: SCIENCE_FRAGMENT, header: SCIENCE_GLSL },
+  Military_Ground: { key: 'city_military_v1', code: MILITARY_FRAGMENT, header: MILITARY_GLSL },
+  Hospital_Ground: { key: 'city_hospital_v1', code: HOSPITAL_FRAGMENT, header: HOSPITAL_GLSL },
+  Technopark_Ground: { key: 'city_technopark_v1', code: TECHNOPARK_FRAGMENT, header: TECHNOPARK_GLSL },
 };
 
 const LIGHT_POINT_HIDE = /^(Infrastructure_StreetLamp_Heads|Roads_TrafficGlow)/;
@@ -1485,6 +1492,15 @@ export function prepareCity(
   // Bilim merkezi yeniden kurulur: laboratuvar kütleleri, hol, kule podyumu, bilim parkı parçaları, araçlar, ağaçlar ve
   // lambalar (zemin rengi aşağıda LANDSCAPES ile).
   const scienceLamps = landscapeScienceCenter(cityRoot, TREE_SCALE);
+  // Askerî kampüs yeniden kurulur: karargâh, koğuşlar, atölye, duvar ve kuleler, kapılar, tribün, ağaçlar ve lambalar
+  // (zemin rengi aşağıda LANDSCAPES ile).
+  const militaryLamps = landscapeMilitaryCampus(cityRoot, TREE_SCALE);
+  // Hastane yeniden kurulur: kanat kütleleri, podyum, poliklinik, doğu blok, açık katlı otopark, bahçe ve servis parçaları,
+  // otopark adaları, ağaçlar ve lambalar (zemin rengi aşağıda LANDSCAPES ile).
+  const hospitalLamps = landscapeHospital(cityRoot, TREE_SCALE);
+  // Teknopark (bilim merkezinin doğusu, askerî kampüsün eski kuzey kısmı): Ar-Ge blokları, salonlar, veri merkezi,
+  // kampüs çimi, otoparklar, kortlar, ağaçlar ve lambalar. Askerî kampüsten sonra (zemin rengi aşağıda LANDSCAPES ile).
+  const technoparkLamps = landscapeTechnopark(cityRoot, TREE_SCALE);
   createLightPoints(cityRoot, thin, [
     ...parkLamps,
     ...kindergartenLamps,
@@ -1495,6 +1511,9 @@ export function prepareCity(
     ...cableCarLamps,
     ...airportLamps,
     ...scienceLamps,
+    ...militaryLamps,
+    ...hospitalLamps,
+    ...technoparkLamps,
   ]);
   // İnsanlar: kaldırımlarda, blokların ve tesislerin boş alanlarında. Doluluk haritası yerleşim ve park bittikten sonra.
   // Hareketleri shader'da ortak saatle (uTime) yürür, burada güncellenmez.
@@ -1512,6 +1531,13 @@ export function prepareCity(
     }
     trees.instanceMatrix.needsUpdate = true;
   }
+  // Şehre yayılmış büyük örnekli mesh'ler hücrelere bölünür: kadraj dışındaki hücreler çizilmez (görüntü aynı). Bütün
+  // dikim ve ışık noktalarından sonra, gölge ve seyreltme ayarından önce. Her karede matrisi değişenler bölünmez.
+  chunkInstances(
+    cityRoot,
+    (mesh) =>
+      mesh.name === config.cableCar.instancedMesh || mesh.name.endsWith('_Moving') || LIGHT_POINT_HIDE.test(mesh.name),
+  );
   cityRoot.traverse((object) => {
     if (object instanceof THREE.Mesh) {
       const data = object.userData as CityUserData;
@@ -1528,8 +1554,14 @@ export function prepareCity(
       else if (data.lodMaxDistance || data.lodMinDistance) lodObjects.push(object);
       if (object instanceof THREE.InstancedMesh && data.thinnable) {
         // Kalite değişirse veya StrictMode çift çalıştırırsa seyreltme üst üste binmesin diye ilk sayı saklanır.
-        data.baseCount ??= object.count;
-        object.count = Math.floor(data.baseCount * thin);
+        // Hücrelere bölünen mesh'te kaynak sırasıyla seyreltilir (bölünmeden önceki örneklerin aynısı kalır).
+        const chunkCount = chunkThinCount(object.userData, thin);
+        if (chunkCount !== null) {
+          object.count = chunkCount;
+        } else {
+          data.baseCount ??= object.count;
+          object.count = Math.floor(data.baseCount * thin);
+        }
       }
       object.matrixAutoUpdate = false;
       object.updateMatrix();

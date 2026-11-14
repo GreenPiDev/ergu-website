@@ -39,10 +39,17 @@ export function replantTrees(cityRoot: THREE.Object3D, { prefix, inside, spots, 
       sample ??= matrix.clone();
       mesh.setMatrixAt(i, zero);
     }
-    if (!sample && mesh.count > 0) mesh.getMatrixAt(0, (sample = new THREE.Matrix4()));
+    // Alanda ağaç yoksa şehrin ilk ağacı örnek olur (crownRadius da onu ölçer). Önceki bir tesis onu gizlediyse (ölçek
+    // sıfır) örnek aşağıda öbür kaynaktan alınır: gizli bir örnek bütün yeni ağaçları görünmez yapardı.
+    if (!sample && mesh.count > 0) {
+      mesh.getMatrixAt(0, matrix);
+      if (matrix.determinant() !== 0) sample = matrix.clone();
+    }
     mesh.instanceMatrix.needsUpdate = true;
     sources.push({ mesh, sample });
   }
+  const fallback = sources.find((source) => source.sample)?.sample ?? null;
+  for (const source of sources) source.sample ??= fallback;
 
   sources.forEach(({ mesh, sample }, sourceIndex) => {
     if (!sample) return;

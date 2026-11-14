@@ -19,6 +19,7 @@ import { CityPostFx } from './cityPostFx';
 import { FacilityHighlight, curtainHeight } from './cityHighlight';
 import { setCursorInteractive } from '../../ui/CustomCursor/cursorEvents';
 import { FACILITY_RECTS, facilityPickBoxes, pickFacility } from './cityLayout';
+import { CityPerfProbe } from './CityPerfProbe';
 
 const CITY_CONFIG: CityConfig = config;
 const HERO_POSITION = new THREE.Vector3().fromArray(CITY_CONFIG.hero.position);
@@ -27,6 +28,8 @@ const MODEL_URL = '/models/smart_city.glb';
 const TIME_OF_DAY = 0;
 // Geliştirmede `?fx=0` post-process'i kapatır (kare süresini karşılaştırmak için).
 const FX_DISABLED = import.meta.env.DEV && new URLSearchParams(window.location.search).get('fx') === '0';
+// Geliştirmede `?perf=1` konsola kare ölçümü yazar (CityPerfProbe).
+const PERF_PROBE = import.meta.env.DEV && new URLSearchParams(window.location.search).get('perf') === '1';
 
 /** Bloom ve renk düzeltme. Öncelikli useFrame çizimi R3F'ten devralır: sahneyi çizer, sonra efektleri uygular. */
 function PostFx({ quality }: { quality: Quality }) {
@@ -133,7 +136,9 @@ function CityScene({
   useEffect(() => {
     if (resetSignal > 0) director.resetView(reducedMotion);
   }, [director, resetSignal, reducedMotion]);
-  const pointer = useRef({ ndc: new THREE.Vector2(), inside: false, mouse: false });
+  const pointer = useRef({ ndc: new THREE.Vector2(), inside: false, mouse: false, moved: false });
+  // Son tesis aramasındaki kamera: fare de kamera da kıpırdamadıysa arama tekrarlanmaz.
+  const lastPickCamera = useRef(new THREE.Matrix4());
   // Sürükleyerek döndürme (yalnızca fare: dokunmada sayfa kaydırması korunur). Basılan nokta eşiği aşınca sürükleme
   // başlar, sürüklemeden sonraki tıklama seçim sayılmaz.
   const drag = useRef({ id: -1, startX: 0, startY: 0, lastX: 0, lastY: 0, active: false, moved: false });
@@ -199,6 +204,7 @@ function CityScene({
         }
       }
       toNdc(event, pointer.current.ndc);
+      pointer.current.moved = true;
       pointer.current.inside = true;
       pointer.current.mouse = event.pointerType === 'mouse';
     };
@@ -261,9 +267,14 @@ function CityScene({
     atmosphere.focusShadows(director.target, director.distance);
     city.update(reducedMotion ? 0 : delta, director.distance);
     highlight.update(Math.min(delta, 0.1), reducedMotion);
-    // Kamera süzülürken fare dursa da altındaki tesis değişebilir: her karede yeniden bakılır (11 tesis, birkaç kutu).
-    // Sürüklerken tesis vurgulanmaz, etiket çıkmaz.
-    if (pointer.current.inside && pointer.current.mouse && !drag.current.moved) setHovered(pickAt(pointer.current.ndc));
+    // Kamera süzülürken fare dursa da altındaki tesis değişebilir: fare veya kamera kıpırdadığı her karede yeniden bakılır
+    // (11 tesis, birkaç kutu). Sürüklerken tesis vurgulanmaz, etiket çıkmaz.
+    const cameraMoved = !lastPickCamera.current.equals(camera.matrixWorld);
+    if (pointer.current.inside && pointer.current.mouse && !drag.current.moved && (pointer.current.moved || cameraMoved)) {
+      pointer.current.moved = false;
+      lastPickCamera.current.copy(camera.matrixWorld);
+      setHovered(pickAt(pointer.current.ndc));
+    }
     // İlk gerçek kareler ekrandayken poster solar.
     if (++frames.current === 3) onReady();
   });
@@ -273,6 +284,7 @@ function CityScene({
       <primitive object={gltf.scene} />
       <primitive object={highlight.object} />
       {quality !== 'low' && !FX_DISABLED && <PostFx quality={quality} />}
+      {PERF_PROBE && <CityPerfProbe />}
     </>
   );
 }

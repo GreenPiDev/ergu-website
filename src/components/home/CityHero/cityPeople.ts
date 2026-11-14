@@ -4,6 +4,7 @@
 // (gövde: kıyafet rengi, baş: ten rengi), hareketleri shader'da, gölge düşürmez, kalite düşükse seyreltilir (`thinnable`).
 import * as THREE from 'three';
 import { AIRPORT_LANDSIDE, FACILITY_RECTS, ROAD_CUTS, type Rect } from './cityLayout';
+import { PARADE_GROUND } from './cityMilitaryCampus';
 
 // Gerçek boy ~1.72 m. Maket gibi iri (~3.4 m): hero mesafesinde ~5, yakın çekimde ~15 piksel. 1.3 katında (~3 piksel)
 // kullanıcıya fazla küçük geldi. Araçlar da aynı nedenle büyütülür (cityRuntime.ts, VEHICLE_SCALE).
@@ -22,12 +23,19 @@ const FACILITY_AREA_PER_PERSON = 650;
 const SIDEWALK_INSET_MIN = 1.4;
 const SIDEWALK_INSET_MAX = 3.4;
 
-const SKIP = /^(Runtime_|Traffic_(?!.*_Parked$)|Vehicles_|Greens_|Roads_Asphalt|Roads_Markings|Roads_Medians|Roads_Traffic|Terrain_|Sea_|Coast_|River_|Riverside_|Bridges|Infrastructure_Ships|Infrastructure_StreetLamp|Airport_Lights|CableCar_(Cables|Gondolas))/;
+const SKIP = /^(Runtime_|Traffic_(?!.*_Parked$)|Vehicles_|Greens_|Roads_Markings|Roads_Medians|Roads_Traffic|Terrain_|Sea_|Coast_|River_|Riverside_|Bridges|Infrastructure_Ships|Infrastructure_StreetLamp|Airport_Lights|CableCar_(Cables|Gondolas))/;
 const GROUND = /(Ground|Sidewalk|Plaza|Paving|Pavement|Airfield|Court|Promenade|Field)/;
 // Düz ama üstünde yürünmeyen yüzeyler.
-const WATER = /^(Park_Pond|Residential_Pools|Greenhouse_Basin|Cultural_Fountain|Housing_Pool|Housing_Beds)/;
+const WATER = /^(Park_Pond|Residential_Pools|Greenhouse_Basin|Cultural_Fountain|Housing_Pool|Housing_Beds|Hospital_Pond|Technopark_Pond)/;
 // Park etmiş araçlar engel eşiğinden alçak (~2.2 m) ama üstlerinde insan durmaz: yükseklikten bağımsız dolu sayılır.
 const PARKED = /^Traffic_.*_Parked$/;
+// Tesis parçaları (bank, raf, alçak duvar, kürsü): alçak olsalar da içlerinden geçilmez, zeminin bu kadar üstüne çıkan parça
+// hücreyi doldurur. Kaldırım taşı ve ada bordürü gibi basılabilecek kadar alçak olanlar boş kalır.
+const PROPS = /_Props$/;
+// Şehir yolları: trafik akar, gezinenler üstünde durmaz (tesis dikdörtgeni sokağı kapsayabilir, havalimanının güney sokağı
+// gibi). Kaldırımda yürüyenler kendi yollarını kullanır, etkilenmez.
+const ROADS = /^Roads_Asphalt/;
+const PROP_HEIGHT = 0.3;
 
 // Kıyafet renkleri: koyu ve nötr ağırlıklı, aralarda canlı tonlar. Ten renkleri ayrı.
 const CLOTHES = ['#1d2433', '#2b2b2e', '#e9e6df', '#c9b79a', '#7b2d2d', '#d6a531', '#2f6f73', '#4d5a3a', '#8a8f98', '#3c4f7a', '#b4472c', '#f1f1ee'];
@@ -157,11 +165,12 @@ function buildGrid(cityRoot: THREE.Object3D) {
   for (const mesh of meshes) {
     if (GROUND.test(mesh.name) && !WATER.test(mesh.name)) continue;
     const water = WATER.test(mesh.name);
-    const parked = PARKED.test(mesh.name);
+    const parked = PARKED.test(mesh.name) || ROADS.test(mesh.name);
+    const obstacle = PROPS.test(mesh.name) ? PROP_HEIGHT : OBSTACLE_HEIGHT;
     const mark = (x0: number, x1: number, z0: number, z1: number, top: number) =>
       grid.forEach(x0, x1, z0, z1, (cell) => {
         const ground = Number.isNaN(grid.ground[cell]) ? 1 : grid.ground[cell];
-        if (water || parked || top > ground + OBSTACLE_HEIGHT) grid.blocked[cell] = 1;
+        if (water || parked || top > ground + obstacle) grid.blocked[cell] = 1;
       });
     if (mesh instanceof THREE.InstancedMesh) {
       // Örneklenmiş yapılar (bina parçaları, çatı ekipmanı): her örneğin sınır kutusu.
@@ -202,8 +211,11 @@ function sidewalkBlocks(cityRoot: THREE.Object3D): Rect[] {
     blocks.set(`${rect.x0.toFixed(0)},${rect.x1.toFixed(0)},${rect.z0.toFixed(0)},${rect.z1.toFixed(0)}`, rect);
   });
   const inside = (r: Rect, cut: Rect) => r.x0 >= cut.x0 - 1 && r.x1 <= cut.x1 + 1 && r.z0 >= cut.z0 - 1 && r.z1 <= cut.z1 + 1;
-  const kept = [...blocks.values()].filter((rect) => !ROAD_CUTS.some((cut) => inside(rect, cut)));
-  return [...kept, ...ROAD_CUTS];
+  // Askerî kampüs de tek blok: altında kalan eski blokların kaldırımı duruyor, iç kenarlarında yürüyenler duvarın içinden
+  // ve karargâhın altından geçiyordu.
+  const merged = [...ROAD_CUTS, FACILITY_RECTS.militaryCampus];
+  const kept = [...blocks.values()].filter((rect) => !merged.some((cut) => inside(rect, cut)));
+  return [...kept, ...merged];
 }
 
 /** Basit insan: gövde (bacaklar ve gövde tek konik) ve baş. Taban y = 0, boy ~1.72 m. */
@@ -329,7 +341,7 @@ interface Placed {
 }
 
 /**
- * Askerî kampüste içtima: en büyük açık alana bölükler halinde nizam, önünde gidip gelen komutan. Alan doluluk haritasında
+ * Askerî kampüste içtima: tören alanındaki en büyük açık dikdörtgene bölükler halinde nizam, önünde gidip gelen komutan. Alan doluluk haritasında
  * dolu işaretlenir, gezinenler nizamın içine girmez.
  */
 function parade(grid: OccupancyGrid, zone: Rect): Placed[] {
@@ -384,10 +396,11 @@ export function createPeople(cityRoot: THREE.Object3D) {
   const grid = buildGrid(cityRoot);
   const rand = random(20261113);
   const blocks = sidewalkBlocks(cityRoot);
-  // İçtima önce kurulur. Sonra kampüsün tamamı gezinenlere kapatılır: çitin içinde sivil olmaz (kullanıcı isteği).
-  // Kaldırımda yürüyenler çitin dışında kalır (blok kenarından en çok 3.4 m içeride, çit 6 m içeride).
+  // İçtima önce kurulur: karargâh ile tribün arasındaki tören alanında (cityMilitaryCampus.ts). Sonra kampüsün tamamı
+  // gezinenlere kapatılır: duvarın içinde sivil olmaz (kullanıcı isteği). Kaldırımda yürüyenler duvarın dışında kalır
+  // (blok kenarından en çok 3.4 m içeride, duvar 5.5 m içeride).
   const military = FACILITY_RECTS.militaryCampus;
-  const soldiers = parade(grid, military);
+  const soldiers = parade(grid, PARADE_GROUND);
   grid.forEach(military.x0, military.x1, military.z0, military.z1, (cell) => {
     grid.blocked[cell] = 1;
   });
@@ -429,8 +442,12 @@ export function createPeople(cityRoot: THREE.Object3D) {
     const count = Math.round(((free.length / 2) * CELL * CELL) / areaPerPerson);
     for (let n = 0; n < count; n++) {
       const pick = Math.floor(rand() * (free.length / 2)) * 2;
-      const ax = free[pick] + (rand() - 0.5) * CELL;
-      const az = free[pick + 1] + (rand() - 0.5) * CELL;
+      // Hücre içinde rastgele nokta. Kayma noktayı komşu dolu hücreye (araç, bina köşesi) taşırsa hücre merkezi kalır.
+      const jx = free[pick] + (rand() - 0.5) * CELL;
+      const jz = free[pick + 1] + (rand() - 0.5) * CELL;
+      const inside = grid.free(jx, jz);
+      const ax = inside ? jx : free[pick];
+      const az = inside ? jz : free[pick + 1];
       const idler = rand() < 0.35;
       let bx = ax + Math.cos(rand() * Math.PI * 2) * 0.01;
       let bz = az + Math.sin(rand() * Math.PI * 2) * 0.01;
