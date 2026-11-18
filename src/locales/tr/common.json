@@ -5,6 +5,40 @@
   "nav": {
     "label": "Ana menü",
     "allButtons": "Tüm Butonlar",
+    "main": {
+      "home": "Ana Sayfa",
+      "corporate": "Kurumsal",
+      "contact": "İletişim",
+      "gallery": "Galerimiz",
+      "certificates": "Belgelerimiz",
+      "industries": "Endüstri",
+      "solarPlants": "400V - 800V GES Projeleri",
+      "biomassPlants": "Biyokütle Santralleri",
+      "industrialFacilities": "Endüstriyel Fabrikalar",
+      "energyDistribution": "Enerji Dağıtım",
+      "oilGas": "Petrol Gaz",
+      "waterSystems": "Su ve Atık Su Sistemleri",
+      "products": "Ürünlerimiz",
+      "instrumentTransformers": "Akım ve Gerilim Trafosu",
+      "lowVoltagePanels": "Alçak Gerilim Dağıtım Panoları",
+      "transformerPanel": "Trafo Panosu",
+      "factoryPanel": "Fabrika Panosu",
+      "constructionPanel": "Şantiye Panosu",
+      "evCharging": "Araç Şarj İstasyonları",
+      "lightingPoles": "Aydınlatma Direği",
+      "steelKiosks": "Sac Köşk Binalar",
+      "concreteKiosks": "Beton Köşk Binalar",
+      "prefabBuildings": "Prefabrik Binalar",
+      "busbar": "Busbar",
+      "gasInsulatedSwitchgear": "Gaz İzoleli Hücre",
+      "generators": "Jeneratör",
+      "cables": "Kablo ve Aksesuarlar",
+      "relayScada": "Röle & Scada Malzeme Satış ve Uygulamaları",
+      "transformers": "Transformatörler",
+      "upsRectifiers": "UPS & Redresör",
+      "projects": "Projelerimiz",
+      "eCatalog": "E-Katalog"
+    },
     "items": {
       "home": "Ana Sayfa",
       "about": "Hakkında",
@@ -64,5 +98,8 @@
         "airport": "Havalimanı"
       }
     }
+  },
+  "placeholderPage": {
+    "note": "[YER TUTUCU] Bu sayfanın içeriği henüz hazırlanmadı."
   }
 }

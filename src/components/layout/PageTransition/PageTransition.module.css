@@ -32,3 +32,76 @@
   line-height: 1.2;
   text-wrap: balance;
 }
+
+.label[data-long='true'] {
+  font-size: var(--text-page-transition-long);
+}
+
+/* İkon ve çevresindeki yaylar üst üste, ortalanmış durur. */
+.emblem {
+  display: grid;
+  place-items: center;
+  inline-size: calc(var(--size-page-transition-icon) * 1.75);
+  aspect-ratio: 1;
+}
+
+.emblem > * {
+  grid-area: 1 / 1;
+}
+
+.rings {
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+
+/* Yaylar yalnızca perde ekrandayken döner, ana sayfada gizli perde boşuna kare çizdirmesin. */
+.ring {
+  fill: none;
+  stroke: var(--color-white);
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: ring-spin var(--duration-ring) var(--ease-ring) infinite paused;
+}
+
+:root[data-page-curtain] .ring {
+  animation-play-state: running;
+}
+
+/* Dış yay uzun ve ince, saat yönünde. */
+.ringOuter {
+  --duration-ring: var(--duration-ring-outer);
+  stroke-width: 1;
+  stroke-dasharray: 34 66;
+}
+
+/* İç yay kısa ve kalın, ters yönde ve farklı hızda; ikisi sürekli kesişip ayrılır. */
+.ringInner {
+  --duration-ring: var(--duration-ring-inner);
+  stroke-width: 1.6;
+  stroke-dasharray: 18 82;
+  stroke-dashoffset: 50;
+  animation-direction: reverse;
+}
+
+@keyframes ring-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    animation: none;
+  }
+}
+
+/* Firma ikonu maske olarak kullanılır, perdede beyaz görünür. */
+.icon {
+  display: block;
+  inline-size: var(--size-page-transition-icon);
+  aspect-ratio: 1;
+  background: var(--color-white);
+  mask: var(--icon-src) center / contain no-repeat;
+}

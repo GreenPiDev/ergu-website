@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { PageHero } from '../components/layout/PageHero/PageHero';
-import type { NavKey } from '../content/navigation';
+import type { SampleKey } from '../content/navigation';
 import { DemoPage } from './DemoPage';
 
 /** İçeriği henüz yazılmamış sayfalar: sayfa başlıklı hero ve altında geçici test bölümleri. */
-export function SectionPage({ navKey }: { navKey: NavKey }) {
+export function SectionPage({ navKey }: { navKey: SampleKey }) {
   const { t, i18n } = useTranslation();
 
   return (

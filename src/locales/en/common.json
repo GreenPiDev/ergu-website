@@ -5,6 +5,40 @@
   "nav": {
     "label": "Main menu",
     "allButtons": "All Buttons",
+    "main": {
+      "home": "Home",
+      "corporate": "Corporate",
+      "contact": "Contact",
+      "gallery": "Gallery",
+      "certificates": "Certificates",
+      "industries": "Industries",
+      "solarPlants": "400V - 800V Solar Power Plant Projects",
+      "biomassPlants": "Biomass Power Plants",
+      "industrialFacilities": "Industrial Plants",
+      "energyDistribution": "Energy Distribution",
+      "oilGas": "Oil & Gas",
+      "waterSystems": "Water & Wastewater Systems",
+      "products": "Products",
+      "instrumentTransformers": "Current & Voltage Transformers",
+      "lowVoltagePanels": "Low Voltage Distribution Panels",
+      "transformerPanel": "Transformer Panels",
+      "factoryPanel": "Factory Panels",
+      "constructionPanel": "Construction Site Panels",
+      "evCharging": "EV Charging Stations",
+      "lightingPoles": "Lighting Poles",
+      "steelKiosks": "Steel Kiosk Substations",
+      "concreteKiosks": "Concrete Kiosk Substations",
+      "prefabBuildings": "Prefabricated Buildings",
+      "busbar": "Busbar",
+      "gasInsulatedSwitchgear": "Gas-Insulated Switchgear",
+      "generators": "Generators",
+      "cables": "Cables & Accessories",
+      "relayScada": "Relay & SCADA Equipment Sales and Applications",
+      "transformers": "Transformers",
+      "upsRectifiers": "UPS & Rectifiers",
+      "projects": "Projects",
+      "eCatalog": "E-Catalog"
+    },
     "items": {
       "home": "Home",
       "about": "About",
@@ -64,5 +98,8 @@
         "airport": "Airport"
       }
     }
+  },
+  "placeholderPage": {
+    "note": "[PLACEHOLDER] The content of this page has not been prepared yet."
   }
 }

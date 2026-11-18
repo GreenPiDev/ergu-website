@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type FacilityId, facilityColorToken } from '../../../content/facilities';
+import { usePageRevealHold } from '../../../animations/pageReveal';
 import { useIsMobile, usePrefersReducedMotion } from '../../../hooks/useDevice';
 import { FacilityBar } from '../FacilityBar/FacilityBar';
 import { setCursorLabel } from '../../ui/CustomCursor/cursorEvents';
@@ -26,6 +27,8 @@ export function CityHero() {
   const isMobile = useIsMobile();
   const reducedMotion = usePrefersReducedMotion();
   const [ready, setReady] = useState(false);
+  // Perdeyle gelindiyse perde, şehrin ilk kareleri çizilene kadar kalkmaz (ikonun çevresindeki yaylar döner).
+  usePageRevealHold(ready);
   const [onScreen, setOnScreen] = useState(true);
   const [tabVisible, setTabVisible] = useState(true);
   const [facility, setFacility] = useState<FacilityId | null>(null);

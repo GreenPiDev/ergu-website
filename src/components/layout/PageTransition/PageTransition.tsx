@@ -1,16 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type BlockerFunction, NavigationType, useBlocker } from 'react-router';
 import { gsap, MOTION, useGSAP } from '../../../animations/gsap';
-import { NAV_ITEMS } from '../../../content/navigation';
+import { whenPageRevealReady } from '../../../animations/pageReveal';
+import { HOME_PATH, NAV_PAGES } from '../../../content/navigation';
 import { REDUCED_MOTION_QUERY } from '../../../hooks/useDevice';
 import { getLocaleFromPathname, stripLocale } from '../../../i18n/locale';
 import styles from './PageTransition.module.css';
 
-type Phase = 'idle' | 'entering' | 'covered' | 'leaving';
+type Phase = 'idle' | 'entering' | 'covered' | 'waiting' | 'leaving';
 
 // Fontun hem latin hem latin-ext dosyası önceden insin, ilk geçişte yazı atlamasın.
 const FONT_PRELOAD_GLYPHS = 'Aİ';
+
+// Bu uzunluğun üstündeki sayfa adları perdede küçük yazılır.
+const LONG_LABEL_LENGTH = 16;
+
+// Ana sayfaya gidişte perdenin ortasında yazı yerine firma ikonu durur.
+const HOME_ICON_SRC = '/ergu-icon.png';
 
 // Dil değişiminde ve yönlendirmelerde (replace) perde çalışmaz.
 const isPageChange: BlockerFunction = ({ currentLocation, nextLocation, historyAction }) =>
@@ -42,6 +49,7 @@ export function PageTransition() {
       if (!root || !label || !contextSafe) return;
 
       let phase: Phase = 'idle';
+      let cancelWait: (() => void) | null = null;
       const isReduced = () => window.matchMedia(REDUCED_MOTION_QUERY).matches;
 
       const handleCovered = () => {
@@ -103,11 +111,27 @@ export function PageTransition() {
 
         if (phase === 'idle' && current.state === 'blocked') enter();
         else if (phase === 'covered' && current.state === 'blocked') current.proceed();
-        else if (phase === 'covered' && current.state === 'unblocked') leave();
+        else if (phase === 'covered' && current.state === 'unblocked') {
+          // Yeni sayfa hazır olana kadar (ör. 3D şehir) perde ekranda kalır.
+          phase = 'waiting';
+          cancelWait = whenPageRevealReady(
+            contextSafe(() => {
+              cancelWait = null;
+              leave();
+            }),
+          );
+        } else if (phase === 'waiting' && current.state === 'blocked') {
+          // Beklerken başka sayfaya gidilirse perde zaten kapalı, doğrudan oraya geçilir.
+          cancelWait?.();
+          cancelWait = null;
+          phase = 'covered';
+          current.proceed();
+        }
       });
 
       syncRef.current = sync;
       return () => {
+        cancelWait?.();
         syncRef.current = null;
       };
     },
@@ -123,23 +147,39 @@ export function PageTransition() {
     if (!labelRef.current) return;
     const { fontWeight, fontFamily } = getComputedStyle(labelRef.current);
     document.fonts.load(`${fontWeight} 1em ${fontFamily}`, FONT_PRELOAD_GLYPHS).catch(() => undefined);
+    // İkon maske olarak kullanıldığı için ilk geçişte boş kalmasın diye önceden indirilir.
+    new Image().src = HOME_ICON_SRC;
   }, []);
 
   const locale = getLocaleFromPathname(targetPathname);
   const targetRoute = stripLocale(targetPathname);
-  const targetItem = NAV_ITEMS.find(({ path }) => path === targetRoute);
-  // Ana sayfaya dönüşte perde yazısız gelir.
-  const label =
-    targetItem && targetItem.key !== 'home'
-      ? i18n.getFixedT(locale)(`nav.items.${targetItem.key}`).toLocaleUpperCase(locale)
-      : '';
+  const targetItem = NAV_PAGES.find(({ path }) => path === targetRoute);
+  // Ana sayfaya dönüşte perdede yazı yerine firma ikonu görünür.
+  const isHome = targetRoute === HOME_PATH;
+  const label = targetItem && !isHome ? i18n.getFixedT(locale)(targetItem.labelKey).toLocaleUpperCase(locale) : '';
+  // Uzun sayfa adları (ör. ürün adları) küçük boyutla birkaç satıra bölünür, ekrana sığar.
+  const isLongLabel = label.length > LONG_LABEL_LENGTH;
 
   return (
     <div ref={rootRef} className={styles.curtain} aria-hidden="true">
       <div className={styles.content}>
         <div className={styles.mask}>
-          <span ref={labelRef} className={styles.label}>
-            {label}
+          <span ref={labelRef} className={styles.label} data-long={isLongLabel}>
+            {isHome ? (
+              <span className={styles.emblem}>
+                {/* İkonun çevresinde ters yönlerde dönen iki yay. */}
+                <svg className={styles.rings} viewBox="0 0 100 100">
+                  <circle className={`${styles.ring} ${styles.ringOuter}`} cx="50" cy="50" r="47" pathLength="100" />
+                  <circle className={`${styles.ring} ${styles.ringInner}`} cx="50" cy="50" r="40" pathLength="100" />
+                </svg>
+                <span
+                  className={styles.icon}
+                  style={{ '--icon-src': `url(${HOME_ICON_SRC})` } as CSSProperties}
+                />
+              </span>
+            ) : (
+              label
+            )}
           </span>
         </div>
       </div>

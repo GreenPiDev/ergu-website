@@ -34,6 +34,10 @@
   --text-display: clamp(2.5rem, 1.4rem + 5.2vw, 7.5rem);
   /* Yaklaşık 6,5 em genişliğindeki tek kelime 320 px ekrana sığar. Daha uzun menü adı varsa 13.5vw düşürülür. */
   --text-page-transition: min(13.5vw, 30svh, 13rem);
+  /* Uzun sayfa adları (16 harften uzun) birkaç satıra bölünür. En uzun kelime 360 px ekrana sığmalıdır. */
+  --text-page-transition-long: min(8vw, 13svh, 6.5rem);
+  /* Ana sayfaya gidişte perdedeki ikon. Kaynak PNG 118 px, daha büyüğü bulanıklaşır; büyütmek için SVG gerekir. */
+  --size-page-transition-icon: min(20vw, 15svh, 6.5rem);
   --text-rail-counter: clamp(1.5rem, 1.1rem + 1.6vw, 3rem);
   --text-checkbox-label: clamp(1.1875rem, 1.05rem + 0.55vw, 1.625rem);
   --text-checkbox-description: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
@@ -74,6 +78,10 @@
   --duration-slow: 0.8s;
   --ease-out: cubic-bezier(0.7, 0, 0.15, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Sayfa geçişi perdesindeki dönen yaylar: hızlanıp yavaşlayan, savrulur gibi bir dönüş. */
+  --ease-ring: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-ring-outer: 1.3s;
+  --duration-ring-inner: 1.05s;
 
   /* Katmanlar */
   --z-section-rail: 90;

@@ -57,6 +57,13 @@
   --nav-gap: var(--space-sm);
 }
 
+/* Menüde dokuz öğe var; dar masaüstü pencerelerinde aralık daralır ki tek satıra sığsın. */
+@media (max-width: 79.99rem) {
+  .header {
+    --nav-gap: var(--space-sm);
+  }
+}
+
 .link {
   position: relative;
   display: inline-flex;

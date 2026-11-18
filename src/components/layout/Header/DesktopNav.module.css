@@ -1,0 +1,159 @@
+.topGroup,
+.groupItem {
+  position: relative;
+}
+
+.trigger {
+  gap: 0.45em;
+}
+
+/* İnce ok: açılır menüde aşağı, alt menüde sağa bakar. */
+.chevron {
+  flex: none;
+  inline-size: 0.42em;
+  block-size: 0.42em;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.chevron[data-direction='down'] {
+  margin-block-start: -0.25em;
+  transform: rotate(45deg);
+}
+
+.trigger[aria-expanded='true'] .chevron {
+  transform: translateY(0.25em) rotate(-135deg);
+}
+
+.chevron[data-direction='right'] {
+  transform: rotate(-45deg);
+}
+
+.groupRow[aria-expanded='true'] .chevron {
+  transform: translateX(0.2em) rotate(-45deg);
+}
+
+/* Panel bulunulan bölümün zeminini yarı saydam alır, arkası bulanık görünür. */
+.panel {
+  position: absolute;
+  isolation: isolate;
+  min-inline-size: 15rem;
+  padding: var(--space-sm) 0;
+  margin: 0;
+  list-style: none;
+  color: var(--surface-fg);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-out),
+    visibility 0s linear var(--duration-base);
+}
+
+.panel[data-open='true'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-out),
+    visibility 0s;
+}
+
+/* Zemin ve bulanıklık ayrı katmanda: panelin kendisinde olsaydı içindeki alt menü yalnızca paneli bulanıklaştırırdı. */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in srgb, var(--surface-bg) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-fg) 14%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+/* Açılır menü başlığın altında, yazılar başlıkla hizalı açılır. */
+.panel[data-variant='dropdown'] {
+  inset-block-start: 100%;
+  transform: translateY(-0.5rem);
+}
+
+.panel[data-variant='dropdown'][data-side='start'] {
+  inset-inline-start: calc(var(--space-md) * -1);
+}
+
+.panel[data-variant='dropdown'][data-side='end'] {
+  inset-inline-end: calc(var(--space-md) * -1);
+}
+
+/* Alt menü satırın yanında, ilk satırı satırla hizalı açılır. */
+.panel[data-variant='flyout'] {
+  inset-block-start: calc((var(--space-sm) + 1px) * -1);
+  transform: translateX(-0.5rem);
+}
+
+.panel[data-variant='flyout'][data-side='end'] {
+  inset-inline-start: 100%;
+}
+
+.panel[data-variant='flyout'][data-side='start'] {
+  inset-inline-end: 100%;
+  transform: translateX(0.5rem);
+}
+
+.panel[data-open='true'][data-variant] {
+  transform: none;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  justify-content: space-between;
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding-inline: var(--space-md);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-nav);
+  text-align: start;
+  white-space: nowrap;
+}
+
+/* Aktif sayfa (veya içinde aktif sayfa olan alt menü) solda vurgu renginde ince çizgiyle işaretlenir. */
+.item::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.6rem;
+  inset-inline-start: 0;
+  inline-size: 2px;
+  background: var(--color-accent);
+  transform: scaleY(0);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.active::before,
+.groupRow[aria-expanded='true']::before {
+  transform: scaleY(1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover::before {
+    transform: scaleY(1);
+  }
+
+  /* Ürünler gibi uzun listeler kısa dizüstü ekranlarına sığsın. Fareyle 36 px'lik satır WCAG 2.2 AA (24 px) üstündedir. */
+  @media (max-height: 51.25rem) {
+    .item {
+      min-block-size: 2.25rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .panel[data-variant] {
+    transform: none;
+  }
+}

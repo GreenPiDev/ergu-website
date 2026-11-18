@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
 import { gsap, MOTION, useGSAP } from '../../animations/gsap';
-import { getNavPath } from '../../content/navigation';
+import { CONTACT_PATH } from '../../content/navigation';
 import { usePrefersReducedMotion } from '../../hooks/useDevice';
 import { useScrollLock } from '../../hooks/useSmoothScroll';
 import { getLocaleFromPathname, localizePath } from '../../i18n/locale';
@@ -30,7 +30,7 @@ export function ChecklistCompleteDialog({ total, onClose }: ChecklistCompleteDia
   const panelRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const contactPath = localizePath(getNavPath('contact'), getLocaleFromPathname(pathname));
+  const contactPath = localizePath(CONTACT_PATH, getLocaleFromPathname(pathname));
 
   useScrollLock(true);
 

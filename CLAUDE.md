@@ -3,7 +3,7 @@
 [SEKTÖR] alanında faaliyet gösteren bir firmanın kurumsal web sitesi. Hedef, Awwwards seviyesinde premium bir deneyim.
 
 - **Repo:** [REPO ADRESİ] (ana dal: `main`)
-- **Durum, yapılanlar, açık kararlar ve planlar:** `PROGRESS.md`. Her tamamlanan işten sonra güncellenir. Oradaki açık kararlar için varsayım yapma, kullanıcıya sor.
+- **Durum, yapılanlar, açık kararlar ve planlar:** `PROGRESS.md`. Yalnızca önemli, büyük geliştirmelerden sonra güncellenir; küçük düzeltme ve ayarlar yazılmaz. Oradaki açık kararlar için varsayım yapma, kullanıcıya sor.
 
 > Bu dosya şablondur. Köşeli parantezli alanları doldur, yeni projeye başlarken `PROGRESS.md`'deki kurulum listesini uygula.
 
@@ -51,7 +51,7 @@ React, Vite, TypeScript (`strict`), GSAP + `@gsap/react`, Lenis, React Router, i
 - Örnek alınan sitelerin kodu, metinleri, görselleri ve renk paleti kopyalanmaz.
 - Şablon hissi veren kart ızgaraları, gradient bloblar, stok ikonlar ve jenerik sektör görselleri kullanılmaz. Fontlar Türkçe karakterleri tam desteklemeli, ücretli fontlar lisanssız kullanılmaz.
 - GSAP, React içinde `useGSAP` ve `scope` ile yazılır, ortak hareketler `src/animations/` altındadır.
-- **Sayfa geçişi:** Vurgu renginde perde alttan yukarı hızla gelir, ortasında `--font-transition` fontuyla gidilen sayfanın adı yazar, sonra yukarı çıkıp gider. Ana sayfaya gidişte yazı olmaz, dil değişiminde perde çalışmaz. Tek kaynak `RootLayout` içindeki `PageTransition` bileşenidir, sayfalara ayrı geçiş yazılmaz.
+- **Sayfa geçişi:** Vurgu renginde perde alttan yukarı hızla gelir, ortasında `--font-transition` fontuyla gidilen sayfanın adı yazar, sonra yukarı çıkıp gider. Ana sayfaya gidişte yazı yerine ortada firma ikonu (`ergu-icon.png`, beyaz) durur, dil değişiminde perde çalışmaz. Tek kaynak `RootLayout` içindeki `PageTransition` bileşenidir, sayfalara ayrı geçiş yazılmaz.
 - **Uzun sayfalarda bölüm rayı:** `SectionRail` (`src/components/ui/SectionRail/`) konumu, ilerlemeyi ve bölüme atlamayı sağlar. Bölümler tek kapsayıcının doğrudan alt öğeleridir, masaüstünde sağlarında `--rail-width` kadar yer bırakılır, vurgu rengi gibi doygun zeminli bölümler `data-rail-solid` taşır.
 - Yalnızca `transform` ve `opacity` animasyonu yapılır. Her bölüme efekt yığılmaz.
 - SplitText fontlar yüklendikten sonra çalışır. Her sayfa geçişinde ScrollTrigger'lar temizlenir ve yenilenir.
