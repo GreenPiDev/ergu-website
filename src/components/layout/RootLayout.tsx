@@ -20,7 +20,8 @@ export function RootLayout() {
   }, [i18n, locale]);
 
   useEffect(() => {
-    document.title = t('meta.title');
+    // Geliştirme sunucusunda sekme canlı siteden ayırt edilsin diye başa (Dev) eklenir. Yayın derlemesinde yoktur.
+    document.title = import.meta.env.DEV ? `(Dev) ${t('meta.title')}` : t('meta.title');
   }, [t]);
 
   return (

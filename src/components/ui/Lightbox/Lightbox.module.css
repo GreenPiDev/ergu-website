@@ -46,7 +46,7 @@
   margin: auto;
 }
 
-/* Mobilde sarı kare içinde siyah çarpı, daha geniş ekranlarda yazı. */
+/* Mobilde turuncu kare içinde siyah çarpı, daha geniş ekranlarda yazı. */
 .close {
   position: absolute;
   inset-block-start: calc(var(--space-sm) + env(safe-area-inset-top));
