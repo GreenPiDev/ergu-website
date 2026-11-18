@@ -46,6 +46,7 @@
   inline-size: 100%;
   min-block-size: var(--touch-target);
   font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
   font-size: var(--text-nav);
   font-weight: var(--weight-heavy);
   --item-opacity: 0.55;
@@ -109,6 +110,7 @@
   .counter {
     display: block;
     font-family: var(--font-transition);
+    font-stretch: var(--stretch-transition);
     font-size: var(--text-rail-counter);
     font-weight: var(--weight-heavy);
     line-height: 1;

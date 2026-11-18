@@ -8,11 +8,11 @@ importers:
 
   .:
     dependencies:
-      '@fontsource-variable/big-shoulders-stencil':
-        specifier: ^5.3.0
-        version: 5.3.0
       '@fontsource-variable/geist':
         specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource-variable/saira':
+        specifier: 5.3.0
         version: 5.3.0
       '@fontsource/barlow':
         specifier: 5.3.0
@@ -88,11 +88,11 @@ packages:
   '@emnapi/wasi-threads@2.2.0':
     resolution: {integrity: sha512-JP7OYH38Q7+pyTAe14raZHLQIK7BDKbdwji+Xi3pcd/6QkJYQH3SX4wu6EplGrGJWRepoNzedfm0G3B9Z4e9Rw==}
 
-  '@fontsource-variable/big-shoulders-stencil@5.3.0':
-    resolution: {integrity: sha512-M722iR7TPc+CDhj5kI0rsTo1IS+vh5AbTY+p2Ee507tgbqD/ElbuQzR32VRuYYqonG50VFoas5+rWSd84RHmKQ==}
-
   '@fontsource-variable/geist@5.3.0':
     resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
+
+  '@fontsource-variable/saira@5.3.0':
+    resolution: {integrity: sha512-C1rm7n1OuEx4Se/SAB/5EeUuCviGFFnYTr5vxuQQm2YIOfgbQWx/P6qqhdXlVCBRm/1UzNWCtDK5jNbVmO6W2w==}
 
   '@fontsource/barlow@5.3.0':
     resolution: {integrity: sha512-tGR0y6QObRtKv71MOth44222+mdNFM/ZWFWDV1VLzNbG4oK9PNRlyJzmkck4vHAi9ibHBXgt4SlY51amFP55CA==}
@@ -882,9 +882,9 @@ snapshots:
       tslib: 2.9.1
     optional: true
 
-  '@fontsource-variable/big-shoulders-stencil@5.3.0': {}
-
   '@fontsource-variable/geist@5.3.0': {}
+
+  '@fontsource-variable/saira@5.3.0': {}
 
   '@fontsource/barlow@5.3.0': {}
 

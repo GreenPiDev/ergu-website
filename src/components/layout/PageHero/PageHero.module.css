@@ -43,6 +43,7 @@
   /* Dikey yazımda margin-block-start sağ kenara denk gelir, bu yüzden fiziksel özellik kullanılır. */
   margin-top: calc((var(--header-height) - var(--hero-padding-end, var(--space-md))) * -1);
   font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
   font-size: var(--page-title-size);
   font-weight: var(--weight-heavy);
   /* İ'nin noktası ve Ç'nin çengeli harf maskesinde kesilmesin. */

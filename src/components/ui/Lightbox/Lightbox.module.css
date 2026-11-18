@@ -57,6 +57,7 @@
   min-inline-size: var(--touch-target);
   min-block-size: var(--touch-target);
   font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
   font-size: var(--text-scroll-cue);
   font-weight: var(--weight-heavy);
   color: var(--color-accent);

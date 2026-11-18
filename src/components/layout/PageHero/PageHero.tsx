@@ -16,13 +16,23 @@ type PageHeroProps = {
   children?: ReactNode;
 };
 
+const CANVAS_STRETCH: Record<string, CanvasFontStretch> = {
+  '62.5%': 'extra-condensed',
+  '75%': 'condensed',
+  '87.5%': 'semi-condensed',
+  '100%': 'normal',
+};
+
 /** Başlığın `em` cinsinden ölçüleri. CSS bunlarla her sayfa adını aynı yüksekliğe sığdırır. */
 function measureTitle(element: HTMLElement, text: string) {
   const context = document.createElement('canvas').getContext('2d');
   if (!context) return null;
 
-  const { fontWeight, fontFamily } = getComputedStyle(element);
-  context.font = `${fontWeight} 100px ${fontFamily}`;
+  const { fontWeight, fontFamily, fontStretch } = getComputedStyle(element);
+  // Canvas yalnızca anahtar kelime genişlikleri bilir; başlığın dar kesimi (75%) 'condensed' olarak ölçülür.
+  const stretch = CANVAS_STRETCH[fontStretch] ?? 'normal';
+  context.font = `${fontWeight} ${stretch} 100px ${fontFamily}`;
+  context.fontStretch = stretch;
   // SplitText harfleri ayırdığı için ekrandaki metinde kerning yoktur.
   context.fontKerning = 'none';
 

@@ -1,4 +1,5 @@
-import '@fontsource-variable/big-shoulders-stencil';
+// Ağırlık ve genişlik eksenleriyle: başlıklarda dar kesim kullanılır.
+import '@fontsource-variable/saira/wdth.css';
 // Şehir hero'sundaki lokasyon butonları (400 normal, 500 seçili).
 import '@fontsource/barlow/400.css';
 import '@fontsource/barlow/500.css';

@@ -159,7 +159,8 @@ export function createAtmosphere(
   const sun = new THREE.DirectionalLight('#ffffff', 3);
   sun.name = 'Runtime_Sun';
   sun.castShadow = quality !== 'low';
-  const shadowSize = quality === 'high' ? 4096 : 2048;
+  // Telefonda 1024: kamera uçarken gölge haritası her karede yeniden çizildiği için bu geçiş de ucuzlar.
+  const shadowSize = quality === 'high' ? 4096 : 1024;
   sun.shadow.mapSize.set(shadowSize, shadowSize);
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.6;

@@ -294,12 +294,15 @@ interface CityCanvasProps extends CitySceneProps {
   active: boolean;
   ready: boolean;
   className: string;
+  /** Çözünürlük (piksel oranı) üst sınırı. */
+  maxDpr: number;
 }
 
 export default function CityCanvas({
   active,
   ready,
   className,
+  maxDpr,
   quality,
   reducedMotion,
   onReady,
@@ -315,11 +318,13 @@ export default function CityCanvas({
       data-ready={ready}
       frameloop={active ? 'always' : 'never'}
       // Retina'da 1.75 piksel sayısını 2.6 katına çıkarıp kare süresini 30 ms üstüne taşıyordu. 1.25'te de imleç diğer
-      // sayfalardaki kadar akıcı değildi, MSAA ile 1 (kullanıcı kararı).
-      dpr={[1, CITY_DEBUG.highDpr ? 1.25 : 1]}
-      shadows={quality !== 'low' ? 'soft' : false}
+      // sayfalardaki kadar akıcı değildi, MSAA ile 1 (kullanıcı kararı). Telefonda daha yüksek, bkz. CityHero getMaxDpr.
+      dpr={[1, CITY_DEBUG.highDpr ? Math.max(maxDpr, 1.25) : maxDpr]}
+      // Telefonda (medium) yumuşak gölge yerine tek örneklemeli PCF: piksel başına örnek sayısı birkaç kat azalır.
+      shadows={quality === 'high' ? 'soft' : quality === 'medium' ? 'percentage' : false}
       gl={{
-        antialias: quality !== 'low',
+        // Telefonda MSAA kapalı: 1.5 piksel oranında tırtıklar zaten az görünür, kazanç büyük.
+        antialias: quality === 'high',
         powerPreference: 'high-performance',
         // Neutral: ACES beyaz cepheleri kremrengine kaydırıp patlatıyordu, Neutral beyazı beyaz bırakır.
         toneMapping: THREE.NeutralToneMapping,

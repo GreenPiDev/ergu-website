@@ -21,11 +21,22 @@ function getQuality(isMobile: boolean): Quality {
   return 'high';
 }
 
+/**
+ * Çözünürlük üst sınırı. Masaüstünde 1 (imleç akıcılığı için kullanıcı kararı). Telefonların piksel oranı 3 olduğundan
+ * 1'de sahne ekranın üçte biri çözünürlükte çizilip büyütülüyor ve bulanık görünüyordu. 2 net ama takılıyordu, 1.5
+ * netlik ile akıcılık arasındaki denge (kullanıcı geri bildirimi). Zayıf cihazlarda 1.25.
+ */
+function getMaxDpr(isMobile: boolean, quality: Quality): number {
+  if (!isMobile) return 1;
+  return quality === 'low' ? 1.25 : 1.5;
+}
+
 /** Tam ekran 3D şehir. Poster yok: sahne hemen yüklenir, ilk kareler hazır olunca koyu zeminden solarak gelir. */
 export function CityHero() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const reducedMotion = usePrefersReducedMotion();
+  const quality = getQuality(isMobile);
   const [ready, setReady] = useState(false);
   // Perdeyle gelindiyse perde, şehrin ilk kareleri çizilene kadar kalkmaz (ikonun çevresindeki yaylar döner).
   usePageRevealHold(ready);
@@ -84,7 +95,8 @@ export function CityHero() {
           className={styles.canvas}
           active={onScreen && tabVisible}
           ready={ready}
-          quality={getQuality(isMobile)}
+          quality={quality}
+          maxDpr={getMaxDpr(isMobile, quality)}
           reducedMotion={reducedMotion}
           onReady={() => setReady(true)}
           facilities={shown}

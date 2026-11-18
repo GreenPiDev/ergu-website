@@ -5,7 +5,8 @@
   z-index: var(--z-page-transition);
   /* Mobil tarayıcı çubuğu kaybolduğunda altta boşluk kalmasın. */
   block-size: 100lvh;
-  color: var(--color-black);
+  /* Yazı büyük olduğu için turuncu üstünde beyazın ~3:1 kontrastı WCAG AA (büyük metin) için yeterlidir. */
+  color: var(--color-white);
   background: var(--color-accent);
   visibility: hidden;
   will-change: transform;
@@ -26,6 +27,7 @@
 .label {
   display: block;
   font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
   font-size: var(--text-page-transition);
   font-weight: var(--weight-heavy);
   /* İ'nin noktası ve Ç'nin çengeli maskede kesilmesin. */
@@ -58,7 +60,7 @@
 /* Yaylar yalnızca perde ekrandayken döner, ana sayfada gizli perde boşuna kare çizdirmesin. */
 .ring {
   fill: none;
-  stroke: var(--color-white);
+  stroke: currentColor;
   stroke-linecap: round;
   transform-box: view-box;
   transform-origin: 50% 50%;
@@ -97,11 +99,11 @@
   }
 }
 
-/* Firma ikonu maske olarak kullanılır, perdede beyaz görünür. */
+/* Firma ikonu maske olarak kullanılır, rengi perde yazısıyla aynıdır. */
 .icon {
   display: block;
   inline-size: var(--size-page-transition-icon);
   aspect-ratio: 1;
-  background: var(--color-white);
+  background: currentColor;
   mask: var(--icon-src) center / contain no-repeat;
 }

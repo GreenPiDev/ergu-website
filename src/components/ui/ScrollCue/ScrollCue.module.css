@@ -18,6 +18,7 @@
 .word {
   display: flex;
   font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
   font-size: var(--text-scroll-cue);
   font-weight: var(--weight-heavy);
   line-height: 1.2;

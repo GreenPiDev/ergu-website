@@ -22,7 +22,9 @@
 
   /* Tipografi */
   --font-sans: 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
-  --font-transition: 'Big Shoulders Stencil Variable', 'Arial Narrow', sans-serif;
+  /* Sayfa geçişi, sayfa başlıkları ve numaralar: Saira'nın dar kesimi. 75% canvas ölçümündeki 'condensed' ile aynıdır. */
+  --font-transition: 'Saira Variable', 'Arial Narrow', sans-serif;
+  --stretch-transition: 75%;
   --font-facility: 'Barlow', 'Arial Narrow', sans-serif;
   /* Bilgi merkezi gibi sayfalardaki büyük başlıklar. Dar (condensed) bir fontla değiştirilirse --text-kb-* boyutları büyütülebilir. */
   --font-display: var(--font-sans);
@@ -32,8 +34,8 @@
   --weight-heavy: 800;
   --text-nav: clamp(0.875rem, 0.82rem + 0.16vw, 1rem);
   --text-display: clamp(2.5rem, 1.4rem + 5.2vw, 7.5rem);
-  /* Yaklaşık 6,5 em genişliğindeki tek kelime 320 px ekrana sığar. Daha uzun menü adı varsa 13.5vw düşürülür. */
-  --text-page-transition: min(13.5vw, 30svh, 13rem);
+  /* Yaklaşık 7 em genişliğindeki tek kelime (ör. ÇALIŞMALARIMIZ) 360 px ekrana sığar. Daha uzun menü adı varsa 12.5vw düşürülür. */
+  --text-page-transition: min(12.5vw, 30svh, 13rem);
   /* Uzun sayfa adları (16 harften uzun) birkaç satıra bölünür. En uzun kelime 360 px ekrana sığmalıdır. */
   --text-page-transition-long: min(8vw, 13svh, 6.5rem);
   /* Ana sayfaya gidişte perdedeki ikon. Kaynak PNG 118 px, daha büyüğü bulanıklaşır; büyütmek için SVG gerekir. */

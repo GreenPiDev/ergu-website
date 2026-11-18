@@ -19,7 +19,7 @@
 
 ## Teknoloji
 
-React, Vite, TypeScript (`strict`), GSAP + `@gsap/react`, Lenis, React Router, i18next + react-i18next, CSS Modules + CSS değişkenleri, Geist Variable, sayfa geçişi yazısı için Big Shoulders Stencil. Formlar için `react-hook-form` + `zod`. 3D yalnızca gerçekten değer katan bir an için ve lazy load ile kullanılır.
+React, Vite, TypeScript (`strict`), GSAP + `@gsap/react`, Lenis, React Router, i18next + react-i18next, CSS Modules + CSS değişkenleri, Geist Variable, sayfa geçişi yazısı, sayfa başlıkları ve numaralar için Saira (dar kesim, `wdth` 75%). Formlar için `react-hook-form` + `zod`. 3D yalnızca gerçekten değer katan bir an için ve lazy load ile kullanılır.
 
 ## Kod Kuralları
 
