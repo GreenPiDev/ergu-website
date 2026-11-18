@@ -1,8 +1,15 @@
 /*
  * Ekranın üçte biri yüksekliğinde bant. Header bandın üstüne biner: ikisinin de üst kenarı sayfanın en üstüdür.
- * Başlık, header'ın altında kalan alana ve genişliğe sığacak en büyük boyutta, alt kenara oturur.
+ * Başlık, sığabileceği en büyük boyuttan küçük tutulur ve alt kenardaki çizginin az üstüne oturur. Arkada sayfaya özel
+ * görsel durur (src/content/pageHeroImages.ts), üstündeki koyu örtü başlığı ve header'ı okunaklı tutar.
  */
 .hero {
+  /* Alt kenardaki çift çizginin ölçüleri; başlık bu çizginin az üstüne oturur. */
+  --line-bold: 3px;
+  --line-fine: 1px;
+  --line-gap: 3px;
+  --line-total: calc(var(--line-bold) + var(--line-gap) + var(--line-fine));
+
   position: relative;
   container-type: inline-size;
   display: flex;
@@ -10,28 +17,56 @@
   block-size: var(--page-hero-height);
   /* Yatay telefonda üçte bir, header'dan bile kısa kalır. */
   min-block-size: calc(var(--header-height) + 4.5rem);
-  padding-block: var(--header-height) var(--space-sm);
+  padding-block: var(--header-height) calc(var(--line-total) + var(--space-sm));
   padding-inline: var(--gutter);
   color: var(--surface-fg);
   background: var(--surface-bg);
 }
 
+.media,
+.veil {
+  position: absolute;
+  inset: 0;
+}
+
+.image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* Üstte header, altta başlık ve çizgi için koyulaşır, ortada görsel daha açık kalır. */
+.veil {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-carbon) 70%, transparent) 0%,
+    color-mix(in srgb, var(--color-carbon) 45%, transparent) 45%,
+    color-mix(in srgb, var(--color-carbon) 78%, transparent) 100%
+  );
+}
+
 /* --title-em (başlık uzunluğu) ve --title-bearing (ilk harfin sol boşluğu) PageHero tarafından ölçülür. */
 .title {
   --title-height: max(var(--page-hero-height), calc(var(--header-height) + 4.5rem)) - var(--header-height) -
-    var(--space-sm);
+    var(--line-total) - var(--space-sm);
+  /* Başlık, bandı doldurmak yerine sığabileceği en büyük boyutun bu oranında durur. */
+  --title-scale: 0.55;
 
+  position: relative;
   margin-inline-start: calc(var(--title-bearing, 0) * -1em);
   font-family: var(--font-transition);
   font-stretch: var(--stretch-transition);
   /* 100cqi, kenar boşlukları düşülmüş genişliktir. */
-  font-size: min(calc(100cqi / var(--title-em, 6)), calc((var(--title-height)) / 1.2));
+  font-size: calc(min(calc(100cqi / var(--title-em, 6)), calc((var(--title-height)) / 1.2)) * var(--title-scale));
   font-weight: var(--weight-heavy);
   /* İ'nin noktası ve Ç'nin çengeli harf maskesinde kesilmesin. */
   line-height: 1.2;
   color: var(--color-accent);
   white-space: nowrap;
-  opacity: 0.4;
+  /* Başlık büyük harftir, alt uzantı payı boş kalır; harfler çizgiye bu kadar yaklaşır. */
+  margin-block-end: -0.2em;
+  opacity: 0.92;
 }
 
 /*
@@ -39,14 +74,10 @@
  * ikisi de tam genişlikte. PageHero açılışta ikisini soldan sağa çizer.
  */
 .line {
-  --line-bold: 3px;
-  --line-fine: 1px;
-  --line-gap: 3px;
-
   position: absolute;
   inset-inline: 0;
   inset-block-end: 0;
-  block-size: calc(var(--line-bold) + var(--line-gap) + var(--line-fine));
+  block-size: var(--line-total);
   pointer-events: none;
 }
 

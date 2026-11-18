@@ -37,15 +37,16 @@ export function whenPageRevealReady(callback: () => void): () => void {
 /**
  * Sayfa hazır olana kadar perdeyi bekletir. Bileşen perdenin arkasında açıldığı commit'te bağlandığı için
  * layout effect kullanılır: perde kalkıp kalkmayacağına aynı commit'in effect'lerinde karar verir.
+ * maxMs: en uzun bekleme. Görsel gibi süs niteliğindeki şeyler kısa tutar, yavaş bağlantıda sayfa perdede kalmaz.
  */
-export function usePageRevealHold(isReady: boolean) {
+export function usePageRevealHold(isReady: boolean, maxMs = MAX_HOLD_MS) {
   useLayoutEffect(() => {
     if (isReady) return;
     const release = holdPageReveal();
-    const timer = window.setTimeout(release, MAX_HOLD_MS);
+    const timer = window.setTimeout(release, maxMs);
     return () => {
       window.clearTimeout(timer);
       release();
     };
-  }, [isReady]);
+  }, [isReady, maxMs]);
 }

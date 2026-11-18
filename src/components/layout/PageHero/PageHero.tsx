@@ -1,14 +1,23 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { gsap, MOTION, SplitText, useGSAP } from '../../../animations/gsap';
 import { getPageIntroDelay } from '../../../animations/pageIntro';
-import { usePrefersReducedMotion } from '../../../hooks/useDevice';
+import { usePageRevealHold } from '../../../animations/pageReveal';
+import { getPageHeroImage, type PageHeroImage } from '../../../content/pageHeroImages';
+import { MOBILE_QUERY, usePrefersReducedMotion } from '../../../hooks/useDevice';
+import { stripLocale } from '../../../i18n/locale';
 import styles from './PageHero.module.css';
 
 // Ölçüm farkları başlığı kenara taşırmasın diye küçük bir pay bırakılır.
 const TITLE_FIT_MARGIN = 1.03;
 
+// Görsel inene kadar sayfa geçişi perdesi bekler, yavaş bağlantıda en fazla bu kadar.
+const IMAGE_HOLD_MS = 2500;
+
 type PageHeroProps = {
   title: string;
+  /** Görseli sayfanın yolundan bağımsız vermek için. Verilmezse `pageHeroImages.ts`'ten yola göre seçilir. */
+  image?: PageHeroImage;
 };
 
 const CANVAS_STRETCH: Record<string, CanvasFontStretch> = {
@@ -40,8 +49,18 @@ function measureTitle(element: HTMLElement, text: string) {
 }
 
 /** Ana sayfa dışındaki sayfaların girişi: ekranın üçte biri yüksekliğinde bant, içinde büyük ve şeffaf sayfa adı. */
-export function PageHero({ title }: PageHeroProps) {
+export function PageHero({ title, image }: PageHeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { pathname } = useLocation();
+  const { src, avif, mobileSrc, mobileAvif, focus } = image ?? getPageHeroImage(stripLocale(pathname));
+  // Görsel inince (veya inemezse) perde kalkar. Yol değişip aynı bileşen kalırsa yeni görsel yeniden beklenir.
+  const [settledSrc, setSettledSrc] = useState<string | null>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  usePageRevealHold(settledSrc === src, IMAGE_HOLD_MS);
+  useLayoutEffect(() => {
+    // Önbellekten gelen görsel bağlanmadan önce yüklenmiş olabilir.
+    if (imageRef.current?.complete) setSettledSrc(src);
+  }, [src]);
   const rootRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
@@ -110,7 +129,26 @@ export function PageHero({ title }: PageHeroProps) {
   );
 
   return (
-    <section ref={rootRef} className={styles.hero} data-surface="light" data-tone="white">
+    <section ref={rootRef} className={styles.hero} data-surface="dark">
+      {/* Dekoratif arka plan: sayfanın adı başlıkta yazar. Telefon kadrajı varsa dar ekranda o seçilir. */}
+      <picture className={styles.media}>
+        {mobileAvif && <source media={MOBILE_QUERY} srcSet={mobileAvif} type="image/avif" />}
+        {mobileSrc && <source media={MOBILE_QUERY} srcSet={mobileSrc} type="image/webp" />}
+        {avif && <source srcSet={avif} type="image/avif" />}
+        <img
+          key={src}
+          ref={imageRef}
+          className={styles.image}
+          src={src}
+          alt=""
+          decoding="async"
+          fetchPriority="high"
+          style={focus ? { objectPosition: focus } : undefined}
+          onLoad={() => setSettledSrc(src)}
+          onError={() => setSettledSrc(src)}
+        />
+      </picture>
+      <div className={styles.veil} aria-hidden="true" />
       {/* SplitText DOM'u değiştirdiği için başlık değişince React temiz bir eleman kurar. */}
       <h1 key={title} ref={titleRef} className={styles.title}>
         {title}

@@ -3,7 +3,7 @@ import { useMediaQuery } from './useMediaQuery';
 export type Device = 'mobile' | 'tabletPortrait' | 'tabletLandscape' | 'desktop';
 
 // Yatay telefonlar genişlik olarak tablete yaklaştığı için ekran yüksekliğiyle mobil sayılır.
-const MOBILE_QUERY =
+export const MOBILE_QUERY =
   '(max-width: 599.98px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
 
 const TABLET_PORTRAIT_QUERY = '(min-width: 600px) and (max-width: 1050px) and (orientation: portrait)';

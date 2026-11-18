@@ -50,7 +50,7 @@ export function CityHero() {
   const resetView = useCallback(() => {
     setFacility(null);
     setResetSignal((value) => value + 1);
-  }, []);
+  }, [setFacility, setResetSignal]);
   const { t } = useTranslation();
   // Şehirde fareyle tesisin üstüne gelince perde açılır ve imlecin yanında tesisin adı, tesisin renginde yazar.
   // Butonlarda etiket yok: adı zaten butonda yazıyor.
@@ -61,12 +61,12 @@ export function CityHero() {
         hovered ? { text: t(`home.facilities.items.${hovered}`), color: `var(${facilityColorToken(hovered)})` } : null,
       );
     },
-    [t],
+    [t, setPreview],
   );
   // Şehirde tesise tıklamak butonla aynı: seçer, seçili olana yeniden tıklamak veya boş yere tıklamak seçimi kaldırır.
   const pickFromCity = useCallback(
     (picked: FacilityId | null) => setFacility((current) => (picked === null || picked === current ? null : picked)),
-    [],
+    [setFacility],
   );
   const shown = useMemo(
     () => [facility, preview].filter((id, index, list): id is FacilityId => id !== null && list.indexOf(id) === index),
