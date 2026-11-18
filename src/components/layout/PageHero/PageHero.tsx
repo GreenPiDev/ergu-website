@@ -118,9 +118,9 @@ export function PageHero({ title, image }: PageHeroProps) {
         onSplit: (self) =>
           gsap.from(self.chars, {
             yPercent: 110,
-            duration: MOTION.slow,
+            duration: MOTION.heroTitle,
             ease: MOTION.ease,
-            stagger: MOTION.stagger,
+            stagger: { amount: MOTION.heroTitleStaggerAmount },
             delay,
           }),
       });

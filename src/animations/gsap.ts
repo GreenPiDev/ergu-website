@@ -15,6 +15,10 @@ export const MOTION = {
   base: 0.45,
   slow: 0.8,
   stagger: 0.05,
+  // PageHero başlığının harfleri: süre ve harflere yayılan toplam gecikme. Toplam sabit tutulur ki uzun sayfa adları
+  // daha geç tamamlanmasın.
+  heroTitle: 0.55,
+  heroTitleStaggerAmount: 0.2,
   // PageHero alt kenar çizgisinin soldan sağa çizilmesi.
   lineDraw: 1.3,
   curtain: 0.65,
