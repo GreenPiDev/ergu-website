@@ -23,6 +23,8 @@
 
 - Header logosu `public/sirket-logosu.png` (açık zemin) ve ondan üretilen `public/sirket-logosu-dark.png` (koyu zemin, siyah kısımlar beyaz, turuncu ikon korunur). `Header.tsx` içindeki boyut 300×108, `--logo-height` `clamp(2.5rem, 2.2rem + 0.8vw, 3.25rem)`.
 - Eski yer tutucu `logo-for-*-surface.svg` dosyaları kullanılmıyor, silinmedi. Sekme ikonu `public/favicon.png` (118×118): `ergu-icon.png`'nin `#da7e21` renginde, kare tuvale ortalanmış hali; yer tutucu `favicon.svg` silindi. Vurgu rengi değişirse yeniden üretilir.
+- **Geçici "Tüm Butonlar" açılır menüsü (2026-11-18):** taslak dönemde masaüstü header'daki bütün bağlantılar tek bir açılır düğmenin altında (`NavDropdown.tsx`, etiket `nav.allButtons`). Disclosure deseni; dışarı tıklama, Escape, odağın dışarı çıkması ve sayfa değişimi kapatır. Mobil menüye dokunulmadı. Gerçek menüye dönerken `Header.tsx` içinde `<NavDropdown />` yerine eski `NAV_ITEMS` listesi geri konur (stilleri `Header.module.css` içinde `.navList`, `.active` olarak duruyor), `NavDropdown` dosyaları ve `nav.allButtons` anahtarı silinir.
+- **Taslak adresleri (2026-11-18):** ana sayfa `/home` (`/en/home`), kök `/` ve `/en` oraya yönlenir (replace, perde çalışmaz), logo da `/home`'a gider. Örnek sayfalar `sample-` önekli: `/sample-about`, `/sample-services`, `/sample-projects`, `/sample-contact`, `/sample-knowledge-center`. Yollar yalnızca `src/content/navigation.ts` içinde, kodun geri kalanı `getNavPath(key)` kullanır. Gerçek sayfalara geçerken buradaki yollar ve `router.tsx` içindeki kök yönlendirmesi değiştirilir.
 
 ### Ana sayfa: tam ekran 3D şehir hero'su (v2, renkli alacakaranlık)
 
@@ -180,7 +182,7 @@
 
 ### Şablon: Bilgi merkezi sayfası (Adanex projesinden genelleştirildi)
 
-- `/knowledge-center` hazır bir başvuru sayfası olarak geliyor (`src/pages/KnowledgePage.tsx`, `src/components/knowledge/`), rota lazy yükleniyor. İçerik örnektir, her maddenin hangi düzen özelliğini gösterdiğini anlatır. Gerçek içerik yoksa `[YER TUTUCU]` yazar.
+- `/sample-knowledge-center` hazır bir başvuru sayfası olarak geliyor (`src/pages/KnowledgePage.tsx`, `src/components/knowledge/`), rota lazy yükleniyor. İçerik örnektir, her maddenin hangi düzen özelliğini gösterdiğini anlatır. Gerçek içerik yoksa `[YER TUTUCU]` yazar.
 - **Hero:** `PageHero` içinde büyük arama satırı ve bölüm dizini. Yazmaya başlayınca bölüm satırlarının yerini sonuçlar alır, arama büyük harf ve aksan farkını yok sayar. Altta "Kaydır" belirteci (`src/components/ui/ScrollCue/`).
 - **Bölümler:** 1024 px ve üstünde solda yapışık bölüm başlığı ve okunan maddeyi gösteren madde dizini, sağda akan maddeler. Daha dar ekranda tek sütun, dizin yerine sağdaki ray (`SectionRail`, mobilde alt şerit) kullanılır.
 - **Madde yapıları:** öne çıkan tanım, kısa yanıt etiketi, paragraflar, numaralı/akış/numarasız liste, adımlar, fosforlu kalem vurgusu, dar ekranda karta dönen tablo, "Bkz." bağlantıları ve metin içi dış bağlantılar (`EXTERNAL_LINKS`). Her maddenin paylaşılabilir adresi var (`#comparison` gibi), atlanınca vurgu renkli bir çizgi yanıp söner.

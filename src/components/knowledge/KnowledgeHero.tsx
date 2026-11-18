@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { gsap, MOTION, useGSAP } from '../../animations/gsap';
 import { getPageIntroDelay } from '../../animations/pageIntro';
 import { KNOWLEDGE_CHAPTERS } from '../../content/knowledge';
+import { getNavPath } from '../../content/navigation';
 import { usePrefersReducedMotion } from '../../hooks/useDevice';
 import { getLocaleFromPathname, localizePath } from '../../i18n/locale';
 import { PageHero } from '../layout/PageHero/PageHero';
@@ -56,7 +57,7 @@ export function KnowledgeHero() {
     if (event.key === 'Escape') clear();
   };
 
-  const contactPath = localizePath('/contact', getLocaleFromPathname(window.location.pathname));
+  const contactPath = localizePath(getNavPath('contact'), getLocaleFromPathname(window.location.pathname));
 
   return (
     <PageHero

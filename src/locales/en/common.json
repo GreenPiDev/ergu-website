@@ -4,6 +4,7 @@
   },
   "nav": {
     "label": "Main menu",
+    "allButtons": "All Buttons",
     "items": {
       "home": "Home",
       "about": "About",

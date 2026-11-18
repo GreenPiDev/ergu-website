@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink, useLocation } from 'react-router';
-import { MAIN_CONTENT_ID, NAV_ITEMS } from '../../../content/navigation';
+import { Link, useLocation } from 'react-router';
+import { getNavPath, MAIN_CONTENT_ID } from '../../../content/navigation';
 import { useDevice, useIsNavCollapsed } from '../../../hooks/useDevice';
 import { useHeaderSurface } from '../../../hooks/useHeaderSurface';
 import { useScrollLock } from '../../../hooks/useSmoothScroll';
@@ -9,6 +9,7 @@ import { getLocaleFromPathname, localizePath } from '../../../i18n/locale';
 import styles from './Header.module.css';
 import { LanguageSwitch } from './LanguageSwitch';
 import { MobileMenu } from './MobileMenu';
+import { NavDropdown } from './NavDropdown';
 
 const MOBILE_MENU_ID = 'mobile-menu';
 const LOGO_FOR_DARK = '/sirket-logosu-dark.png';
@@ -69,7 +70,7 @@ export function Header() {
       <div className={styles.bar}>
         <Link
           className={styles.logo}
-          to={localizePath('/', locale)}
+          to={localizePath(getNavPath('home'), locale)}
           aria-label={t('a11y.homeLink')}
           onClick={closeMenu}
         >
@@ -93,25 +94,7 @@ export function Header() {
           </button>
         ) : (
           <nav className={styles.nav} aria-label={t('nav.label')}>
-            <ul className={styles.navList}>
-              {NAV_ITEMS.map(({ key, path }) => {
-                const label = t(`nav.items.${key}`);
-                return (
-                  <li key={key}>
-                    <NavLink
-                      className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
-                      to={localizePath(path, locale)}
-                      end={path === '/'}
-                    >
-                      <span className={styles.roll}>
-                        <span>{label}</span>
-                        <span aria-hidden="true">{label}</span>
-                      </span>
-                    </NavLink>
-                  </li>
-                );
-              })}
-            </ul>
+            <NavDropdown />
             <LanguageSwitch />
           </nav>
         )}

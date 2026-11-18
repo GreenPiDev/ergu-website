@@ -4,6 +4,7 @@
   },
   "nav": {
     "label": "Ana menü",
+    "allButtons": "Tüm Butonlar",
     "items": {
       "home": "Ana Sayfa",
       "about": "Hakkında",

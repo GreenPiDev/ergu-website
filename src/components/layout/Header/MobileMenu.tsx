@@ -74,7 +74,6 @@ export function MobileMenu({ id, isOpen, onNavigate, onCoverChange }: MobileMenu
               <NavLink
                 className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
                 to={localizePath(path, locale)}
-                end={path === '/'}
                 onClick={onNavigate}
               >
                 <span className={styles.reveal} data-menu-reveal>
