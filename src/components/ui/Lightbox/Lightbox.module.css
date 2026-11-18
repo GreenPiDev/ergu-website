@@ -2,13 +2,13 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-lightbox);
-  color: var(--color-white);
+  color: var(--color-black);
 }
 
 .curtain {
   position: absolute;
   inset: 0;
-  background: var(--color-black);
+  background: var(--color-paper);
   transform-origin: 50% 100%;
 }
 
@@ -62,7 +62,7 @@
   font-weight: var(--weight-heavy);
   color: var(--color-accent);
   background: var(--color-accent);
-  --roll-hover-color: var(--color-white);
+  --roll-hover-color: var(--color-black);
 }
 
 .closeMark {

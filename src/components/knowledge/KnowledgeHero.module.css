@@ -1,19 +1,24 @@
-.hero {
-  /* Uzun başlık neredeyse tam boydur. Header'dan büyük bir değer ortalama payıyla hero'yu ekrandan taşırır. */
-  --hero-padding-end: var(--header-height);
+/* Hero ile birlikte ilk ekranı doldurur. */
+.index {
   --hairline: color-mix(in srgb, currentColor 22%, transparent);
+
+  position: relative;
+  display: flex;
+  min-block-size: calc(100svh - var(--page-hero-height));
+  padding-block-start: var(--space-md);
+  padding-inline: var(--gutter);
+  color: var(--surface-fg);
+  background: var(--surface-bg);
 }
 
 .panel {
   position: relative;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  grid-row: 1 / -1;
-  grid-column: 2;
   min-inline-size: 0;
   /* Kaydırma belirteci dizinin üstüne binmesin. */
-  padding-block-end: calc(4.75rem - var(--header-height));
-  margin-inline-start: var(--space-sm);
+  padding-block-end: 4.75rem;
 }
 
 .search {
@@ -202,7 +207,7 @@
   text-underline-offset: 0.2em;
 }
 
-.hero .cue {
+.index .cue {
   --scroll-cue-track: 1.25rem;
 
   inset-block-end: var(--space-sm);
@@ -210,9 +215,7 @@
 
 @media (min-width: 37.5rem) {
   .panel {
-    grid-row: auto;
-    padding-block-end: calc(6.25rem - var(--header-height));
-    margin-inline: var(--space-md);
+    padding-block-end: 6.25rem;
   }
 
   .list {
@@ -223,7 +226,7 @@
     display: block;
   }
 
-  .hero .cue {
+  .index .cue {
     --scroll-cue-track: 2rem;
 
     inset-block-end: var(--space-md);
@@ -232,7 +235,7 @@
 
 @media (min-width: 64rem) {
   .panel {
-    padding-block-end: calc(7.5rem - var(--header-height));
+    padding-block-end: 7.5rem;
   }
 }
 

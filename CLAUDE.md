@@ -25,7 +25,7 @@ React, Vite, TypeScript (`strict`), GSAP + `@gsap/react`, Lenis, React Router, i
 
 - Dosya ve tanımlayıcılar İngilizce, kod yorumları Türkçe. `any` kullanılmaz.
 - Header yalnızca `RootLayout` içinde durur, sayfalara eklenmez.
-- Ana sayfa dışındaki her sayfa `PageHero` ile başlar: solda yan yatmış, şeffaf sayfa adı, sağında sayfanın içeriği. Hero scroll'da yukarıda kalır, yapışık değildir.
+- Ana sayfa dışındaki her sayfa `PageHero` ile başlar: ekranın üçte biri yüksekliğinde bant, içinde genişliğe sığan büyük, şeffaf ve yatay sayfa adı. Header bandın üstüne biner (ikisinin de üst kenarı sayfanın en üstüdür). Sayfanın içeriği hero'nun içine değil altına, ayrı bölüm olarak gelir. Hero scroll'da yukarıda kalır, yapışık değildir.
 - `main` içindeki her tam genişlik bölüm `data-surface="dark"` veya `data-surface="light"` taşır, header rengi ve logosu buradan belirlenir.
 - Renk, boşluk, font boyutu, süre ve easing token'dan gelir (`src/styles/tokens.css`).
 - Büyük/küçük harf dönüşümünde aktif dil kullanılır: `toLocaleUpperCase(i18n.language)` (i/İ, ı/I sorunu).
@@ -51,7 +51,7 @@ React, Vite, TypeScript (`strict`), GSAP + `@gsap/react`, Lenis, React Router, i
 - Örnek alınan sitelerin kodu, metinleri, görselleri ve renk paleti kopyalanmaz.
 - Şablon hissi veren kart ızgaraları, gradient bloblar, stok ikonlar ve jenerik sektör görselleri kullanılmaz. Fontlar Türkçe karakterleri tam desteklemeli, ücretli fontlar lisanssız kullanılmaz.
 - GSAP, React içinde `useGSAP` ve `scope` ile yazılır, ortak hareketler `src/animations/` altındadır.
-- **Sayfa geçişi:** Vurgu renginde perde alttan yukarı hızla gelir, ortasında `--font-transition` fontuyla gidilen sayfanın adı yazar, sonra yukarı çıkıp gider. Ana sayfaya gidişte yazı yerine ortada firma ikonu (`ergu-icon.png`, beyaz) durur, dil değişiminde perde çalışmaz. Tek kaynak `RootLayout` içindeki `PageTransition` bileşenidir, sayfalara ayrı geçiş yazılmaz.
+- **Sayfa geçişi:** Vurgu renginde perde alttan yukarı hızla gelir, ortasında `--font-transition` fontuyla gidilen sayfanın adı yazar, sonra yukarı çıkıp gider. Ana sayfaya gidişte yazı yerine ortada firma ikonu (`ergu-icon.png`, beyaz) durur, dil değişiminde perde çalışmaz. Tek kaynak `RootLayout` içindeki `PageTransition` bileşenidir, sayfalara ayrı geçiş yazılmaz. Sitenin yükleme ekranı da bu perdedir: ilk açılışta `index.html`'deki perde devralınır. Veri, model veya görsel bekleyen bileşen `usePageRevealHold(isReady)` (`src/animations/pageReveal.ts`) ile perdeyi bekletir, ayrı yükleme ekranı yazılmaz.
 - **Uzun sayfalarda bölüm rayı:** `SectionRail` (`src/components/ui/SectionRail/`) konumu, ilerlemeyi ve bölüme atlamayı sağlar. Bölümler tek kapsayıcının doğrudan alt öğeleridir, masaüstünde sağlarında `--rail-width` kadar yer bırakılır, vurgu rengi gibi doygun zeminli bölümler `data-rail-solid` taşır.
 - Yalnızca `transform` ve `opacity` animasyonu yapılır. Her bölüme efekt yığılmaz.
 - SplitText fontlar yüklendikten sonra çalışır. Her sayfa geçişinde ScrollTrigger'lar temizlenir ve yenilenir.

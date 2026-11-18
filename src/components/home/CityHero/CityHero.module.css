@@ -12,6 +12,10 @@
   block-size: 100%;
   opacity: 0;
   transition: opacity var(--duration-slow) var(--ease-out);
+  /* Dokunma hareketlerinin tamamı şehre gider (CityCanvas): yatay döndürür, dikey bakış açısını değiştirir, kıstırma
+     yakınlaştırır. Ana sayfa tek ekran olduğu için kaydırılacak içerik yok, bu ayar yenileme çekmesini de engeller.
+     Hero'nun altına bölüm eklenirse yeniden ele alınmalı. */
+  touch-action: none;
 }
 
 .canvas[data-ready='true'] {

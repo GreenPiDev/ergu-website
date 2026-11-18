@@ -70,6 +70,8 @@
   --space-lg: clamp(2rem, 1.5rem + 2vw, 4rem);
   --gutter: clamp(1rem, 2.4vw, 2.5rem);
   --header-height: clamp(4rem, 3.5rem + 1.5vw, 5.5rem);
+  /* Sayfa hero'su ekranın üçte biri kadardır, header üstüne biner. */
+  --page-hero-height: 33.333svh;
   --logo-height: clamp(2.5rem, 2.2rem + 0.8vw, 3.25rem);
   --nav-gap: clamp(1.25rem, 2.2vw, 3rem);
   --touch-target: 2.75rem;
@@ -95,7 +97,7 @@
 
   /* Scrollbar */
   --scrollbar-size: 8px;
-  --scrollbar-track: var(--color-carbon);
+  --scrollbar-track: var(--color-paper);
   --scrollbar-thumb: var(--color-accent);
 }
 
@@ -107,4 +109,9 @@
 [data-surface='light'] {
   --surface-bg: var(--color-paper);
   --surface-fg: var(--color-black);
+}
+
+/* Açık zeminin beyaz tonu. Art arda gelen açık bölümler kâğıt ve beyaz arasında değişerek ayrışır. */
+[data-surface='light'][data-tone='white'] {
+  --surface-bg: var(--color-white);
 }

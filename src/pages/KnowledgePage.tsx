@@ -44,7 +44,7 @@ export function KnowledgePage() {
 
       <div ref={sequenceRef}>
         <Chapter chapter={getKnowledgeChapter('basics')} surface="light" />
-        <Chapter chapter={getKnowledgeChapter('guide')} surface="dark" />
+        <Chapter chapter={getKnowledgeChapter('guide')} surface="light" tone="white" />
         <ChecklistChapter />
         <Chapter chapter={getKnowledgeChapter('faq')} surface="light" />
       </div>
@@ -54,7 +54,7 @@ export function KnowledgePage() {
         items={KNOWLEDGE_CHAPTERS.map(({ key }) => ({ key, label: chapters[key].short }))}
       />
 
-      <section className={styles.note} data-surface="dark">
+      <section className={styles.note} data-surface="light" data-tone="white">
         <p className={styles.noteText}>{common.note}</p>
       </section>
     </>

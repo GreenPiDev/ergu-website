@@ -16,7 +16,7 @@ import { buildSearchIndex, searchEntries } from './search';
 
 const KNOWLEDGE_SEARCH_INPUT_ID = 'knowledge-search';
 
-/** Sayfanın girişi aynı zamanda dizindir: yazmaya başlayınca bölüm satırlarının yerini sonuçlar alır. */
+/** Sayfa hero'su ve altında, aynı zamanda arama olan dizin. Yazınca bölüm satırlarının yerini sonuçlar alır. */
 export function KnowledgeHero() {
   const { t, i18n } = useTranslation('knowledge');
   const { entries, chapters, hero } = useKnowledge();
@@ -60,84 +60,83 @@ export function KnowledgeHero() {
   const contactPath = localizePath(CONTACT_PATH, getLocaleFromPathname(window.location.pathname));
 
   return (
-    <PageHero
-      ref={rootRef}
-      className={styles.hero}
-      title={i18n.t('nav.items.knowledgeCenter', { ns: 'common' }).toLocaleUpperCase(locale)}
-    >
-      <div className={styles.panel}>
-        <form className={styles.search} role="search" onSubmit={handleSubmit} data-hero-search>
-          <label className={styles.srOnly} htmlFor={KNOWLEDGE_SEARCH_INPUT_ID}>
-            {hero.searchLabel}
-          </label>
-          <input
-            ref={inputRef}
-            id={KNOWLEDGE_SEARCH_INPUT_ID}
-            className={styles.input}
-            type="search"
-            value={query}
-            placeholder={hero.placeholder}
-            autoComplete="off"
-            enterKeyHint="search"
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          {isSearching && (
-            <button className={styles.clear} type="button" aria-label={hero.clear} onClick={clear}>
-              <span className={styles.clearMark} aria-hidden="true" />
-            </button>
-          )}
-        </form>
+    <>
+      <PageHero title={i18n.t('nav.items.knowledgeCenter', { ns: 'common' }).toLocaleUpperCase(locale)} />
+      <section ref={rootRef} className={styles.index} data-surface="light" data-tone="white">
+        <div className={styles.panel}>
+          <form className={styles.search} role="search" onSubmit={handleSubmit} data-hero-search>
+            <label className={styles.srOnly} htmlFor={KNOWLEDGE_SEARCH_INPUT_ID}>
+              {hero.searchLabel}
+            </label>
+            <input
+              ref={inputRef}
+              id={KNOWLEDGE_SEARCH_INPUT_ID}
+              className={styles.input}
+              type="search"
+              value={query}
+              placeholder={hero.placeholder}
+              autoComplete="off"
+              enterKeyHint="search"
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            {isSearching && (
+              <button className={styles.clear} type="button" aria-label={hero.clear} onClick={clear}>
+                <span className={styles.clearMark} aria-hidden="true" />
+              </button>
+            )}
+          </form>
 
-        <p className={styles.hint}>{hero.hint}</p>
-        <p className={styles.srOnly} aria-live="polite">
-          {isSearching ? t('hero.resultCount', { count: results.length }) : ''}
-        </p>
-
-        {isSearching && results.length === 0 ? (
-          <p className={styles.empty}>
-            {hero.noResults}{' '}
-            <Link className={styles.emptyLink} to={contactPath}>
-              {hero.noResultsLink}
-            </Link>
+          <p className={styles.hint}>{hero.hint}</p>
+          <p className={styles.srOnly} aria-live="polite">
+            {isSearching ? t('hero.resultCount', { count: results.length }) : ''}
           </p>
-        ) : (
-          <ol
-            className={styles.list}
-            style={{ '--list-rows': KNOWLEDGE_CHAPTERS.length } as CSSProperties}
-            aria-label={isSearching ? hero.resultsLabel : hero.indexLabel}
-          >
-            {isSearching
-              ? results.map(({ entry, title }) => (
-                  <li key={entry.key} className={styles.item}>
-                    <EntryLink className={styles.row} slug={entry.slug}>
-                      <span className={styles.number} aria-hidden="true">
-                        {entry.code}
-                      </span>
-                      <span className={styles.result}>{title}</span>
-                      <span className={styles.meta}>{chapters[entry.chapterKey].short}</span>
-                    </EntryLink>
-                  </li>
-                ))
-              : KNOWLEDGE_CHAPTERS.map((chapter) => (
-                  <li key={chapter.key} className={styles.item}>
-                    <EntryLink className={styles.row} slug={chapter.slug}>
-                      <span className={styles.rowReveal} data-hero-row>
-                        <span className={styles.rowInner}>
-                          <span className={styles.number} aria-hidden="true">
-                            {chapter.number}
-                          </span>
-                          <span className={styles.chapter}>{chapters[chapter.key].title}</span>
-                        </span>
-                      </span>
-                    </EntryLink>
-                  </li>
-                ))}
-          </ol>
-        )}
-      </div>
 
-      <ScrollCue className={styles.cue} />
-    </PageHero>
+          {isSearching && results.length === 0 ? (
+            <p className={styles.empty}>
+              {hero.noResults}{' '}
+              <Link className={styles.emptyLink} to={contactPath}>
+                {hero.noResultsLink}
+              </Link>
+            </p>
+          ) : (
+            <ol
+              className={styles.list}
+              style={{ '--list-rows': KNOWLEDGE_CHAPTERS.length } as CSSProperties}
+              aria-label={isSearching ? hero.resultsLabel : hero.indexLabel}
+            >
+              {isSearching
+                ? results.map(({ entry, title }) => (
+                    <li key={entry.key} className={styles.item}>
+                      <EntryLink className={styles.row} slug={entry.slug}>
+                        <span className={styles.number} aria-hidden="true">
+                          {entry.code}
+                        </span>
+                        <span className={styles.result}>{title}</span>
+                        <span className={styles.meta}>{chapters[entry.chapterKey].short}</span>
+                      </EntryLink>
+                    </li>
+                  ))
+                : KNOWLEDGE_CHAPTERS.map((chapter) => (
+                    <li key={chapter.key} className={styles.item}>
+                      <EntryLink className={styles.row} slug={chapter.slug}>
+                        <span className={styles.rowReveal} data-hero-row>
+                          <span className={styles.rowInner}>
+                            <span className={styles.number} aria-hidden="true">
+                              {chapter.number}
+                            </span>
+                            <span className={styles.chapter}>{chapters[chapter.key].title}</span>
+                          </span>
+                        </span>
+                      </EntryLink>
+                    </li>
+                  ))}
+            </ol>
+          )}
+        </div>
+
+        <ScrollCue className={styles.cue} />
+      </section>
+    </>
   );
 }

@@ -1908,6 +1908,15 @@ export class CameraDirector {
   }
 
   /**
+   * İki parmakla kıstırma: parmaklar arası mesafe oranı (1'den büyük: açılma, yakınlaşma). Yakınlaşma oranı parmak
+   * hareketini birebir izler, sınırlar tekerlekle aynıdır. ndc: iki parmağın ortası.
+   */
+  pinchBy(ratio: number, ndc?: THREE.Vector2) {
+    if (!(ratio > 0) || ratio === 1) return false;
+    return this.zoomBy(Math.log(ratio) / ZOOM_SENSITIVITY, ndc);
+  }
+
+  /**
    * Bakış noktasını imlecin altındaki zemin noktasına doğru kaydırır. Kamera ve bakış noktası birlikte o nokta
    * etrafında k oranında ölçeklenince nokta ekranda yerinde kalır: yeni merkez = P + (merkez - P) x k.
    */

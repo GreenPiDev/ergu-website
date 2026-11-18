@@ -1,81 +1,69 @@
+/*
+ * Ekranın üçte biri yüksekliğinde bant. Header bandın üstüne biner: ikisinin de üst kenarı sayfanın en üstüdür.
+ * Başlık, header'ın altında kalan alana ve genişliğe sığacak en büyük boyutta, alt kenara oturur.
+ */
 .hero {
+  position: relative;
+  container-type: inline-size;
+  display: flex;
+  align-items: flex-end;
+  block-size: var(--page-hero-height);
+  /* Yatay telefonda üçte bir, header'dan bile kısa kalır. */
+  min-block-size: calc(var(--header-height) + 4.5rem);
+  padding-block: var(--header-height) var(--space-sm);
+  padding-inline: var(--gutter);
   color: var(--surface-fg);
   background: var(--surface-bg);
 }
 
-/* Mobilde solda yan yatmış başlık, sağda sayfanın içeriği durur. */
-.inner {
-  /* --title-em, başlık uzunluğudur ve PageHero tarafından ölçülür. */
-  --page-title-size: min(calc((100svh - var(--header-height) * 2) / var(--title-em, 6)), 34vw);
-
-  position: relative;
-  display: grid;
-  grid-template-rows: repeat(2, 1fr);
-  grid-template-columns: auto minmax(0, 1fr);
-  min-block-size: 100svh;
-  padding-block: var(--header-height) var(--hero-padding-end, var(--space-md));
-  padding-inline: var(--gutter);
-  will-change: transform;
-}
-
-.grid {
-  position: absolute;
-  inset-block: 0;
-  inset-inline: var(--gutter);
-  display: none;
-  pointer-events: none;
-}
-
-.gridLine {
-  border-inline-start: 1px solid color-mix(in srgb, currentColor 14%, transparent);
-}
-
-.gridLine:first-child {
-  border-inline-start: 0;
-}
-
-/* Başlık aşağıdan yukarı okunur. Negatif boşluk, üstteki header payını dengeler ve kolonu tam ortalar. */
+/* --title-em (başlık uzunluğu) ve --title-bearing (ilk harfin sol boşluğu) PageHero tarafından ölçülür. */
 .title {
-  position: relative;
-  grid-row: 1 / -1;
-  align-self: center;
-  justify-self: center;
-  /* Dikey yazımda margin-block-start sağ kenara denk gelir, bu yüzden fiziksel özellik kullanılır. */
-  margin-top: calc((var(--header-height) - var(--hero-padding-end, var(--space-md))) * -1);
+  --title-height: max(var(--page-hero-height), calc(var(--header-height) + 4.5rem)) - var(--header-height) -
+    var(--space-sm);
+
+  margin-inline-start: calc(var(--title-bearing, 0) * -1em);
   font-family: var(--font-transition);
   font-stretch: var(--stretch-transition);
-  font-size: var(--page-title-size);
+  /* 100cqi, kenar boşlukları düşülmüş genişliktir. */
+  font-size: min(calc(100cqi / var(--title-em, 6)), calc((var(--title-height)) / 1.2));
   font-weight: var(--weight-heavy);
   /* İ'nin noktası ve Ç'nin çengeli harf maskesinde kesilmesin. */
   line-height: 1.2;
   color: var(--color-accent);
   white-space: nowrap;
   opacity: 0.4;
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
 }
 
-/* İlk kolon başlığın kalınlığı kadardır, kalan genişlik içeriğe kalır. */
-@media (min-width: 37.5rem) {
-  .inner {
-    --page-title-size: min(calc((100svh - var(--header-height) * 2) / var(--title-em, 6)), 24vw);
+/*
+ * Alt kenar: teknik çizimdeki antet çerçevesi gibi çift çizgi. Altta kalın, üstünde küçük bir boşlukla ince çizgi,
+ * ikisi de tam genişlikte. PageHero açılışta ikisini soldan sağa çizer.
+ */
+.line {
+  --line-bold: 3px;
+  --line-fine: 1px;
+  --line-gap: 3px;
 
-    grid-template-rows: none;
-  }
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: calc(var(--line-bold) + var(--line-gap) + var(--line-fine));
+  pointer-events: none;
+}
 
-  .grid {
-    display: grid;
-  }
+.bold,
+.fine {
+  position: absolute;
+  inset-inline: 0;
+  transform-origin: left center;
+  background: var(--color-accent);
+}
 
-  .oneColumn {
-    grid-template-columns: calc(var(--page-title-size) * 1.2 + var(--space-md)) minmax(0, 1fr);
-  }
+.bold {
+  inset-block-end: 0;
+  block-size: var(--line-bold);
+}
 
-  .twoColumns {
-    grid-template-columns: calc(var(--page-title-size) * 1.2 + var(--space-md)) repeat(2, minmax(0, 1fr));
-  }
-
-  .title {
-    grid-row: auto;
-  }
+.fine {
+  inset-block-start: 0;
+  block-size: var(--line-fine);
 }

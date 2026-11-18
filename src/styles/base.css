@@ -5,7 +5,7 @@
 }
 
 html {
-  background: var(--color-carbon);
+  background: var(--color-paper);
   /* Scrollbar kaybolduğunda (menü açıkken) sayfa yana kaymasın. */
   scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
@@ -17,8 +17,8 @@ body {
   overflow-x: clip;
   font-family: var(--font-sans);
   font-weight: var(--weight-regular);
-  color: var(--color-white);
-  background: var(--color-carbon);
+  color: var(--color-black);
+  background: var(--color-paper);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

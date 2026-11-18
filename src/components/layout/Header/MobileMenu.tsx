@@ -147,7 +147,7 @@ export function MobileMenu({ id, isOpen, onNavigate, onCoverChange }: MobileMenu
   useEffect(() => () => onCoverChange(false), [onCoverChange]);
 
   return (
-    <div id={id} ref={rootRef} className={styles.menu} data-surface="dark" data-lenis-prevent>
+    <div id={id} ref={rootRef} className={styles.menu} data-surface="light" data-tone="white" data-lenis-prevent>
       <nav aria-label={t('nav.label')}>
         <NavList nodes={HEADER_NAV} level={0} onNavigate={onNavigate} />
       </nav>

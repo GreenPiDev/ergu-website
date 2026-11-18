@@ -13,7 +13,7 @@ function isSurface(value: string | undefined): value is Surface {
  */
 export function useHeaderSurface(headerRef: RefObject<HTMLElement | null>): Surface {
   const { pathname } = useLocation();
-  const [surface, setSurface] = useState<Surface>('dark');
+  const [surface, setSurface] = useState<Surface>('light');
 
   useEffect(() => {
     const header = headerRef.current;

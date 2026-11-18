@@ -15,6 +15,8 @@ export const MOTION = {
   base: 0.45,
   slow: 0.8,
   stagger: 0.05,
+  // PageHero alt kenar çizgisinin soldan sağa çizilmesi.
+  lineDraw: 1.3,
   curtain: 0.65,
   curtainLabelDelay: 0.12,
   curtainHold: 0.3,

@@ -9,8 +9,8 @@ import { useActiveEntry, useChapterReveal, useKnowledge } from './knowledgeHooks
 type ChapterProps = {
   chapter: KnowledgeChapter;
   surface: 'dark' | 'light';
-  /** Vurgu renkli zemin. Bölüm rayı ve imleç halkası bu bölümde düz renge geçer. */
-  tone?: 'accent';
+  /** `accent`: vurgu renkli zemin, bölüm rayı ve imleç halkası bu bölümde düz renge geçer. `white`: açık zeminin beyaz tonu. */
+  tone?: 'accent' | 'white';
   className?: string;
   /** Yapışık başlık sütununun altındaki ek içerik. */
   aside?: ReactNode;

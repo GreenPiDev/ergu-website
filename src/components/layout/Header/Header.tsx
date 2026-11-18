@@ -64,7 +64,7 @@ export function Header() {
     <header
       ref={headerRef}
       className={styles.header}
-      data-surface={isMenuOpen || isMenuCovering ? 'dark' : sectionSurface}
+      data-surface={isMenuOpen || isMenuCovering ? 'light' : sectionSurface}
       data-device={device}
     >
       <div className={styles.bar}>

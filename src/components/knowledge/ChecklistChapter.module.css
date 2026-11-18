@@ -1,7 +1,8 @@
-/* Vurgu renkli zeminde öne çıkan blok ters renklidir. Vurgu rengi koyuysa yazı rengi beyaz yapılır. */
+/* Vurgu renkli zeminde öne çıkan blok beyaz zeminlidir. Vurgu rengi koyuysa yazı rengi beyaz yapılır. */
 .root {
-  --callout-bg: var(--color-black);
-  --callout-fg: var(--color-white);
+  --callout-bg: var(--color-white);
+  --callout-fg: var(--color-black);
+  --callout-selection-bg: var(--color-accent);
   --selection-bg: var(--color-white);
 
   color: var(--color-black);

@@ -8,11 +8,12 @@ export function PlaceholderPage({ labelKey }: { labelKey: NavLabelKey }) {
   const { t, i18n } = useTranslation();
 
   return (
-    <PageHero title={t(labelKey).toLocaleUpperCase(i18n.language)}>
-      <div className={styles.body}>
+    <>
+      <PageHero title={t(labelKey).toLocaleUpperCase(i18n.language)} />
+      <section className={styles.body} data-surface="light" data-tone="white">
         <p className={styles.name}>{t(labelKey)}</p>
         <p className={styles.note}>{t('placeholderPage.note')}</p>
-      </div>
-    </PageHero>
+      </section>
+    </>
   );
 }

@@ -19,6 +19,27 @@ const LONG_LABEL_LENGTH = 16;
 // Ana sayfaya gidişte perdenin ortasında yazı yerine firma ikonu durur.
 const HOME_ICON_SRC = '/ergu-icon.png';
 
+// index.html'deki açılış perdesi. Varsa PageTransition onu devralır, sayfa hazır olunca kaldırır.
+const BOOT_CURTAIN_ID = 'boot-curtain';
+// Modül düzeyinde: StrictMode'daki ikinci kurulum da açılışı devralsın, perde kalkınca false olur.
+let isBooting = document.getElementById(BOOT_CURTAIN_ID) !== null;
+
+/** Açılışta, ekrandaki fontlar inene kadar bekler. İki kare beklemek, fontların istenmesi için düzenin hesaplanmasını sağlar. */
+function whenBootFontsReady(callback: () => void): () => void {
+  let cancelled = false;
+  let frame = requestAnimationFrame(() => {
+    frame = requestAnimationFrame(() => {
+      void document.fonts.ready.then(() => {
+        if (!cancelled) callback();
+      });
+    });
+  });
+  return () => {
+    cancelled = true;
+    cancelAnimationFrame(frame);
+  };
+}
+
 // Dil değişiminde ve yönlendirmelerde (replace) perde çalışmaz.
 const isPageChange: BlockerFunction = ({ currentLocation, nextLocation, historyAction }) =>
   historyAction !== NavigationType.Replace &&
@@ -26,7 +47,8 @@ const isPageChange: BlockerFunction = ({ currentLocation, nextLocation, historyA
 
 /**
  * Sayfa değişimini perde ekranı kaplayana kadar bekletir, yeni sayfa perdenin arkasında açılır.
- * Linkler ve tarayıcının geri/ileri tuşları aynı yoldan geçer.
+ * Linkler ve tarayıcının geri/ileri tuşları aynı yoldan geçer. Sitenin yükleme ekranı da budur: ilk açılışta
+ * index.html'deki perdeyi devralır, fontlar ve sayfadaki bekletmeler (usePageRevealHold) bitince kalkar.
  */
 export function PageTransition() {
   const { i18n } = useTranslation();
@@ -36,6 +58,8 @@ export function PageTransition() {
   const rootRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const [targetPathname, setTargetPathname] = useState('/');
+  // Açılış perdesinde, hangi sayfa açılırsa açılsın firma ikonu görünür.
+  const [booting, setBooting] = useState(isBooting);
 
   // Perde kalkarken blocker boşa düşer, hedef sayfa bilgisi burada saklanır.
   if (blocker.state === 'blocked' && blocker.location.pathname !== targetPathname) {
@@ -60,6 +84,10 @@ export function PageTransition() {
       const handleLeft = () => {
         gsap.set(root, { autoAlpha: 0 });
         delete document.documentElement.dataset.pageCurtain;
+        if (isBooting) {
+          isBooting = false;
+          setBooting(false);
+        }
         phase = 'idle';
         sync();
       };
@@ -112,14 +140,18 @@ export function PageTransition() {
         if (phase === 'idle' && current.state === 'blocked') enter();
         else if (phase === 'covered' && current.state === 'blocked') current.proceed();
         else if (phase === 'covered' && current.state === 'unblocked') {
-          // Yeni sayfa hazır olana kadar (ör. 3D şehir) perde ekranda kalır.
+          // Yeni sayfa hazır olana kadar (ör. 3D şehir) perde ekranda kalır. Açılışta önce fontlar beklenir.
           phase = 'waiting';
-          cancelWait = whenPageRevealReady(
-            contextSafe(() => {
-              cancelWait = null;
-              leave();
-            }),
-          );
+          const waitForPage = contextSafe(() => {
+            cancelWait = whenPageRevealReady(
+              contextSafe(() => {
+                cancelWait = null;
+                leave();
+              }),
+            );
+          });
+          if (isBooting) cancelWait = whenBootFontsReady(waitForPage);
+          else waitForPage();
         } else if (phase === 'waiting' && current.state === 'blocked') {
           // Beklerken başka sayfaya gidilirse perde zaten kapalı, doğrudan oraya geçilir.
           cancelWait?.();
@@ -130,6 +162,17 @@ export function PageTransition() {
       });
 
       syncRef.current = sync;
+
+      // Açılış: perde zaten ekranı kaplıyor, React'teki perde aynı haliyle onun yerini alır.
+      if (isBooting) {
+        gsap.set(root, { autoAlpha: 1, yPercent: 0 });
+        gsap.set(label, { yPercent: 0 });
+        document.getElementById(BOOT_CURTAIN_ID)?.remove();
+        document.documentElement.dataset.pageCurtain = 'true';
+        phase = 'covered';
+        sync();
+      }
+
       return () => {
         cancelWait?.();
         syncRef.current = null;
@@ -155,7 +198,7 @@ export function PageTransition() {
   const targetRoute = stripLocale(targetPathname);
   const targetItem = NAV_PAGES.find(({ path }) => path === targetRoute);
   // Ana sayfaya dönüşte perdede yazı yerine firma ikonu görünür.
-  const isHome = targetRoute === HOME_PATH;
+  const isHome = booting || targetRoute === HOME_PATH;
   const label = targetItem && !isHome ? i18n.getFixedT(locale)(targetItem.labelKey).toLocaleUpperCase(locale) : '';
   // Uzun sayfa adları (ör. ürün adları) küçük boyutla birkaç satıra bölünür, ekrana sığar.
   const isLongLabel = label.length > LONG_LABEL_LENGTH;

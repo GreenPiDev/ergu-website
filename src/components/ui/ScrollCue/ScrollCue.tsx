@@ -47,7 +47,7 @@ export function ScrollCue({ className = '', ...rest }: ComponentProps<'div'>) {
             <span key={index} className={styles.cell}>
               <span className={styles.drum} data-scroll-cue-drum>
                 {letter}
-                <span className={styles.glyphWhite}>{letter}</span>
+                <span className={styles.glyphBase}>{letter}</span>
                 <span className={styles.glyphAccent}>{letter}</span>
               </span>
             </span>

@@ -1,19 +1,14 @@
-import { type ReactNode, type Ref, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { gsap, MOTION, SplitText, useGSAP } from '../../../animations/gsap';
 import { getPageIntroDelay } from '../../../animations/pageIntro';
 import { usePrefersReducedMotion } from '../../../hooks/useDevice';
 import styles from './PageHero.module.css';
 
-// Ölçüm farkları başlığı header'a değdirmesin diye küçük bir pay bırakılır.
+// Ölçüm farkları başlığı kenara taşırmasın diye küçük bir pay bırakılır.
 const TITLE_FIT_MARGIN = 1.03;
 
 type PageHeroProps = {
   title: string;
-  /** Başlığın sağında kalan alanın kaç kolona bölüneceği. */
-  columns?: 1 | 2;
-  className?: string;
-  ref?: Ref<HTMLElement>;
-  children?: ReactNode;
 };
 
 const CANVAS_STRETCH: Record<string, CanvasFontStretch> = {
@@ -23,7 +18,7 @@ const CANVAS_STRETCH: Record<string, CanvasFontStretch> = {
   '100%': 'normal',
 };
 
-/** Başlığın `em` cinsinden ölçüleri. CSS bunlarla her sayfa adını aynı yüksekliğe sığdırır. */
+/** Başlığın `em` cinsinden ölçüleri. CSS bunlarla her sayfa adını bandın genişliğine sığdırır. */
 function measureTitle(element: HTMLElement, text: string) {
   const context = document.createElement('canvas').getContext('2d');
   if (!context) return null;
@@ -36,39 +31,33 @@ function measureTitle(element: HTMLElement, text: string) {
   // SplitText harfleri ayırdığı için ekrandaki metinde kerning yoktur.
   context.fontKerning = 'none';
 
-  const { width, actualBoundingBoxLeft, actualBoundingBoxRight } = context.measureText(text);
-  const startBearing = -actualBoundingBoxLeft;
-  const endBearing = width - actualBoundingBoxRight;
-
+  const { width, actualBoundingBoxLeft } = context.measureText(text);
   return {
     em: width / 100,
-    inkEm: (actualBoundingBoxLeft + actualBoundingBoxRight) / 100,
-    // Başlık aşağıdan yukarı okunduğu için bitiş boşluğu üstte, başlangıç boşluğu alttadır.
-    inkOffsetEm: (endBearing - startBearing) / 200,
+    // İlk harfin mürekkebi kenar boşluğuyla aynı hizaya çekilir.
+    bearingEm: -actualBoundingBoxLeft / 100,
   };
 }
 
-/** Ana sayfa dışındaki sayfaların girişi: solda yan yatmış sayfa adı, sağında sayfanın içeriği. */
-export function PageHero({ title, columns = 1, className = '', ref, children }: PageHeroProps) {
+/** Ana sayfa dışındaki sayfaların girişi: ekranın üçte biri yüksekliğinde bant, içinde büyük ve şeffaf sayfa adı. */
+export function PageHero({ title }: PageHeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const innerRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const columnClass = columns === 2 ? styles.twoColumns : styles.oneColumn;
+  const lineRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const inner = innerRef.current;
+    const root = rootRef.current;
     const heading = titleRef.current;
-    if (!inner || !heading) return;
+    if (!root || !heading) return;
 
     let isCancelled = false;
     const applyFit = () => {
       const measured = measureTitle(heading, title);
       if (!measured || isCancelled) return;
 
-      inner.style.setProperty('--title-em', String(measured.em * TITLE_FIT_MARGIN));
-      inner.style.setProperty('--title-ink-em', String(measured.inkEm));
-      inner.style.setProperty('--title-ink-offset-em', String(measured.inkOffsetEm));
+      root.style.setProperty('--title-em', String(measured.em * TITLE_FIT_MARGIN));
+      root.style.setProperty('--title-bearing', String(measured.bearingEm));
     };
 
     applyFit();
@@ -81,7 +70,23 @@ export function PageHero({ title, columns = 1, className = '', ref, children }: 
     };
   }, [title]);
 
-  // Başlık değişince (dil dahil) yeniden bölünür.
+  // Alt kenar çift çizgisi: kalın çizgi soldan çizilir, ince çizgi biraz geriden izler. Başlığın harfleriyle aynı anda
+  // başlar.
+  useGSAP(
+    () => {
+      const line = lineRef.current;
+      if (prefersReducedMotion || !line) return;
+
+      const part = (name: string) => line.querySelector(`[data-part="${name}"]`);
+      gsap
+        .timeline({ delay: getPageIntroDelay(), defaults: { ease: MOTION.ease, duration: MOTION.lineDraw } })
+        .from(part('bold'), { scaleX: 0 }, 0)
+        .from(part('fine'), { scaleX: 0 }, MOTION.stagger * 3);
+    },
+    { scope: rootRef, dependencies: [prefersReducedMotion] },
+  );
+
+  // Başlık değişince (dil dahil) yeniden bölünür. Harfler kendi maskelerinden aşağıdan yukarı çıkar.
   useGSAP(
     () => {
       if (prefersReducedMotion || !titleRef.current) return;
@@ -91,10 +96,9 @@ export function PageHero({ title, columns = 1, className = '', ref, children }: 
         type: 'chars',
         mask: 'chars',
         autoSplit: true,
-        // Başlık yan yattığı için harfler kendi maskelerinden yatay eksende çıkar.
         onSplit: (self) =>
           gsap.from(self.chars, {
-            xPercent: -110,
+            yPercent: 110,
             duration: MOTION.slow,
             ease: MOTION.ease,
             stagger: MOTION.stagger,
@@ -102,40 +106,18 @@ export function PageHero({ title, columns = 1, className = '', ref, children }: 
           }),
       });
     },
-    { scope: gridRef, dependencies: [title, prefersReducedMotion], revertOnUpdate: true },
-  );
-
-  useGSAP(
-    () => {
-      if (prefersReducedMotion || !gridRef.current) return;
-
-      gsap.from(gridRef.current.children, {
-        scaleY: 0,
-        transformOrigin: '50% 0%',
-        duration: MOTION.slow,
-        ease: MOTION.ease,
-        stagger: MOTION.stagger,
-        delay: getPageIntroDelay(),
-      });
-    },
-    { scope: gridRef, dependencies: [prefersReducedMotion], revertOnUpdate: true },
+    { scope: rootRef, dependencies: [title, prefersReducedMotion], revertOnUpdate: true },
   );
 
   return (
-    <section ref={ref} className={`${styles.hero} ${className}`} data-surface="dark">
-      <div ref={innerRef} className={`${styles.inner} ${columnClass}`} data-page-hero-inner>
-        <div ref={gridRef} className={`${styles.grid} ${columnClass}`} aria-hidden="true">
-          {Array.from({ length: columns + 1 }, (_, index) => (
-            <span key={index} className={styles.gridLine} />
-          ))}
-        </div>
-
-        {/* SplitText DOM'u değiştirdiği için başlık değişince React temiz bir eleman kurar. */}
-        <h1 key={title} ref={titleRef} className={styles.title}>
-          {title}
-        </h1>
-
-        {children}
+    <section ref={rootRef} className={styles.hero} data-surface="light" data-tone="white">
+      {/* SplitText DOM'u değiştirdiği için başlık değişince React temiz bir eleman kurar. */}
+      <h1 key={title} ref={titleRef} className={styles.title}>
+        {title}
+      </h1>
+      <div ref={lineRef} className={styles.line} aria-hidden="true">
+        <span className={styles.fine} data-part="fine" />
+        <span className={styles.bold} data-part="bold" />
       </div>
     </section>
   );

@@ -5,9 +5,9 @@
   inset-inline: 0;
   z-index: var(--z-section-rail);
   padding-block-end: env(safe-area-inset-bottom);
-  color: var(--color-white);
+  color: var(--color-black);
   visibility: hidden;
-  background: var(--color-black);
+  background: var(--color-white);
   opacity: 0;
   transform: translateY(100%);
   transition:

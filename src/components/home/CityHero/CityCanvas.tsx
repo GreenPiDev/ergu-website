@@ -138,9 +138,13 @@ function CityScene({
   const pointer = useRef({ ndc: new THREE.Vector2(), inside: false, mouse: false, moved: false });
   // Son tesis aramasındaki kamera: fare de kamera da kıpırdamadıysa arama tekrarlanmaz.
   const lastPickCamera = useRef(new THREE.Matrix4());
-  // Sürükleyerek döndürme (yalnızca fare: dokunmada sayfa kaydırması korunur). Basılan nokta eşiği aşınca sürükleme
-  // başlar, sürüklemeden sonraki tıklama seçim sayılmaz.
+  // Sürükleyerek döndürme (fare ve dokunma). Basılan nokta eşiği aşınca sürükleme başlar, sürüklemeden sonraki tıklama
+  // seçim sayılmaz. Dokunmada tuval `touch-action: none` taşır: tarayıcı kaydırma ve yenileme çekmesi yapmaz, yatay ve
+  // dikey hareketin tamamı fareyle sürüklemedeki gibi şehri çevirir.
   const drag = useRef({ id: -1, startX: 0, startY: 0, lastX: 0, lastY: 0, active: false, moved: false });
+  // Ekrandaki parmaklar; iki parmak varken kıstırma yakınlaştırır.
+  const touches = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef({ active: false, distance: 0 });
   const hovered = useRef<FacilityId | null>(null);
   const handlers = useRef({ onHoverFacility, onPickFacility });
   useEffect(() => {
@@ -167,19 +171,42 @@ function CityScene({
 
   useEffect(() => {
     const element = gl.domElement;
+    const touchMap = touches.current;
+    const pinchState = pinch.current;
     const toNdc = (event: PointerEvent | MouseEvent, target: THREE.Vector2) => {
       const rect = element.getBoundingClientRect();
       return target.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     };
     const DRAG_THRESHOLD = 5;
+    const touchDistance = () => {
+      const [a, b] = [...touches.current.values()];
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    };
     const onDown = (event: PointerEvent) => {
-      if (event.pointerType !== 'mouse' || event.button !== 0) return;
-      // Sürükleme sayfada metin seçmesin.
-      event.preventDefault();
+      if (event.pointerType === 'mouse') {
+        if (event.button !== 0) return;
+        // Sürükleme sayfada metin seçmesin.
+        event.preventDefault();
+      } else {
+        touches.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (touches.current.size > 2) return;
+        if (touches.current.size === 2) {
+          // İkinci parmak: döndürme biter, kıstırma başlar. Hareket tıklama sayılmaz.
+          if (drag.current.active && drag.current.moved) director.endDrag();
+          drag.current.active = false;
+          drag.current.moved = true;
+          Object.assign(pinch.current, { active: true, distance: touchDistance() });
+          setHovered(null);
+          return;
+        }
+      }
       element.setPointerCapture(event.pointerId);
       drag.current = { id: event.pointerId, startX: event.clientX, startY: event.clientY, lastX: event.clientX, lastY: event.clientY, active: true, moved: false };
     };
     const onUp = (event: PointerEvent) => {
+      touches.current.delete(event.pointerId);
+      // Kıstırmadan sonra kalan parmak döndürmeye geçmez, şehir sıçramaz.
+      if (pinch.current.active && touches.current.size < 2) pinch.current.active = false;
       const state = drag.current;
       if (!state.active || event.pointerId !== state.id) return;
       state.active = false;
@@ -187,6 +214,23 @@ function CityScene({
       if (state.moved) director.endDrag();
     };
     const onMove = (event: PointerEvent) => {
+      const touch = touches.current.get(event.pointerId);
+      if (touch) {
+        touch.x = event.clientX;
+        touch.y = event.clientY;
+        if (pinch.current.active && touches.current.size === 2) {
+          const distance = touchDistance();
+          const [a, b] = [...touches.current.values()];
+          const rect = element.getBoundingClientRect();
+          const middle = new THREE.Vector2(
+            (((a.x + b.x) / 2 - rect.left) / rect.width) * 2 - 1,
+            -(((a.y + b.y) / 2 - rect.top) / rect.height) * 2 + 1,
+          );
+          director.pinchBy(distance / pinch.current.distance, middle);
+          pinch.current.distance = distance;
+          return;
+        }
+      }
       const state = drag.current;
       if (state.active && event.pointerId === state.id) {
         if (!state.moved && Math.hypot(event.clientX - state.startX, event.clientY - state.startY) > DRAG_THRESHOLD) {
@@ -245,14 +289,19 @@ function CityScene({
       element.removeEventListener('pointermove', onMove);
       element.removeEventListener('pointerleave', onLeave);
       element.removeEventListener('click', onClick);
+      touchMap.clear();
+      pinchState.active = false;
       setHovered(null);
     };
   }, [gl, pickAt, setHovered, director]);
 
   useEffect(() => {
     if (reducedMotion) return;
-    const onMove = (event: PointerEvent) =>
+    // Parallax yalnızca farede: dokunmada parmak konumu sürükleme ve kaydırmayla karışırdı.
+    const onMove = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse') return;
       director.setPointer((event.clientX / window.innerWidth) * 2 - 1, (event.clientY / window.innerHeight) * 2 - 1);
+    };
     window.addEventListener('pointermove', onMove, { passive: true });
     return () => window.removeEventListener('pointermove', onMove);
   }, [director, reducedMotion]);

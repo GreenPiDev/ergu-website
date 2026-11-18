@@ -35,15 +35,15 @@
   display: block;
 }
 
-.glyphWhite,
+.glyphBase,
 .glyphAccent {
   position: absolute;
   inset-inline: 0;
 }
 
-.glyphWhite {
+.glyphBase {
   inset-block-end: 100%;
-  color: var(--color-white);
+  color: currentColor;
 }
 
 .glyphAccent {
@@ -61,5 +61,5 @@
 .runner {
   display: block;
   block-size: 100%;
-  background: var(--color-white);
+  background: currentColor;
 }

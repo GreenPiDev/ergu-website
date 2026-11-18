@@ -1,12 +1,14 @@
 .body {
   display: flex;
   flex-direction: column;
-  grid-row: 1 / -1;
-  grid-column: 2;
   gap: var(--space-sm);
-  align-self: end;
-  padding-block-end: var(--space-lg);
-  padding-inline-start: var(--space-md);
+  justify-content: flex-end;
+  /* Hero ile birlikte ilk ekranı doldurur. */
+  min-block-size: calc(100svh - var(--page-hero-height));
+  padding-block: var(--space-lg);
+  padding-inline: var(--gutter);
+  color: var(--surface-fg);
+  background: var(--surface-bg);
 }
 
 .name {
