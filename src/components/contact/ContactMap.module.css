@@ -1,0 +1,169 @@
+.section {
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+.stage {
+  position: relative;
+}
+
+.map {
+  /* Üstteki Google adres kartı kırpılır, alttaki Google atfı görünür kalır. */
+  --map-crop: 9rem;
+
+  position: relative;
+  block-size: min(60svh, 34rem);
+  overflow: hidden;
+  background: var(--color-paper);
+}
+
+/* Kâğıt zemine uyan, sıcak tonlu gri harita. */
+.frame {
+  position: absolute;
+  inset-block-start: calc(var(--map-crop) * -1);
+  inset-inline-start: 0;
+  inline-size: 100%;
+  block-size: calc(100% + var(--map-crop));
+  pointer-events: none;
+  border: 0;
+  filter: grayscale(1) sepia(0.18) contrast(0.92) brightness(1.04);
+}
+
+/* Harita adresi kırpılmış çerçevenin ortasına yerleştirir: görünen alanda ortanın kırpma payının yarısı kadar üstü. */
+.pin {
+  position: absolute;
+  inset-block-start: calc(50% - var(--map-crop) / 2);
+  inset-inline-start: 50%;
+  inline-size: 0;
+  block-size: 0;
+  pointer-events: none;
+}
+
+.pulse,
+.core {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border-radius: 50%;
+  translate: -50% -50%;
+}
+
+.core {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-white);
+}
+
+.pulse {
+  inline-size: 4rem;
+  block-size: 4rem;
+  border: 2px solid var(--color-accent);
+  opacity: 0;
+  animation: ripple 2.4s var(--ease-standard) infinite;
+}
+
+.pulse + .pulse {
+  animation-delay: 1.2s;
+}
+
+@keyframes ripple {
+  from {
+    opacity: 0.9;
+    transform: scale(0.2);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* Telefonda kart haritanın altında, kenar boşluklarıyla durur. */
+.card {
+  margin: var(--gutter);
+  padding: var(--space-md);
+  color: var(--color-black);
+  background: var(--color-white);
+  border-block-start: 3px solid var(--color-accent);
+}
+
+.specs {
+  margin: 0;
+}
+
+.spec {
+  padding-block: var(--space-sm);
+  border-block-end: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.spec:first-child {
+  padding-block-start: 0;
+}
+
+.specLabel {
+  margin-block-end: 0.25rem;
+  font-size: var(--text-nav);
+  font-weight: var(--weight-medium);
+  opacity: 0.6;
+}
+
+.specValue {
+  display: grid;
+  margin: 0;
+  font-size: var(--text-lead);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+}
+
+.company {
+  margin: 0;
+  font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
+  font-size: var(--text-contact-number);
+  font-weight: var(--weight-heavy);
+  line-height: 1.2;
+}
+
+.actions {
+  display: grid;
+  margin-block-start: var(--space-sm);
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: var(--touch-target);
+  font-size: var(--text-lead);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  --roll-hover-color: var(--color-accent);
+}
+
+/* Geniş ekranda harita tam yükseklikte, kart sağ üstte haritanın üstünde durur (Google atfı sağ alttadır). */
+@media (min-width: 64rem) {
+  .map {
+    block-size: 80svh;
+  }
+
+  .card {
+    position: absolute;
+    inset-block-start: var(--gutter);
+    inset-inline-end: var(--gutter);
+    inline-size: min(26rem, 34vw);
+    margin: 0;
+    box-shadow: 0 1.5rem 3rem color-mix(in srgb, var(--color-black) 12%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+
+  .pulse:first-child {
+    opacity: 0.5;
+    transform: scale(0.6);
+  }
+}

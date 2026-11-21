@@ -71,7 +71,6 @@ export const SAMPLE_PAGES: { key: SampleKey; path: string }[] = [
   { key: 'about', path: '/sample-about' },
   { key: 'services', path: '/sample-services' },
   { key: 'projects', path: '/sample-projects' },
-  { key: 'contact', path: '/sample-contact' },
   { key: 'knowledgeCenter', path: '/sample-knowledge-center' },
 ];
 

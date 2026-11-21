@@ -1,5 +1,6 @@
 /*
- * Ekranın üçte biri yüksekliğinde bant. Header bandın üstüne biner: ikisinin de üst kenarı sayfanın en üstüdür.
+ * Ekranın üçte biri yüksekliğinde bant (telefonda biraz daha alçak, bkz. --page-hero-height). Header bandın üstüne
+ * biner: ikisinin de üst kenarı sayfanın en üstüdür.
  * Başlık, sığabileceği en büyük boyuttan küçük tutulur ve alt kenardaki çizginin az üstüne oturur. Arkada sayfaya özel
  * görsel durur (src/content/pageHeroImages.ts), üstündeki koyu örtü başlığı ve header'ı okunaklı tutar.
  */
@@ -19,14 +20,26 @@
   min-block-size: calc(var(--header-height) + 4.5rem);
   padding-block: var(--header-height) calc(var(--line-total) + var(--space-sm));
   padding-inline: var(--gutter);
+  /* Telefonda görsel bandın altından taşar, taşan kısım kesilir. */
+  overflow: clip;
   color: var(--surface-fg);
   background: var(--surface-bg);
 }
 
-.media,
 .veil {
   position: absolute;
   inset: 0;
+}
+
+/*
+ * Görsel, bant telefonda kısalsa da üçte birlik kutuda kadrajlanır ve üste yaslanır. Böylece kadrajı değişmez, bandın
+ * altında kalan kısmı kesilir. Yatay telefonda bant en az yüksekliğe çıkarsa görsel yine bandı doldurur.
+ */
+.media {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: max(var(--page-hero-media-height), 100%);
 }
 
 .image {

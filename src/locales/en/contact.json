@@ -1,0 +1,115 @@
+{
+  "lines": {
+    "title": "We’re Happy to Answer Your Questions",
+    "copyLabel": "Copy: {{value}}",
+    "copiedAnnounce": "{{value}} copied to clipboard.",
+    "status": {
+      "open": "We’re open now",
+      "closed": "We’re currently closed"
+    },
+    "clock": "{{time}} in Türkiye",
+    "linkedinValue": "Follow us",
+    "today": "Today {{open}}–{{close}}",
+    "todayClosed": "Closed today"
+  },
+  "form": {
+    "title": "Write to us",
+    "lead": "A quote, a technical question or a new project. Tell us about it in a few sentences and the right team will get back to you.",
+    "requiredNote": "Fields marked with * are required.",
+    "topic": {
+      "legend": "Topic",
+      "options": {
+        "quote": "Request a quote",
+        "technical": "Technical info",
+        "project": "Project meeting",
+        "other": "Other"
+      }
+    },
+    "fields": {
+      "name": "Full name",
+      "company": "Company",
+      "email": "Email",
+      "phone": "Phone",
+      "message": "Your message"
+    },
+    "optional": "optional",
+    "messageCount": "{{count}} / {{max}}",
+    "consent": {
+      "label": "I give my explicit consent *",
+      "description": "I consent to my personal data being processed under the KVKK (Turkish data protection law) to respond to my request.",
+      "more": "Read the privacy notice",
+      "notice": {
+        "title": "Privacy Notice on the Protection of Personal Data",
+        "draftNote": "[PLACEHOLDER] This is a draft. It must be approved by the company and its legal counsel before publication.",
+        "regionLabel": "Privacy notice",
+        "sections": {
+          "controller": {
+            "heading": "Data controller",
+            "body": "Under the Turkish Personal Data Protection Law No. 6698 (“KVKK”), your personal data is processed by {{company}} ([PLACEHOLDER: trade name and MERSIS number]) as the data controller, within the scope described below. Address: {{address}}."
+          },
+          "data": {
+            "heading": "Personal data processed",
+            "body": "The full name, company name, email address, phone number, selected topic and message content you share through the contact form, together with the date you submitted the form and the language of the site you used."
+          },
+          "purposes": {
+            "heading": "Purposes of processing",
+            "body": "Your personal data is processed to review and respond to your request, question or quotation request, to prepare quotations for the products and services you ask about, to communicate with you, to keep records of communications and to use them as evidence in possible disputes."
+          },
+          "legalBasis": {
+            "heading": "Method of collection and legal basis",
+            "body": "Your personal data is collected electronically through the contact form on our website, provided directly by you. It is processed on the legal grounds set out in Article 5(2) of the KVKK: (c) it is directly related to the establishment or performance of a contract, (ç) it is necessary to fulfil legal obligations, and (f) it is necessary for the legitimate interests of the data controller, provided that your fundamental rights and freedoms are not harmed."
+          },
+          "transfer": {
+            "heading": "Transfers",
+            "body": "Limited to the purposes above, your personal data may be transferred to the suppliers we use to deliver the form and provide email services ([PLACEHOLDER: form and email service provider, country where its servers are located]) and, upon request, to authorised public authorities, in accordance with Articles 8 and 9 of the KVKK."
+          },
+          "retention": {
+            "heading": "Retention period",
+            "body": "Your personal data is kept for as long as the purposes of processing require and for the periods set out in the applicable legislation; at the end of these periods it is deleted, destroyed or anonymised. [PLACEHOLDER: retention period]"
+          }
+        },
+        "rights": {
+          "heading": "Your rights",
+          "intro": "Under Article 11 of the KVKK, you may apply to the data controller to:",
+          "items": [
+            "learn whether your personal data is processed,",
+            "request information about the processing if it has been processed,",
+            "learn the purpose of processing and whether the data is used accordingly,",
+            "know the third parties in Türkiye or abroad to whom your personal data is transferred,",
+            "request correction if your personal data is incomplete or inaccurate,",
+            "request deletion or destruction of your personal data under the conditions set out in Article 7 of the KVKK,",
+            "request that third parties to whom your data was transferred be notified of any correction, deletion or destruction,",
+            "object to a result against you arising from analysis of the data exclusively through automated systems,",
+            "claim compensation for damages if you suffer loss due to unlawful processing of your personal data."
+          ]
+        },
+        "application": {
+          "heading": "How to apply",
+          "body": "You can submit requests regarding your rights in writing to {{address}} or by email to {{email}}, in accordance with the Communiqué on the Procedures and Principles of Application to the Data Controller. Your application will be concluded free of charge within thirty days at the latest, depending on the nature of the request; if the process requires an additional cost, the fee set by the Personal Data Protection Board may be charged."
+        }
+      }
+    },
+    "submit": "Send message",
+    "sending": "Sending",
+    "status": {
+      "sent": "Thank you, your message has reached us.",
+      "error": "Your message could not be sent. Please try again shortly or give us a call.",
+      "unconfigured": "[PLACEHOLDER] The form is not yet connected to a delivery service."
+    },
+    "errors": {
+      "topic": "Choose a topic.",
+      "name": "Enter your full name.",
+      "email": "Enter a valid email address.",
+      "phone": "Enter a valid phone number or leave the field empty.",
+      "message": "Your message must be at least 10 characters.",
+      "consent": "Your consent is required to continue."
+    }
+  },
+  "map": {
+    "frameTitle": "Map showing the {{company}} location",
+    "companyLabel": "Company",
+    "addressLabel": "Address",
+    "hoursLabel": "Working hours",
+    "openInMaps": "Open in Maps"
+  }
+}

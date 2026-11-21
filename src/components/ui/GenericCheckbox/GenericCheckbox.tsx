@@ -1,7 +1,8 @@
-import type { InputHTMLAttributes, ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import styles from './GenericCheckbox.module.css';
 
-type GenericCheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'className'> & {
+// `ref` da input'a geçer (React 19), form kütüphaneleri doğrudan bağlanabilir.
+type GenericCheckboxProps = Omit<ComponentProps<'input'>, 'type' | 'className'> & {
   /** Çevrilmiş etiket. Kutunun yanında büyük yazıyla durur. */
   label: ReactNode;
   /** Etiketin altındaki açıklama, isteğe bağlıdır. */

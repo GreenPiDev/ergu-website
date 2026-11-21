@@ -44,8 +44,19 @@
       "about": "About",
       "services": "Services",
       "projects": "Projects",
-      "contact": "Contact",
       "knowledgeCenter": "Knowledge Center"
+    }
+  },
+  "company": {
+    "hours": {
+      "open": "{{days}} · {{open}}–{{close}}",
+      "closed": "{{days}} · Closed"
+    },
+    "labels": {
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "linkedin": "LinkedIn"
     }
   },
   "language": {

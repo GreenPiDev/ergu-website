@@ -1,0 +1,115 @@
+{
+  "lines": {
+    "title": "Sorularınızı Cevaplamaktan Memnuniyet Duyarız",
+    "copyLabel": "Kopyala: {{value}}",
+    "copiedAnnounce": "{{value}} panoya kopyalandı.",
+    "status": {
+      "open": "Şu an açığız",
+      "closed": "Şu an mesai dışındayız"
+    },
+    "clock": "Türkiye saatiyle {{time}}",
+    "linkedinValue": "Bizi takip edin",
+    "today": "Bugün {{open}}–{{close}}",
+    "todayClosed": "Bugün kapalıyız"
+  },
+  "form": {
+    "title": "Bize yazın",
+    "lead": "Teklif, teknik soru ya da yeni bir proje. Ne olduğunu birkaç cümleyle anlatın, ilgili ekibimiz size dönsün.",
+    "requiredNote": "* ile işaretli alanlar zorunludur.",
+    "topic": {
+      "legend": "Konu",
+      "options": {
+        "quote": "Teklif talebi",
+        "technical": "Teknik bilgi",
+        "project": "Proje görüşmesi",
+        "other": "Diğer"
+      }
+    },
+    "fields": {
+      "name": "Ad soyad",
+      "company": "Firma",
+      "email": "E-posta",
+      "phone": "Telefon",
+      "message": "Mesajınız"
+    },
+    "optional": "isteğe bağlı",
+    "messageCount": "{{count}} / {{max}}",
+    "consent": {
+      "label": "Açık onay veriyorum *",
+      "description": "Kişisel verilerimin, talebime yanıt verilmesi amacıyla KVKK kapsamında işlenmesine onay veriyorum.",
+      "more": "Aydınlatma metnini oku",
+      "notice": {
+        "title": "Kişisel Verilerin Korunması Aydınlatma Metni",
+        "draftNote": "[YER TUTUCU] Taslak metindir. Yayından önce firmanın ve hukuk danışmanının onayından geçmelidir.",
+        "regionLabel": "Aydınlatma metni",
+        "sections": {
+          "controller": {
+            "heading": "Veri sorumlusu",
+            "body": "6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) uyarınca kişisel verileriniz, veri sorumlusu sıfatıyla {{company}} ([YER TUTUCU: ticari unvan ve MERSİS numarası]) tarafından aşağıda açıklanan kapsamda işlenmektedir. Adres: {{address}}."
+          },
+          "data": {
+            "heading": "İşlenen kişisel veriler",
+            "body": "İletişim formu aracılığıyla paylaştığınız ad soyad, firma adı, e-posta adresi, telefon numarası, seçtiğiniz konu ve mesajınızın içeriği ile formu gönderdiğiniz tarih ve sitenin kullandığınız dil bilgisi."
+          },
+          "purposes": {
+            "heading": "İşleme amaçları",
+            "body": "Kişisel verileriniz; talebinizi, sorunuzu veya teklif isteğinizi değerlendirmek ve size yanıt vermek, talep ettiğiniz ürün ve hizmetlere ilişkin teklif hazırlamak, sizinle iletişim kurmak, iletişim süreçlerinin kaydını tutmak ve olası uyuşmazlıklarda delil olarak kullanmak amaçlarıyla işlenir."
+          },
+          "legalBasis": {
+            "heading": "Toplama yöntemi ve hukuki sebep",
+            "body": "Kişisel verileriniz, internet sitemizdeki iletişim formu aracılığıyla elektronik ortamda ve doğrudan sizin tarafınızdan sağlanarak toplanır. Bu veriler KVKK’nın 5. maddesinin 2. fıkrasının (c) bendi uyarınca bir sözleşmenin kurulması veya ifasıyla doğrudan ilgili olması, (ç) bendi uyarınca hukuki yükümlülüklerin yerine getirilmesi ve (f) bendi uyarınca temel hak ve özgürlüklerinize zarar vermemek kaydıyla veri sorumlusunun meşru menfaati hukuki sebeplerine dayanılarak işlenir."
+          },
+          "transfer": {
+            "heading": "Aktarım",
+            "body": "Kişisel verileriniz yukarıdaki amaçlarla sınırlı olarak; formun iletilmesi ve e-posta hizmetinin sağlanması için hizmet aldığımız tedarikçilere ([YER TUTUCU: form ve e-posta hizmet sağlayıcısı, sunucularının bulunduğu ülke]) ve talep hâlinde yetkili kamu kurum ve kuruluşlarına KVKK’nın 8. ve 9. maddelerine uygun olarak aktarılabilir."
+          },
+          "retention": {
+            "heading": "Saklama süresi",
+            "body": "Kişisel verileriniz, işlenme amaçlarının gerektirdiği süre ve ilgili mevzuatta öngörülen süreler boyunca saklanır; bu sürelerin sonunda silinir, yok edilir veya anonim hâle getirilir. [YER TUTUCU: saklama süresi]"
+          }
+        },
+        "rights": {
+          "heading": "Haklarınız",
+          "intro": "KVKK’nın 11. maddesi uyarınca veri sorumlusuna başvurarak aşağıdaki haklarınızı kullanabilirsiniz:",
+          "items": [
+            "Kişisel verilerinizin işlenip işlenmediğini öğrenme,",
+            "Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme,",
+            "Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme,",
+            "Yurt içinde veya yurt dışında kişisel verilerinizin aktarıldığı üçüncü kişileri bilme,",
+            "Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme,",
+            "KVKK’nın 7. maddesinde öngörülen şartlar çerçevesinde kişisel verilerinizin silinmesini veya yok edilmesini isteme,",
+            "Düzeltme, silme veya yok etme işlemlerinin kişisel verilerinizin aktarıldığı üçüncü kişilere bildirilmesini isteme,",
+            "İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme,",
+            "Kişisel verilerinizin kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız hâlinde zararın giderilmesini talep etme."
+          ]
+        },
+        "application": {
+          "heading": "Başvuru",
+          "body": "Haklarınıza ilişkin taleplerinizi, Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ’e uygun olarak yazılı şekilde {{address}} adresine iletebilir veya {{email}} adresine e-posta ile gönderebilirsiniz. Başvurunuz, talebin niteliğine göre en geç otuz gün içinde ücretsiz olarak sonuçlandırılır; işlemin ayrıca bir maliyet gerektirmesi hâlinde Kişisel Verileri Koruma Kurulunca belirlenen tarifedeki ücret alınabilir."
+        }
+      }
+    },
+    "submit": "Mesajı gönder",
+    "sending": "Gönderiliyor",
+    "status": {
+      "sent": "Teşekkürler, mesajınız bize ulaştı.",
+      "error": "Mesaj gönderilemedi. Lütfen biraz sonra tekrar deneyin ya da bizi telefonla arayın.",
+      "unconfigured": "[YER TUTUCU] Form henüz bir gönderim servisine bağlı değil."
+    },
+    "errors": {
+      "topic": "Bir konu seçin.",
+      "name": "Adınızı ve soyadınızı yazın.",
+      "email": "Geçerli bir e-posta adresi yazın.",
+      "phone": "Geçerli bir telefon numarası yazın ya da alanı boş bırakın.",
+      "message": "Mesajınız en az 10 karakter olmalı.",
+      "consent": "Devam etmek için onay vermeniz gerekiyor."
+    }
+  },
+  "map": {
+    "frameTitle": "{{company}} konumunu gösteren harita",
+    "companyLabel": "Firma",
+    "addressLabel": "Adres",
+    "hoursLabel": "Çalışma saatleri",
+    "openInMaps": "Haritada aç"
+  }
+}

@@ -44,8 +44,19 @@
       "about": "Hakkında",
       "services": "Hizmetlerimiz",
       "projects": "Çalışmalarımız",
-      "contact": "İletişim",
       "knowledgeCenter": "Bilgi Merkezi"
+    }
+  },
+  "company": {
+    "hours": {
+      "open": "{{days}} · {{open}}–{{close}}",
+      "closed": "{{days}} · Kapalı"
+    },
+    "labels": {
+      "phone": "Telefon",
+      "email": "E-posta",
+      "address": "Adres",
+      "linkedin": "LinkedIn"
     }
   },
   "language": {

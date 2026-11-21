@@ -7,6 +7,9 @@ import { MASS_VARIANTS, type MassVariant } from './cityMass';
 import { type VertexPatch, createPeople } from './cityPeople';
 import { AIRPORT_FRAGMENT, AIRPORT_GLSL, landscapeAirport } from './cityAirport';
 import { CABLECAR_FRAGMENT, CABLECAR_GLSL, landscapeCableCar } from './cityCableCar';
+import { createFlights } from './cityFlights';
+import { createTram, inTramCorridor } from './cityTram';
+import { SHIP_COUNT, SHIP_HALF_BEAM, SHIP_HALF_LENGTH, createShips, shipWakes } from './cityShips';
 import { CULTURAL_FRAGMENT, CULTURAL_GLSL, landscapeCulturalCenter } from './cityCulturalCenter';
 import { GREENHOUSE_FRAGMENT, GREENHOUSE_GLSL, landscapeGreenhouse } from './cityGreenhouse';
 import { HOSPITAL_FRAGMENT, HOSPITAL_GLSL, landscapeHospital } from './cityHospital';
@@ -84,6 +87,7 @@ const cityUniforms = {
   uHeightTex: { value: null as THREE.Texture | null },
   uHeightRect: { value: new THREE.Vector4(HEIGHT_RECT.minX, HEIGHT_RECT.minZ, 1 / HEIGHT_RECT.sizeX, 1 / HEIGHT_RECT.sizeZ) },
   uCloudTex: { value: null as THREE.Texture | null },
+  uShips: { value: shipWakes }, // gemi izleri için konum, yön ve iz şiddeti (cityShips.ts)
 };
 
 // Gün batımı (0) ile mavi saat (1) arasındaki ara değerler.
@@ -840,6 +844,7 @@ const MATTE_FRAGMENT = `#include <color_fragment>
 
 // Su: iki katmanlı, yavaş akan dalga normali ve değişken pürüzlülük, gökyüzünü ve güneşi kırık kırık yansıtır.
 // Kıyıya yakın yerde (çevre yüksekliği su yüzeyine yaklaştıkça) renk turkuaza açılır, açıkta derin maviye döner.
+const WATER_HEADER = `uniform vec4 uShips[${SHIP_COUNT}];\n`;
 const WATER_FRAGMENT = `#include <normal_fragment_maps>
   {
     vec2 p = vWPos.xz;
@@ -859,13 +864,16 @@ const WATER_FRAGMENT = `#include <normal_fragment_maps>
     float gust = smoothstep(0.35, 0.7, fbm(p * 0.006 + vec2(uTime * 0.015, uTime * 0.009)));
     roughnessFactor = mix(roughnessFactor * 0.6, 0.5, gust);
     vec2 swell = vec2(vnoise(p * 0.017 + uTime * 0.03) - 0.5, vnoise(p * 0.017 + 31.0 - uTime * 0.025) - 0.5);
+    // Geniş ölü dalga (~170 m): ince dalgalar uzakta söndüğü için hero mesafesinde yüzeyi bu taşır, gökyüzü yansıması
+    // geniş açık-koyu bölgelere kırılır (düz ayna hissi kalkar). Piksele göre büyük olduğundan titremez.
+    vec2 swell2 = vec2(vnoise(p * 0.006 + uTime * 0.012) - 0.5, vnoise(p * 0.006 + 57.0 - uTime * 0.01) - 0.5);
     // Akış: nehirde akıntı yönünde uzamış çizgiler denize doğru (-z) ~3 m/sn kayar, denizde kıyıya paralel dalga sırtları
     // kıyıya doğru (+z) ~2 m/sn yürür. Dalga boyu onlarca metre olduğundan bu mesafeden de seçilir.
     float sea = step(vWPos.z, -1390.0);
     vec2 fp = mix(vec2(p.x * 0.07, p.y * 0.016 + uTime * 0.05), vec2(p.x * 0.006 + 13.0, p.y * 0.035 - uTime * 0.07), sea);
     float flow = vnoise(fp) * 0.6 + vnoise(fp * 2.1 + 7.0) * 0.4;
     vec2 flowGrad = vec2(vnoise(fp + vec2(0.4, 0.0)) - vnoise(fp - vec2(0.4, 0.0)), vnoise(fp + vec2(0.0, 0.4)) - vnoise(fp - vec2(0.0, 0.4)));
-    vec3 ripple = vec3(swell.x * 0.05 + flowGrad.x * mix(0.1, 0.02, sea), 0.0, swell.y * 0.05 + flowGrad.y * mix(0.03, 0.1, sea));
+    vec3 ripple = vec3(swell.x * 0.07 + swell2.x * 0.08 + flowGrad.x * mix(0.1, 0.02, sea), 0.0, swell.y * 0.07 + swell2.y * 0.08 + flowGrad.y * mix(0.03, 0.1, sea));
     normal = normalize((viewMatrix * vec4(normalize(wn + ripple), 0.0)).xyz);
     diffuseColor.rgb *= mix(0.75, 1.2, gust) * (0.82 + 0.4 * flow);
     roughnessFactor = clamp(roughnessFactor + (flow - 0.5) * 0.25, 0.05, 1.0);
@@ -873,6 +881,39 @@ const WATER_FRAGMENT = `#include <normal_fragment_maps>
     float shallow = (1.0 - smoothstep(1.5, 9.0, vWPos.y - ch.y)) * ch.w * uAo;
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.09, 0.3, 0.33), shallow * 0.6);
     diffuseColor.rgb *= 0.88 + 0.24 * fbm(p * 0.0012 + 3.0);
+
+    // Köpük: önce kıyı, sonra gemi izleri. Bir pikselin kapladığı metre (mpx) kadar inceden çizilmez, uzakta kırık desen
+    // ortalamasına döner (titremez).
+    float mpx = max(length(fwidth(p)), 0.3);
+    float breakup = mix(smoothstep(0.3, 0.75, vnoise(p * 0.11 + vec2(uTime * 0.12, -uTime * 0.08))), 0.5, smoothstep(1.0, 4.0, mpx));
+    // Kıyı: yakın çevre su yüzeyine yaklaştıkça (0 açık deniz, 1 kıyı çizgisi) kıyıya doğru yürüyen kırık bantlar ve en
+    // dipte sürekli köpük. Derede (rıhtım duvarları) çok daha hafif.
+    float prox = smoothstep(-11.0, 0.5, ch.x - vWPos.y) * ch.w;
+    float bands = smoothstep(0.7, 1.0, sin(prox * 20.0 - uTime * 1.1 + vnoise(p * 0.012) * 5.0));
+    float foam = (bands * smoothstep(0.45, 0.9, prox) * 0.7 + smoothstep(0.88, 1.0, prox) * 0.6) * breakup * mix(0.25, 1.0, sea);
+    for (int s = 0; s < ${SHIP_COUNT}; s++) {
+      vec4 sh = uShips[s];
+      if (sh.w <= 0.0) continue;
+      float along = (p.x - sh.x) * sh.z;
+      float across = abs(p.y - sh.y);
+      // b: kıçtan geriye metre. İz 1 km'de söner, V kolları ~19° değil daha dar (görünen dalga sırtı).
+      float b = -along - ${SHIP_HALF_LENGTH.toFixed(1)};
+      if (b > 1100.0 || across > 450.0 || along > ${(SHIP_HALF_LENGTH + 30).toFixed(1)}) continue;
+      float behind = step(0.0, b);
+      float trailW = 9.0 + b * 0.05;
+      float trail = (1.0 - smoothstep(trailW * 0.35, trailW, across)) * exp(-b / 520.0) * behind;
+      float armW = max(3.0 + b * 0.015, mpx * 1.5);
+      float arm = (1.0 - smoothstep(0.0, armW, abs(across - ${SHIP_HALF_BEAM.toFixed(1)} - b * 0.3))) * exp(-b / 380.0) * behind * 0.75;
+      // Gövde boyunca ve pruvada köpük (pruvada güçlü).
+      float hull = (1.0 - smoothstep(0.0, max(6.0, mpx * 1.5), across - ${SHIP_HALF_BEAM.toFixed(1)})) * (1.0 - behind)
+        * (0.3 + 0.6 * smoothstep(${(SHIP_HALF_LENGTH * 0.4).toFixed(1)}, ${SHIP_HALF_LENGTH.toFixed(1)}, along));
+      foam += (trail * 0.9 + arm + hull) * sh.w * mix(breakup, 1.0, 0.35);
+    }
+    foam = clamp(foam, 0.0, 1.0);
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.89, 0.9), foam * 0.85);
+    roughnessFactor = mix(roughnessFactor, 0.85, foam);
+    metalnessFactor = mix(metalnessFactor, 0.0, foam);
+    normal = normalize(mix(normal, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz), foam));
   }`;
 
 /** Malzemenin shader'ına ortak uniform'ları, dünya konumu varying'lerini, ortak ışık düzeltmesini ve verilen bloğu ekler. */
@@ -1163,6 +1204,10 @@ const TREE_SCALE = 1.35;
 // Araçların gerçek ölçüye göre büyütülmesi (otomobil ~4.4 m): yoldakiler ~6.2 m (hero mesafesinde ~9 piksel), otoparktakiler
 // park yerlerine sığsın diye daha az. Gerçek ölçüde kullanıcıya fazla küçük geldi.
 const VEHICLE_SCALE = { moving: 1.4, parked: 1.25 };
+// Teleferik kabini: model birim boyda (±1), modeldeki ölçek 2,3 idi. Uzaktan seçilsin diye bunun iki katı (yaklaşık 9 m).
+const GONDOLA_SCALE = 4.6;
+// Kabin rengi: marka turuncusu (tokens.css --color-accent ile aynı).
+const GONDOLA_COLOR = '#da7e21';
 
 // Sokak lambası başlıkları ve yol ışıkları bu mesafeden piksel altında kalıp görünmüyordu. Örnekli kutular yerine sabit
 // piksel boyutlu, yumuşak kenarlı noktalar olarak çizilir (bloom bunları parlatır). size: piksel, glow: parlaklık,
@@ -1361,6 +1406,8 @@ function createTraffic(cityRoot: THREE.Object3D): Traffic {
       xAxis.setFromMatrixColumn(matrix, 0);
       const headsX = Math.abs(xAxis.x) > Math.abs(xAxis.z);
       const road = roads.find((item) => x >= item.x0 && x <= item.x1 && z >= item.z0 && z <= item.z1 && lanes[item.lane].alongX === headsX);
+      // Bulvarın iç şeritleri tramvay ray yoluna verildi (cityTram.ts): oradaki araçlar çıkarılır.
+      if (road && headsX && inTramCorridor(x, z)) continue;
       if (!road) {
         parked.push(enlarge(source, matrix, VEHICLE_SCALE.parked));
         continue;
@@ -1490,6 +1537,12 @@ export function prepareCity(
   // Havalimanı: tek zemin (pistler, taksi yolları, apronlar, kara tarafı), kargo, itfaiye, kule tabanı, radar, körük
   // köprüler, yer araçları, kamyonlar, kara tarafında ağaçlar ve lambalar (zemin rengi aşağıda LANDSCAPES ile).
   const airportLamps = landscapeAirport(cityRoot, TREE_SCALE);
+  // İniş ve kalkış trafiği: taksi yolundaki ve pist başındaki iki uçak kapalı bir rotada döner (chunk bölmeden önce).
+  const flights = createFlights(cityRoot);
+  // Doğu-batı bulvarında tramvay: refüj yerine çimli ray yolu ve iki tramvay (malzeme yamasından önce).
+  const tram = createTram(cityRoot);
+  // Gemiler şeritlerinde seyreder, izleri su shader'ında çizilir (chunk bölmeden önce).
+  const ships = createShips(cityRoot);
   // Bilim merkezi yeniden kurulur: laboratuvar kütleleri, hol, kule podyumu, bilim parkı parçaları, araçlar, ağaçlar ve
   // lambalar (zemin rengi aşağıda LANDSCAPES ile).
   const scienceLamps = landscapeScienceCenter(cityRoot, TREE_SCALE);
@@ -1600,7 +1653,12 @@ export function prepareCity(
           // Hafif metalik: yüzey rengini boyadan çok gökyüzü yansımasından alır.
           material.metalness = 0.3;
           material.envMapIntensity = 1.3;
-          patchMaterial(material, 'city_water_v6', { include: '#include <normal_fragment_maps>', code: WATER_FRAGMENT }, false);
+          patchMaterial(
+            material,
+            'city_water_v7',
+            { include: '#include <normal_fragment_maps>', code: WATER_FRAGMENT, header: WATER_HEADER },
+            false,
+          );
         } else {
           patchMaterial(material, 'city_light_v5');
         }
@@ -1622,8 +1680,14 @@ export function prepareCity(
   const matrix = new THREE.Matrix4();
   const quaternion = new THREE.Quaternion();
   const position = new THREE.Vector3();
-  const unit = new THREE.Vector3(1, 1, 1);
+  const unit = new THREE.Vector3(GONDOLA_SCALE, GONDOLA_SCALE, GONDOLA_SCALE);
   const yAxis = new THREE.Vector3(0, 1, 0);
+  // Kabinler marka turuncusu: örnek rengi köşe renkleriyle çarpılır (cam ve askı koyu kalır).
+  if (gondolas) {
+    const accent = new THREE.Color(GONDOLA_COLOR);
+    for (let i = 0; i < gondolas.count; i++) gondolas.setColorAt(i, accent);
+    if (gondolas.instanceColor) gondolas.instanceColor.needsUpdate = true;
+  }
 
   function animateGondolas(dt: number) {
     if (!gondolas) return;
@@ -1637,13 +1701,17 @@ export function prepareCity(
         const a = track.points[i - 1];
         const b = track.points[i];
         const t = (distance - track.lengths[i - 1]) / Math.max(1e-6, track.lengths[i] - track.lengths[i - 1]);
+        // Rota noktaları halatın üstünde: kabin askısının ucu (modelde y +1) halata değer.
         position.lerpVectors(a, b, t);
+        position.y -= GONDOLA_SCALE;
         quaternion.setFromAxisAngle(yAxis, -Math.atan2(b.z - a.z, b.x - a.x));
         gondolas.setMatrixAt(index++, matrix.compose(position, quaternion, unit));
       }
     }
     gondolas.instanceMatrix.needsUpdate = true;
   }
+  // İlk yerleşim: hareket azaltılmışsa (dt hep 0) kabinler bu konumda, halatta asılı kalır.
+  animateGondolas(0);
 
   return {
     update(dt, cameraDistance) {
@@ -1656,6 +1724,9 @@ export function prepareCity(
       }
       animateGondolas(Math.min(dt, 0.1));
       traffic.update(Math.min(dt, 0.1));
+      flights?.update(Math.min(dt, 0.1));
+      tram?.update(Math.min(dt, 0.1));
+      ships?.update(Math.min(dt, 0.1));
     },
   };
 }

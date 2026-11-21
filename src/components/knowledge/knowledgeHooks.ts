@@ -1,6 +1,7 @@
 import { type RefObject, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { flashEntryMark, revealWordsOnScroll } from '../../animations/knowledge';
+import { flashEntryMark } from '../../animations/knowledge';
+import { revealWordsOnScroll } from '../../animations/reveal';
 import { gsap, useGSAP } from '../../animations/gsap';
 import type { ChapterKey } from '../../content/knowledge';
 import { usePrefersReducedMotion } from '../../hooks/useDevice';
