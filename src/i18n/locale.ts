@@ -2,6 +2,9 @@ export type Locale = 'tr' | 'en';
 
 export const DEFAULT_LOCALE: Locale = 'tr';
 
+/** Sitenin dilleri, gösterim sırasıyla. */
+export const LOCALES: readonly Locale[] = ['tr', 'en'];
+
 const EN_PREFIX = '/en';
 
 function hasEnPrefix(pathname: string): boolean {

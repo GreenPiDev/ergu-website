@@ -1,4 +1,4 @@
-import type { Icon } from '@phosphor-icons/react';
+import type { Icon, IconWeight } from '@phosphor-icons/react';
 // Kök paketten içe aktarılınca geliştirme sunucusu 9000'den fazla ikon modülünü işler; ikonlar tek tek alınır.
 import { EnvelopeSimpleIcon } from '@phosphor-icons/react/dist/csr/EnvelopeSimple';
 import { LinkedinLogoIcon } from '@phosphor-icons/react/dist/csr/LinkedinLogo';
@@ -14,8 +14,16 @@ const ICONS: Readonly<Record<ContactCardKind, Icon>> = {
   linkedin: LinkedinLogoIcon,
 };
 
-/** Kartın konusunu anlatan dekoratif ikon (Phosphor, ince çizgi). Boyutu ve rengi CSS'ten gelir. */
-export function ContactCardIcon({ kind, className }: { kind: ContactCardKind; className?: string }) {
+/** Kartın konusunu anlatan dekoratif ikon (Phosphor, varsayılanı ince çizgi). Boyutu ve rengi CSS'ten gelir. */
+export function ContactCardIcon({
+  kind,
+  className,
+  weight = 'light',
+}: {
+  kind: ContactCardKind;
+  className?: string;
+  weight?: IconWeight;
+}) {
   const IconComponent = ICONS[kind];
-  return <IconComponent className={className} weight="light" size="1em" aria-hidden="true" />;
+  return <IconComponent className={className} weight={weight} size="1em" aria-hidden="true" />;
 }

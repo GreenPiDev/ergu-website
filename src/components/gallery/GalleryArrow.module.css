@@ -1,0 +1,49 @@
+.root {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--gallery-arrow-size);
+  block-size: var(--gallery-arrow-size);
+  font-size: calc(var(--gallery-arrow-size) * 0.4);
+  color: var(--surface-fg);
+  border: 1px solid var(--surface-line);
+  border-radius: 50%;
+}
+
+/* Dolgu yalnızca transform ile büyür. */
+.root::before {
+  position: absolute;
+  inset: -1px;
+  content: '';
+  background: var(--color-accent);
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.icon {
+  position: relative;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .root:hover::before {
+    transform: scale(1);
+  }
+}
+
+.root:active::before {
+  transform: scale(0.92);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root::before {
+    transition: none;
+  }
+}

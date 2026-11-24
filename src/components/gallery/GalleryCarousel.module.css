@@ -1,0 +1,69 @@
+/* Galeri tek ekranı doldurur: silindir, altında sayaç ve oklar, en altta bütün fotoğrafların şeridi. */
+.root {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  block-size: 100svh;
+  min-block-size: 30rem;
+  padding-block: var(--header-height) calc(var(--space-sm) + env(safe-area-inset-bottom));
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+/* Dokunmada dikey kaydırma sayfaya kalır, yatay hareket silindiri döndürür. */
+.stage {
+  position: relative;
+  min-block-size: 0;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stage:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.canvasLayer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+
+.canvasLayer[data-ready='true'] {
+  opacity: 1;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.bar {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-block: var(--space-sm);
+  padding-inline: var(--gutter);
+}
+
+.arrows {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvasLayer {
+    transition: none;
+  }
+}

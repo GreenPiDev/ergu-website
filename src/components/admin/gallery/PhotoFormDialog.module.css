@@ -1,0 +1,293 @@
+.form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.fileField,
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.labelRow {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.label {
+  font-size: var(--text-admin-small);
+  font-weight: var(--weight-medium);
+}
+
+.optional,
+.counter {
+  font-weight: var(--weight-regular);
+  color: var(--surface-muted);
+}
+
+.counter {
+  font-size: var(--text-admin-small);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dosya seçimi: tüm alan tıklanabilir, fotoğraf sürüklenip bırakılabilir. */
+.dropZone {
+  position: relative;
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  min-block-size: 8rem;
+  padding: var(--space-md);
+  cursor: pointer;
+  background: var(--color-paper);
+  border: 1px dashed var(--surface-line);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+
+.dropZone[data-dragging] {
+  border-color: var(--color-accent);
+  border-style: solid;
+}
+
+.dropZone[data-invalid] {
+  border-color: var(--color-error);
+}
+
+.dropZone:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.fileInput {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.fileInput:disabled {
+  cursor: progress;
+}
+
+.dropIcon {
+  flex: none;
+  font-size: 3rem;
+  color: var(--surface-muted);
+}
+
+.preview,
+.currentImage {
+  flex: none;
+  inline-size: 7rem;
+  block-size: 7rem;
+  object-fit: cover;
+  background: var(--color-gallery-placeholder);
+  border-radius: var(--radius-sm);
+}
+
+.currentImage {
+  inline-size: 100%;
+  block-size: auto;
+  max-block-size: 16rem;
+  object-fit: contain;
+}
+
+.dropCopy {
+  display: grid;
+  gap: 0.25rem;
+  min-inline-size: 0;
+}
+
+.dropAction {
+  font-size: var(--text-admin-body);
+  font-weight: var(--weight-medium);
+  color: var(--color-accent);
+}
+
+.fileName {
+  overflow: hidden;
+  font-size: var(--text-admin-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hint {
+  font-size: var(--text-admin-small);
+  line-height: 1.45;
+  color: var(--surface-muted);
+}
+
+.input {
+  inline-size: 100%;
+  min-block-size: 3rem;
+  padding: 0.625rem 0.875rem;
+  font: inherit;
+  font-size: var(--text-field);
+  color: var(--surface-fg);
+  background: var(--color-paper);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--radius-sm);
+}
+
+.textarea {
+  min-block-size: 7.5rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.input:disabled {
+  opacity: 0.6;
+}
+
+.fieldError {
+  font-size: var(--text-admin-small);
+  color: var(--color-error);
+}
+
+.alert {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: var(--text-admin-body);
+  line-height: 1.4;
+  color: var(--color-error);
+}
+
+.alert:empty {
+  margin-block-start: calc(var(--space-md) * -1);
+}
+
+.alert svg {
+  flex: none;
+  margin-block-start: 0.15em;
+}
+
+.progress {
+  inline-size: 100%;
+  block-size: 0.375rem;
+  overflow: hidden;
+  appearance: none;
+  background: var(--color-paper);
+  border: 0;
+  border-radius: var(--radius-sm);
+  accent-color: var(--color-accent);
+}
+
+.progress::-webkit-progress-bar {
+  background: var(--color-paper);
+}
+
+.progress::-webkit-progress-value {
+  background: var(--color-accent);
+}
+
+.progress::-moz-progress-bar {
+  background: var(--color-accent);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.primary,
+.secondary,
+.danger {
+  min-block-size: 3rem;
+  padding-inline: var(--space-md);
+  font-size: var(--text-admin-body);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.primary {
+  font-weight: var(--weight-bold);
+  color: var(--color-black);
+  background: var(--color-accent);
+}
+
+.secondary {
+  border: 1px solid var(--surface-line);
+}
+
+/* Geri alınamayan işlem: hata renginde, beyaz yazı (AA). */
+.danger {
+  font-weight: var(--weight-bold);
+  color: var(--color-white);
+  background: var(--color-error);
+}
+
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.visuallyHidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dropZone:hover {
+    border-color: var(--color-accent);
+  }
+
+  .primary:not(:disabled):hover,
+  .danger:not(:disabled):hover {
+    opacity: 0.88;
+  }
+
+  .secondary:not(:disabled):hover {
+    border-color: var(--surface-fg);
+  }
+}
+
+/* Telefonda düğmeler tam genişlik, ana eylem üstte. */
+@media (max-width: 37.4375rem) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .primary,
+  .secondary,
+  .danger {
+    inline-size: 100%;
+  }
+
+  .dropZone {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropZone,
+  .primary,
+  .secondary,
+  .danger {
+    transition: none;
+  }
+}

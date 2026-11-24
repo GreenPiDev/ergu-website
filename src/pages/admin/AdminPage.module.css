@@ -1,0 +1,166 @@
+/* Panel sayfalarının ortak düzeni: üstte başlık bandı, altında içerik. */
+.header,
+.body {
+  padding-block: var(--space-lg);
+  padding-inline: var(--gutter) max(var(--gutter), env(safe-area-inset-right));
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+.header {
+  display: grid;
+  gap: var(--space-sm);
+  border-block-end: 1px solid var(--surface-line);
+}
+
+.body {
+  flex: 1;
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
+  padding-block-end: max(var(--space-lg), env(safe-area-inset-bottom));
+}
+
+.eyebrow {
+  font-size: var(--text-admin-eyebrow);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--surface-muted);
+}
+
+.title {
+  font-family: var(--font-transition);
+  font-size: var(--text-admin-title);
+  font-stretch: var(--stretch-transition);
+  font-weight: var(--weight-display);
+  line-height: 0.95;
+}
+
+.lead {
+  font-size: var(--text-admin-body);
+  line-height: 1.5;
+  color: var(--surface-muted);
+  overflow-wrap: anywhere;
+}
+
+.lead strong {
+  font-weight: var(--weight-medium);
+  color: var(--surface-fg);
+}
+
+.sectionTitle {
+  font-size: var(--text-admin-heading);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-nav);
+}
+
+.empty {
+  /* Metin kadar geniş, dar ekranda satıra kırılır. */
+  justify-self: start;
+  padding: var(--space-md);
+  font-size: var(--text-admin-body);
+  line-height: 1.5;
+  color: var(--surface-muted);
+  border: 1px dashed var(--surface-line);
+  border-radius: var(--radius-sm);
+}
+
+/* Başlık ve sayfanın ana eylemi aynı satırda, dar ekranda eylem alta iner. */
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 3rem;
+  padding-inline: var(--space-md);
+  font-size: var(--text-admin-body);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.primaryButton {
+  color: var(--color-black);
+  background: var(--color-accent);
+}
+
+.secondaryButton {
+  justify-self: start;
+  font-weight: var(--weight-medium);
+  border: 1px solid var(--surface-line);
+}
+
+.primaryButton svg,
+.secondaryButton svg {
+  flex: none;
+  font-size: 1.25rem;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.notice:empty {
+  display: none;
+}
+
+.notice {
+  font-size: var(--text-admin-small);
+  font-weight: var(--weight-medium);
+  color: var(--surface-fg);
+}
+
+.count {
+  font-size: var(--text-admin-small);
+  color: var(--surface-muted);
+}
+
+.errorBox {
+  display: grid;
+  gap: var(--space-sm);
+  justify-self: start;
+  padding: var(--space-md);
+  font-size: var(--text-admin-body);
+  line-height: 1.5;
+  color: var(--color-error);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+}
+
+.errorBox .secondaryButton {
+  color: var(--surface-fg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .primaryButton:not(:disabled):hover {
+    opacity: 0.88;
+  }
+
+  .secondaryButton:hover {
+    border-color: var(--surface-fg);
+  }
+}
+
+@media (max-width: 37.4375rem) {
+  .primaryButton {
+    inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryButton,
+  .secondaryButton {
+    transition: none;
+  }
+}

@@ -1,0 +1,76 @@
+.dialog {
+  inline-size: min(100% - 2 * var(--gutter), 46rem);
+  max-block-size: min(100% - 2 * var(--gutter), 100dvh - 2 * var(--gutter));
+  padding: 0;
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+  border: 0;
+  border-radius: var(--radius-sm);
+  overscroll-behavior: contain;
+}
+
+.small {
+  inline-size: min(100% - 2 * var(--gutter), 28rem);
+}
+
+.dialog::backdrop {
+  background: color-mix(in srgb, var(--color-carbon) 64%, transparent);
+}
+
+.inner {
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.header {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: var(--text-admin-heading);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--tracking-nav);
+}
+
+.close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--touch-target);
+  block-size: var(--touch-target);
+  margin-inline-end: -0.625rem;
+  font-size: 1.25rem;
+  color: var(--surface-muted);
+  border-radius: var(--radius-sm);
+}
+
+.close:disabled {
+  cursor: progress;
+  opacity: 0.5;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .close:not(:disabled):hover {
+    color: var(--surface-fg);
+  }
+}
+
+/* Telefonda pencere ekranı kaplar, içerik kayar. */
+@media (max-width: 37.4375rem) {
+  .dialog:not(.small) {
+    inline-size: 100%;
+    max-inline-size: none;
+    block-size: 100dvh;
+    max-block-size: none;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .dialog:not(.small) .inner {
+    padding-block: max(var(--space-md), env(safe-area-inset-top)) max(var(--space-md), env(safe-area-inset-bottom));
+  }
+}

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
+import { ContactCardIcon } from '../../contact/ContactCardIcon';
+import { COMPANY, toEmailHref, toPhoneHref } from '../../../content/company';
 import { HOME_PATH, MAIN_CONTENT_ID } from '../../../content/navigation';
 import { useDevice, useIsNavCollapsed } from '../../../hooks/useDevice';
 import { useHeaderSurface } from '../../../hooks/useHeaderSurface';
@@ -96,6 +98,18 @@ export function Header() {
           <DesktopNav />
         )}
       </div>
+
+      {/* Ana e-posta ve telefon, bandın altında sağda. Menü açıkken menünün kendi içeriği öne çıksın diye gizlenir. */}
+      <address className={styles.contact} hidden={isMenuOpen || isMenuCovering}>
+        <a className={styles.contactLink} href={toEmailHref(COMPANY.emails[0])}>
+          <ContactCardIcon kind="email" className={styles.contactIcon} weight="bold" />
+          {COMPANY.emails[0]}
+        </a>
+        <a className={styles.contactLink} href={toPhoneHref(COMPANY.phones[0])}>
+          <ContactCardIcon kind="phone" className={styles.contactIcon} weight="bold" />
+          {COMPANY.phones[0]}
+        </a>
+      </address>
 
       {isNavCollapsed && (
         <MobileMenu

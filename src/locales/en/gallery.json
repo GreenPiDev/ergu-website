@@ -1,0 +1,23 @@
+{
+  "label": "Photo gallery",
+  "stageLabel": "Photo cylinder. Rotate with the left and right arrow keys, press Enter to open the front photo full screen.",
+  "previous": "Previous photo",
+  "next": "Next photo",
+  "counter": "<current>{{current}}</current><separator>/</separator><total>{{total}}</total>",
+  "announce": "Photo {{current}} of {{total}}",
+  "imageAlt": "Gallery photo {{number}}",
+  "thumbnails": "All photos",
+  "thumbnail": "Go to photo {{number}}",
+  "cursor": {
+    "drag": "Drag",
+    "view": "View"
+  },
+  "lightbox": {
+    "label": "Full screen photo view"
+  },
+  "status": {
+    "loading": "Loading photos",
+    "empty": "No photos have been added to the gallery yet.",
+    "error": "Photos could not be loaded right now. Please try again later."
+  }
+}

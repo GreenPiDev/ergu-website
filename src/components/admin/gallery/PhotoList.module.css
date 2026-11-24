@@ -1,0 +1,119 @@
+.list {
+  display: grid;
+  border-block-start: 1px solid var(--surface-line);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: var(--space-sm) var(--space-md);
+  align-items: center;
+  padding-block: var(--space-sm);
+  border-block-end: 1px solid var(--surface-line);
+}
+
+.thumb {
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--color-gallery-placeholder);
+  border-radius: var(--radius-sm);
+}
+
+.copy {
+  display: grid;
+  gap: 0.25rem;
+  min-inline-size: 0;
+}
+
+.title {
+  overflow: hidden;
+  font-size: var(--text-admin-body);
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--surface-muted);
+}
+
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--text-admin-small);
+  line-height: 1.45;
+  color: var(--surface-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  font-size: var(--text-admin-eyebrow);
+  color: var(--surface-muted);
+}
+
+.badge {
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--surface-line);
+  border-radius: var(--radius-sm);
+}
+
+/* Telefonda eylemler görselin ve metnin altında tam satır. */
+.actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.action {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-inline-size: var(--touch-target);
+  min-block-size: var(--touch-target);
+  padding-inline: 0.75rem;
+  font-size: var(--text-admin-small);
+  font-weight: var(--weight-medium);
+  color: var(--surface-muted);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-base) var(--ease-standard);
+}
+
+.action svg {
+  flex: none;
+  font-size: 1.125rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .action:hover {
+    color: var(--surface-fg);
+  }
+
+  .deleteAction:hover {
+    color: var(--color-error);
+  }
+}
+
+@media (min-width: 48rem) {
+  .item {
+    grid-template-columns: 8rem minmax(0, 1fr) auto;
+  }
+
+  .actions {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action {
+    transition: none;
+  }
+}

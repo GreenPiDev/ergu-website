@@ -206,6 +206,21 @@
 - Ortak scroll animasyonları `src/animations/reveal.ts` altına alındı (`revealWordsOnScroll`, `revealUpOnScroll`).
 - **Firma iletişim bilgileri tek kaynaktan gelir:** `src/content/company.ts` (`COMPANY`: telefon ve e-posta listeleri, adres, LinkedIn, çalışma saatleri; `tel:`/`mailto:` ve harita adresleri buradan üretilir, etiketler ortak çeviride `company.labels`). Çalışma saati ve açık/kapalı durumu `src/hooks/useOfficeHours.ts`, saat yazısı ortak çeviride (`company.hours`). Footer gibi yeni yerler de buradan okur. Bilgilerin hepsi gerçektir (2026-11-18). Çalışma saatleri gün gruplarıyla tanımlıdır (`hours.schedule`: Pzt–Cum 09:00–18:30, Cmt 10:30–15:30); grupta olmayan günler (pazar) kapalı sayılır. Tarayıcıda görsel kontrol yapılmadı.
 
+### Yönetim paneli: giriş ve iskelet (2026-11-24)
+
+- **Adres:** `/admin-panel`, sitede bağlantısı yok, `noindex` (meta + `X-Robots-Tag`). Alt sayfalar `/admin-panel/<ingilizce-slug>` (ör. `/admin-panel/gallery`). Site layout'unun dışındadır (header, perde, Lenis yok), ayrı lazy parçada yüklenir. Oturum yoksa her panel adresinde aynı yerde giriş formu çıkar. Metinler `locales/{tr,en}/admin.json`, menü `src/content/adminNavigation.ts`, rotalar `src/router.tsx › adminRoutes`.
+- **Backend:** Vercel Functions `api/admin.ts` ve `api/gallery.ts` (Web `fetch` imzası), ortak giriş `server/api.ts`, mantık `server/` altında. `vercel.json` `/api/admin/*` yollarını bu fonksiyona yönlendirir. Uçlar: `POST login`, `POST logout`, `GET session`. Oturum HMAC imzalı, HttpOnly, `SameSite=Strict` çerez (12 saat, yalnızca `/api/admin` yoluna gider), şifre scrypt özetiyle doğrulanır, POST'larda origin kontrolü, hatalı girişte 600 ms gecikme. Kalıcı veri deposu yok.
+- **Ayarlar ortam değişkenlerinde:** `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` (`node scripts/admin-password-hash.mjs '<şifre>'`), `ADMIN_SESSION_SECRET`. Yerelde `.env.local`, yayında Vercel proje ayarları (örnek: `.env.example`). Geliştirme sunucusunda aynı kod Vite eklentisiyle çalışır (`server/vite-api.ts`), `vercel dev` gerekmez. Sunucu kodu ayrı tip kontrolünden geçer (`tsconfig.server.json`).
+
+### Yönetim paneli: fotoğraf galerisi (2026-11-24)
+
+- `/admin-panel/gallery`: listeleme, yükleme, başlık/açıklama düzenleme, silme. Başlık ve açıklama isteğe bağlı, TR/EN ayrı sekmelerde (`LocaleTabs`, ileride diğer iki dilli içeriklerde de kullanılır). Pencereler yerel `dialog` (`AdminDialog`), silmede onay penceresi.
+- **Depo Cloudflare R2** (bucket `ergu-energy`, `aws4fetch` ile imzalı S3 istekleri, `server/storage.ts`). Veritabanı yok: liste `gallery/index.json` (ETag ile koşullu yazılır, çakışmada yeniden denenir), görseller `gallery/photos/<id>/{full,thumb}.webp`.
+- **Yükleme:** tarayıcı fotoğrafı küçültür (büyük 2000 px, küçük 480 px, WebP; WebP üretemeyen tarayıcıda JPEG), sunucudan 10 dakikalık imzalı PUT adresleri alır, dosyaları doğrudan R2'ye yükler (Vercel'in ~4,5 MB istek sınırına takılmaz), sonra kaydı oluşturur. Sunucu kayıttan önce dosyaları HEAD ile doğrular, uymayanları siler. Görseller `immutable` önbellekle yüklenir.
+- **Site için herkese açık liste:** `GET /api/gallery`, biçim `src/components/gallery/galleryApi.ts` sözleşmesiyle aynı (`alt` başlıktan, yoksa açıklamadan), CDN'de 60 sn önbellek. Site galerisinde `VITE_GALLERY_API_URL=/api/gallery` tanımlanınca gerçek veri gelir.
+- **Ortam değişkenleri:** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` (`.env.example`). Bucket CORS'u: site adresleri ve `http://localhost:5173` için `PUT` ve `GET`, başlıklar `Content-Type`, `Cache-Control`.
+- Sunucu akışı bellek içi sahte R2 ile test edildi; gerçek bucket ve tarayıcıda deneme yapılmadı.
+
 ## Sıradaki Teknik İşler
 
 - Rota bazlı code splitting.
@@ -217,5 +232,7 @@
 - [ ] SEO ve render: saf SPA mı, build sırasında prerender mı? (Öneri: `vite-react-ssg` veya eşdeğeri ile prerender)
 - [ ] İçerik yönetimi: çeviri dosyaları ve tipli veriyle devam mı, headless CMS mi?
 - [ ] İletişim formunun gönderileceği servis
+- [ ] Panelde giriş denemesi sınırlaması (kalıcı sayaç deposu gerekir, ör. R2 veya KV).
+- [ ] R2 herkese açık adresi: şimdilik r2.dev mi, `erguenerji.com` Cloudflare'a taşınınca özel alan adı mı?
 - [ ] Yayın ortamı
 - [ ] Şehir hero'su dik telefonda ve tablette: tek kadraj 11 tesisi göstermiyor. Mobil için ayrı kadraj, tesisler arasında gezinme veya yalnızca seçili tesisler mi?

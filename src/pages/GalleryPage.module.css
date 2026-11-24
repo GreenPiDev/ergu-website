@@ -1,0 +1,16 @@
+/* Liste yüklenirken, boşken veya yüklenemediğinde: hero ile birlikte ilk ekranı doldurur. */
+.status {
+  display: flex;
+  align-items: flex-end;
+  min-block-size: calc(100svh - var(--page-hero-height));
+  padding-block: var(--space-lg);
+  padding-inline: var(--gutter);
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+.message {
+  max-inline-size: 32ch;
+  font-size: var(--text-lead);
+  color: var(--surface-muted);
+}

@@ -1,0 +1,221 @@
+.page {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-block-size: 100svh;
+}
+
+/* Sol (dar ekranda üst) bant: logo ve büyük, dar kesim başlık. */
+.intro {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  justify-content: space-between;
+  padding-block: max(var(--space-md), env(safe-area-inset-top)) var(--space-lg);
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) var(--gutter);
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+.backdrop {
+  /* Bloğun üst kısmını kaplar, alt kenarı koyu zemine erir: görsel daha az büyütülür, kadraja daha çoğu girer. */
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -2;
+  inline-size: 100%;
+  block-size: 85%;
+  object-fit: cover;
+  mask-image: linear-gradient(to bottom, #000 75%, transparent);
+  /* Görsel sola kaydırılır: kadrajda tabelanın sağ tarafı da görünür. */
+  object-position: 68% center;
+}
+
+/* Görselin üstünde koyu perde: logo ve başlık her kadrajda okunur kalır. */
+.intro::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to top,
+    var(--surface-bg) 0%,
+    color-mix(in srgb, var(--surface-bg) 55%, transparent) 55%,
+    color-mix(in srgb, var(--surface-bg) 35%, transparent) 100%
+  );
+  content: '';
+}
+
+/* Flex sütunda genişliğe yayılmasın, sol üstte kendi oranında dursun. */
+.logo {
+  align-self: flex-start;
+  inline-size: auto;
+  block-size: var(--logo-height);
+}
+
+.introCopy {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.eyebrow {
+  font-size: var(--text-admin-eyebrow);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--surface-muted);
+}
+
+.title {
+  font-family: var(--font-transition);
+  font-size: var(--text-admin-display);
+  font-stretch: var(--stretch-transition);
+  font-weight: var(--weight-display);
+  line-height: 0.88;
+  color: var(--color-accent);
+  overflow-wrap: anywhere;
+}
+
+.formSection {
+  display: grid;
+  align-items: center;
+  padding-block: var(--space-lg) max(var(--space-lg), env(safe-area-inset-bottom));
+  padding-inline: var(--gutter) max(var(--gutter), env(safe-area-inset-right));
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-md);
+  inline-size: 100%;
+  max-inline-size: 26rem;
+  margin-inline: auto;
+}
+
+.lead {
+  font-size: var(--text-lead);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  letter-spacing: var(--tracking-nav);
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: var(--text-admin-small);
+  font-weight: var(--weight-medium);
+}
+
+.input {
+  inline-size: 100%;
+  min-block-size: 3.25rem;
+  padding-inline: 1rem;
+  font: inherit;
+  font-size: var(--text-field);
+  color: var(--surface-fg);
+  background: var(--color-paper);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.passwordControl {
+  position: relative;
+}
+
+.passwordControl .input {
+  padding-inline-end: calc(var(--touch-target) + 0.5rem);
+}
+
+.reveal {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0.25rem;
+  display: grid;
+  place-items: center;
+  inline-size: var(--touch-target);
+  margin-block: auto;
+  block-size: var(--touch-target);
+  font-size: 1.25rem;
+  color: var(--surface-muted);
+  border-radius: var(--radius-sm);
+}
+
+.reveal:focus-visible {
+  outline-offset: -2px;
+}
+
+.fieldError {
+  font-size: var(--text-admin-small);
+  color: var(--color-error);
+}
+
+.alert {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: var(--text-admin-body);
+  line-height: 1.4;
+  color: var(--color-error);
+}
+
+.alert svg {
+  flex: none;
+  margin-block-start: 0.15em;
+}
+
+.submit {
+  min-block-size: 3.5rem;
+  padding-inline: var(--space-md);
+  font-size: var(--text-admin-body);
+  font-weight: var(--weight-bold);
+  color: var(--color-black);
+  background: var(--color-accent);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.submit:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reveal:hover {
+    color: var(--surface-fg);
+  }
+
+  .submit:not(:disabled):hover {
+    opacity: 0.88;
+  }
+}
+
+@media (min-width: 64rem) {
+  .page {
+    grid-template-rows: none;
+    grid-template-columns: 1.15fr 1fr;
+  }
+
+  .intro {
+    padding-block: var(--space-lg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .submit {
+    transition: none;
+  }
+}

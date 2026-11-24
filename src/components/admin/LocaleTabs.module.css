@@ -1,0 +1,87 @@
+.root {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.tabList {
+  display: flex;
+  gap: 0.25rem;
+  border-block-end: 1px solid var(--surface-line);
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-block-size: var(--touch-target);
+  padding-inline: 0.875rem;
+  font-size: var(--text-admin-body);
+  font-weight: var(--weight-medium);
+  color: var(--surface-muted);
+  transition: color var(--duration-base) var(--ease-standard);
+}
+
+.tab::after {
+  position: absolute;
+  inset: auto 0 -1px;
+  block-size: 2px;
+  background: var(--color-accent);
+  content: '';
+  opacity: 0;
+}
+
+.tab[aria-selected='true'] {
+  color: var(--surface-fg);
+}
+
+.tab[aria-selected='true']::after {
+  opacity: 1;
+}
+
+.tab:focus-visible {
+  outline-offset: -2px;
+}
+
+.code {
+  font-size: var(--text-admin-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  opacity: 0.7;
+}
+
+.errorDot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  background: var(--color-error);
+  border-radius: 50%;
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.visuallyHidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tab:hover {
+    color: var(--surface-fg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition: none;
+  }
+}

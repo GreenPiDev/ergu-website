@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "title": "Yönetim Paneli · ERGÜ"
+  },
+  "brand": {
+    "logoAlt": "ERGÜ",
+    "panel": "Yönetim Paneli"
+  },
+  "login": {
+    "eyebrow": "Yetkili girişi",
+    "title": "Yönetim Paneli",
+    "lead": "Site içeriklerini yönetmek için hesabınızla giriş yapın.",
+    "email": "E-posta",
+    "password": "Şifre",
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle",
+    "submit": "Giriş yap",
+    "submitting": "Giriş yapılıyor…",
+    "errors": {
+      "email": "Geçerli bir e-posta adresi girin.",
+      "password": "Şifrenizi girin.",
+      "invalidCredentials": "E-posta veya şifre hatalı.",
+      "notConfigured": "Giriş sistemi henüz yapılandırılmadı. Site yöneticisiyle iletişime geçin.",
+      "unknown": "Bağlantı kurulamadı. Lütfen tekrar deneyin."
+    }
+  },
+  "nav": {
+    "label": "Panel menüsü",
+    "overview": "Genel bakış",
+    "gallery": "Fotoğraf Galerisi"
+  },
+  "account": {
+    "signedInAs": "Oturum açık",
+    "viewSite": "Siteyi aç",
+    "viewSiteHint": "(yeni sekmede açılır)",
+    "signOut": "Çıkış yap"
+  },
+  "a11y": {
+    "skipToContent": "İçeriğe geç"
+  },
+  "overview": {
+    "eyebrow": "Genel bakış",
+    "title": "Hoş geldiniz",
+    "lead": "<0>{{email}}</0> hesabıyla giriş yaptınız. Sitenin dinamik içerikleri bu panelden yönetilir.",
+    "modules": {
+      "title": "İçerik bölümleri",
+      "empty": "Henüz yönetilebilir bir bölüm eklenmedi. Bölümler eklendikçe burada ve sol menüde görünecek."
+    }
+  },
+  "gallery": {
+    "eyebrow": "İçerik",
+    "title": "Fotoğraf Galerisi",
+    "lead": "Sitedeki galeri sayfasında görünen fotoğrafları buradan ekleyin, düzenleyin ve silin.",
+    "upload": "Fotoğraf yükle",
+    "count_one": "{{count}} fotoğraf",
+    "count_other": "{{count}} fotoğraf",
+    "listLabel": "Galerideki fotoğraflar",
+    "status": {
+      "loading": "Fotoğraflar yükleniyor…",
+      "empty": "Galeride henüz fotoğraf yok. İlk fotoğrafı yükleyerek başlayın.",
+      "retry": "Tekrar dene",
+      "uploaded": "Fotoğraf yüklendi.",
+      "updated": "Değişiklikler kaydedildi.",
+      "deleted": "Fotoğraf silindi."
+    },
+    "item": {
+      "untitled": "Başlıksız",
+      "noDescription": "Açıklama yok",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "editLabel": "Düzenle: {{name}}",
+      "deleteLabel": "Sil: {{name}}",
+      "dimensions": "{{width}} × {{height}} px",
+      "thumbAlt": "{{name}} küçük görseli",
+      "englishMissing": "İngilizce metin yok"
+    },
+    "form": {
+      "createTitle": "Fotoğraf yükle",
+      "editTitle": "Fotoğrafı düzenle",
+      "close": "Kapat",
+      "file": "Fotoğraf",
+      "choose": "Fotoğraf seç",
+      "change": "Başka fotoğraf seç",
+      "dropHint": "Fotoğrafı buraya sürükleyin veya seçin. JPEG, PNG, WebP; en fazla 40 MB. Yüklemeden önce otomatik küçültülür.",
+      "fileRequired": "Bir fotoğraf seçin.",
+      "previewAlt": "Seçilen fotoğrafın önizlemesi",
+      "languages": "Metin dili",
+      "tabs": {
+        "tr": "Türkçe",
+        "en": "İngilizce"
+      },
+      "tabHasError": "(hatalı alan var)",
+      "titleLabel": "Başlık",
+      "descriptionLabel": "Açıklama",
+      "optional": "isteğe bağlı",
+      "tooLong": "En fazla {{max}} karakter yazılabilir.",
+      "textHint": "Başlık ve açıklama isteğe bağlıdır. İngilizce boş kalırsa İngilizce sitede Türkçe metin görünür.",
+      "cancel": "Vazgeç",
+      "submitCreate": "Yükle",
+      "submitEdit": "Kaydet",
+      "preparing": "Fotoğraf hazırlanıyor…",
+      "uploading": "Yükleniyor… %{{percent}}",
+      "uploadingStatus": "Yükleniyor…",
+      "saving": "Kaydediliyor…"
+    },
+    "delete": {
+      "title": "Fotoğraf silinsin mi?",
+      "body": "Fotoğraf galeriden ve sunucudan kalıcı olarak silinir. Bu işlem geri alınamaz.",
+      "confirm": "Sil",
+      "deleting": "Siliniyor…",
+      "cancel": "Vazgeç"
+    },
+    "errors": {
+      "storageNotConfigured": "Fotoğraf deposu henüz yapılandırılmadı. Site yöneticisiyle iletişime geçin.",
+      "sessionExpired": "Oturumunuzun süresi doldu. Sayfayı yenileyip yeniden giriş yapın.",
+      "tooLarge": "Dosya çok büyük. En fazla 40 MB'lık bir fotoğraf seçin.",
+      "unreadable": "Bu dosya okunamadı. JPEG, PNG veya WebP bir fotoğraf deneyin.",
+      "uploadIncomplete": "Yükleme tamamlanamadı. Lütfen tekrar deneyin.",
+      "notFound": "Fotoğraf bulunamadı, başka bir oturumda silinmiş olabilir.",
+      "unknown": "İşlem tamamlanamadı. Bağlantınızı kontrol edip tekrar deneyin."
+    }
+  }
+}

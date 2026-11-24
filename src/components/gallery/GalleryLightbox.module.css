@@ -1,0 +1,153 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-lightbox);
+  color: var(--surface-fg);
+}
+
+.curtain {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-bg);
+  transform-origin: 50% 100%;
+}
+
+/* Üstte sayaç ve kapatma, altta (mobil) oklar için yer bırakılır. Yatay kaydırma gezinir, iki parmak yakınlaştırır. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: calc(var(--touch-target) + var(--space-md) + env(safe-area-inset-top))
+    calc(var(--gallery-arrow-size) + var(--space-md) * 2 + env(safe-area-inset-bottom));
+  padding-inline: var(--gutter);
+  touch-action: pinch-zoom;
+  user-select: none;
+}
+
+.image {
+  display: block;
+  flex: none;
+  max-inline-size: none;
+  background: var(--color-gallery-placeholder);
+  will-change: transform;
+}
+
+.counter {
+  position: absolute;
+  inset-block-start: calc(var(--space-sm) + env(safe-area-inset-top));
+  inset-inline-start: var(--gutter);
+  display: flex;
+  align-items: center;
+  min-block-size: var(--touch-target);
+  --text-gallery-counter: var(--text-gallery-total);
+}
+
+.arrow {
+  position: absolute;
+  inset-block-end: calc(var(--space-md) + env(safe-area-inset-bottom));
+}
+
+.previous {
+  inset-inline-end: calc(var(--gutter) + var(--gallery-arrow-size) + var(--space-sm));
+}
+
+.next {
+  inset-inline-end: var(--gutter);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Geniş ekranlarda oklar fotoğrafın iki yanında, dikeyde ortadadır. */
+@media (min-width: 64rem) {
+  .stage {
+    padding-block-end: calc(var(--space-md) + env(safe-area-inset-bottom));
+    padding-inline: calc(var(--gutter) * 2 + var(--gallery-arrow-size));
+  }
+
+  .arrow {
+    inset-block: 0;
+    block-size: fit-content;
+    margin-block: auto;
+  }
+
+  .previous {
+    inset-inline: var(--gutter) auto;
+  }
+}
+
+/* Mobilde turuncu kare içinde siyah çarpı, daha geniş ekranlarda yazı (genel Lightbox ile aynı dil). */
+.close {
+  position: absolute;
+  inset-block-start: calc(var(--space-sm) + env(safe-area-inset-top));
+  inset-inline-end: var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--touch-target);
+  min-block-size: var(--touch-target);
+  font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
+  font-size: var(--text-scroll-cue);
+  font-weight: var(--weight-heavy);
+  color: var(--color-accent);
+  background: var(--color-accent);
+  --roll-hover-color: var(--color-black);
+}
+
+.closeMark {
+  position: relative;
+  display: block;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.closeMark::before,
+.closeMark::after {
+  position: absolute;
+  inset-block-start: calc(50% - 1px);
+  inset-inline: 0;
+  block-size: 2px;
+  content: '';
+  background: var(--color-black);
+}
+
+.closeMark::before {
+  transform: rotate(45deg);
+}
+
+.closeMark::after {
+  transform: rotate(-45deg);
+}
+
+.closeLabel {
+  display: none;
+}
+
+@media (min-width: 37.5rem) {
+  .close {
+    padding-inline: var(--space-sm);
+    background: none;
+  }
+
+  .closeMark {
+    display: none;
+  }
+
+  .closeLabel {
+    display: block;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

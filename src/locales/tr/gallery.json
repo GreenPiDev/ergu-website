@@ -1,0 +1,23 @@
+{
+  "label": "Fotoğraf galerisi",
+  "stageLabel": "Fotoğraf silindiri. Sağ ve sol ok tuşlarıyla döndürün, Enter ile öndeki fotoğrafı tam ekran açın.",
+  "previous": "Önceki fotoğraf",
+  "next": "Sonraki fotoğraf",
+  "counter": "<current>{{current}}</current><separator>/</separator><total>{{total}}</total>",
+  "announce": "Fotoğraf {{current}} / {{total}}",
+  "imageAlt": "Galeri fotoğrafı {{number}}",
+  "thumbnails": "Tüm fotoğraflar",
+  "thumbnail": "{{number}}. fotoğrafa git",
+  "cursor": {
+    "drag": "Sürükle",
+    "view": "Büyüt"
+  },
+  "lightbox": {
+    "label": "Tam ekran fotoğraf görünümü"
+  },
+  "status": {
+    "loading": "Fotoğraflar yükleniyor",
+    "empty": "Galeriye henüz fotoğraf eklenmedi.",
+    "error": "Fotoğraflar şu an yüklenemedi. Lütfen daha sonra yeniden deneyin."
+  }
+}

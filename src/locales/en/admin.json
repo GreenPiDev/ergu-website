@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "title": "Admin Panel · ERGÜ"
+  },
+  "brand": {
+    "logoAlt": "ERGÜ",
+    "panel": "Admin Panel"
+  },
+  "login": {
+    "eyebrow": "Authorized access",
+    "title": "Admin Panel",
+    "lead": "Sign in with your account to manage the site content.",
+    "email": "Email",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "errors": {
+      "email": "Enter a valid email address.",
+      "password": "Enter your password.",
+      "invalidCredentials": "Incorrect email or password.",
+      "notConfigured": "Sign-in has not been configured yet. Please contact the site administrator.",
+      "unknown": "Could not connect. Please try again."
+    }
+  },
+  "nav": {
+    "label": "Panel menu",
+    "overview": "Overview",
+    "gallery": "Photo Gallery"
+  },
+  "account": {
+    "signedInAs": "Signed in",
+    "viewSite": "Open site",
+    "viewSiteHint": "(opens in a new tab)",
+    "signOut": "Sign out"
+  },
+  "a11y": {
+    "skipToContent": "Skip to content"
+  },
+  "overview": {
+    "eyebrow": "Overview",
+    "title": "Welcome",
+    "lead": "You are signed in as <0>{{email}}</0>. The site's dynamic content is managed from this panel.",
+    "modules": {
+      "title": "Content sections",
+      "empty": "No manageable sections have been added yet. They will appear here and in the side menu as they are added."
+    }
+  },
+  "gallery": {
+    "eyebrow": "Content",
+    "title": "Photo Gallery",
+    "lead": "Add, edit and delete the photos shown on the site's gallery page.",
+    "upload": "Upload photo",
+    "count_one": "{{count}} photo",
+    "count_other": "{{count}} photos",
+    "listLabel": "Photos in the gallery",
+    "status": {
+      "loading": "Loading photos…",
+      "empty": "There are no photos in the gallery yet. Start by uploading the first one.",
+      "retry": "Try again",
+      "uploaded": "Photo uploaded.",
+      "updated": "Changes saved.",
+      "deleted": "Photo deleted."
+    },
+    "item": {
+      "untitled": "Untitled",
+      "noDescription": "No description",
+      "edit": "Edit",
+      "delete": "Delete",
+      "editLabel": "Edit: {{name}}",
+      "deleteLabel": "Delete: {{name}}",
+      "dimensions": "{{width}} × {{height}} px",
+      "thumbAlt": "Thumbnail of {{name}}",
+      "englishMissing": "No English text"
+    },
+    "form": {
+      "createTitle": "Upload photo",
+      "editTitle": "Edit photo",
+      "close": "Close",
+      "file": "Photo",
+      "choose": "Choose photo",
+      "change": "Choose another photo",
+      "dropHint": "Drag a photo here or choose one. JPEG, PNG, WebP; up to 40 MB. It is resized automatically before upload.",
+      "fileRequired": "Choose a photo.",
+      "previewAlt": "Preview of the selected photo",
+      "languages": "Text language",
+      "tabs": {
+        "tr": "Turkish",
+        "en": "English"
+      },
+      "tabHasError": "(has an invalid field)",
+      "titleLabel": "Title",
+      "descriptionLabel": "Description",
+      "optional": "optional",
+      "tooLong": "Up to {{max}} characters allowed.",
+      "textHint": "Title and description are optional. If the English text is empty, the Turkish text is shown on the English site.",
+      "cancel": "Cancel",
+      "submitCreate": "Upload",
+      "submitEdit": "Save",
+      "preparing": "Preparing photo…",
+      "uploading": "Uploading… {{percent}}%",
+      "uploadingStatus": "Uploading…",
+      "saving": "Saving…"
+    },
+    "delete": {
+      "title": "Delete this photo?",
+      "body": "The photo will be permanently removed from the gallery and the server. This cannot be undone.",
+      "confirm": "Delete",
+      "deleting": "Deleting…",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "storageNotConfigured": "Photo storage has not been configured yet. Please contact the site administrator.",
+      "sessionExpired": "Your session has expired. Refresh the page and sign in again.",
+      "tooLarge": "The file is too large. Choose a photo up to 40 MB.",
+      "unreadable": "This file could not be read. Try a JPEG, PNG or WebP photo.",
+      "uploadIncomplete": "The upload could not be completed. Please try again.",
+      "notFound": "Photo not found; it may have been deleted in another session.",
+      "unknown": "The action could not be completed. Check your connection and try again."
+    }
+  }
+}

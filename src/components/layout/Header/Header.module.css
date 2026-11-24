@@ -22,6 +22,76 @@
   padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
 }
 
+/*
+ * Bandın hemen altında iletişim bilgileri: e-posta üstte, telefon altta. Satırlar sağa yaslıdır, sağ kenarları üstteki
+ * dil seçicinin son harfiyle aynı hizadadır (ikisi de bandın iç kenarına dayanır). Scroll'da header'la birlikte sabit kalır.
+ */
+.contact {
+  /* Görünen satır yüksekliği; dokunma alanı aşağıdaki ::before ile 44 px'e tamamlanır. */
+  --contact-row: 1.75rem;
+
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-content: end;
+  justify-items: end;
+  /* Bandın alt boşluğuna biner, logonun ve menünün hemen altında durur. */
+  margin-block-start: calc(var(--space-sm) * -1);
+  padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+  font-size: var(--text-header-contact);
+  font-style: normal;
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-nav);
+}
+
+.contact[hidden] {
+  display: none;
+}
+
+.contactLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-block-size: var(--contact-row);
+  white-space: nowrap;
+  opacity: 0.8;
+  pointer-events: auto;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+/* Satırlar sıkı durur; dokunma alanı üstteki için yukarı, alttaki için aşağı uzar, böylece ikisi çakışmaz. */
+.contactLink::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block: 0;
+}
+
+.contactLink:first-child::before {
+  inset-block-start: calc(var(--contact-row) - var(--touch-target));
+}
+
+.contactLink:last-child::before {
+  inset-block-end: calc(var(--contact-row) - var(--touch-target));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .contactLink:hover {
+    opacity: 1;
+  }
+}
+
+.contactIcon {
+  flex-shrink: 0;
+  font-size: 1.15em;
+}
+
+.contactLink:focus-visible {
+  opacity: 1;
+}
+
 .logo,
 .toggle,
 .nav {
