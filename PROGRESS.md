@@ -218,7 +218,8 @@
 - **Depo Cloudflare R2** (bucket `ergu-energy`, `aws4fetch` ile imzalı S3 istekleri, `server/storage.ts`). Veritabanı yok: liste `gallery/index.json` (ETag ile koşullu yazılır, çakışmada yeniden denenir), görseller `gallery/photos/<id>/{full,thumb}.webp`.
 - **Yükleme:** tarayıcı fotoğrafı küçültür (büyük 2000 px, küçük 480 px, WebP; WebP üretemeyen tarayıcıda JPEG), sunucudan 10 dakikalık imzalı PUT adresleri alır, dosyaları doğrudan R2'ye yükler (Vercel'in ~4,5 MB istek sınırına takılmaz), sonra kaydı oluşturur. Sunucu kayıttan önce dosyaları HEAD ile doğrular, uymayanları siler. Görseller `immutable` önbellekle yüklenir.
 - **Site için herkese açık liste:** `GET /api/gallery`, biçim `src/components/gallery/galleryApi.ts` sözleşmesiyle aynı (`alt` başlıktan, yoksa açıklamadan), CDN'de 60 sn önbellek. Site galerisinde `VITE_GALLERY_API_URL=/api/gallery` tanımlanınca gerçek veri gelir.
-- **Ortam değişkenleri:** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` (`.env.example`). Bucket CORS'u: site adresleri ve `http://localhost:5173` için `PUT` ve `GET`, başlıklar `Content-Type`, `Cache-Control`.
+- **Ortam değişkenleri:** `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (`.env.example`). Bucket CORS'u: site adresleri ve `http://localhost:5173` için `PUT` (panelden doğrudan yükleme), başlıklar `Content-Type`, `Cache-Control`.
+- **Görseller r2.dev'den değil API'den gelir:** `r2.dev` Türkiye'de erişim engelli. Fotoğraflar `GET /api/gallery/photos/<id>/<full|thumb>.<uzantı>` ile R2'den okunup aktarılır (`server/gallery.ts › handlePhotoFile`), Vercel CDN'inde süresiz önbelleklenir. Bucket'ın public access'i kapalı tutulabilir.
 - Sunucu akışı bellek içi sahte R2 ile test edildi; gerçek bucket ve tarayıcıda deneme yapılmadı.
 
 ## Sıradaki Teknik İşler
@@ -233,6 +234,5 @@
 - [ ] İçerik yönetimi: çeviri dosyaları ve tipli veriyle devam mı, headless CMS mi?
 - [ ] İletişim formunun gönderileceği servis
 - [ ] Panelde giriş denemesi sınırlaması (kalıcı sayaç deposu gerekir, ör. R2 veya KV).
-- [ ] R2 herkese açık adresi: şimdilik r2.dev mi, `erguenerji.com` Cloudflare'a taşınınca özel alan adı mı?
 - [ ] Yayın ortamı
 - [ ] Şehir hero'su dik telefonda ve tablette: tek kadraj 11 tesisi göstermiyor. Mobil için ayrı kadraj, tesisler arasında gezinme veya yalnızca seçili tesisler mi?

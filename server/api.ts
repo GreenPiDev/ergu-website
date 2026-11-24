@@ -1,5 +1,5 @@
 import { handleAdminRequest } from './admin/handler.js';
-import { handlePublicGallery } from './gallery.js';
+import { handlePhotoFile, handlePublicGallery, isPhotoFilePath } from './gallery.js';
 import { apiError } from './http.js';
 
 /**
@@ -12,6 +12,7 @@ export async function handleApiRequest(request: Request): Promise<Response> {
   const pathname = new URL(request.url).pathname.replace(/\/+$/, '');
   try {
     if (pathname === '/api/gallery') return await handlePublicGallery(request);
+    if (isPhotoFilePath(pathname)) return await handlePhotoFile(request, pathname);
     if (pathname === '/api/admin' || pathname.startsWith('/api/admin/')) return await handleAdminRequest(request);
     return apiError('not_found', 404);
   } catch (cause) {

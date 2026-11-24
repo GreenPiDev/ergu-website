@@ -16,7 +16,8 @@ import { z } from 'zod';
  *   ]
  * }
  *
- * Görseller WebGL dokusu olarak çizildiği için görsel sunucusu `Access-Control-Allow-Origin` başlığı göndermelidir.
+ * Görseller WebGL dokusu olarak çizilir: başka bir alan adından gelirlerse o sunucu `Access-Control-Allow-Origin`
+ * göndermelidir. Kendi API'miz görselleri sitenin adresinden verdiği için (`/api/gallery/photos/…`) buna gerek yoktur.
  */
 const galleryImageSchema = z.object({
   id: z.string().min(1),

@@ -10,6 +10,8 @@ import { createStorage, readStorageConfig, StorageConfigError, type Storage } fr
  * - `gallery/photos/<id>/thumb.<uzantı>`: küçük görsel (uzun kenar en fazla 480 px).
  *
  * Görseller tarayıcıda küçültülüp WebP'ye (desteklemeyen tarayıcıda JPEG'e) çevrilir, doğrudan R2'ye yüklenir.
+ * Gösterilirken r2.dev kullanılmaz, sitenin kendi adresinden aktarılır: `GET /api/gallery/photos/<id>/<boyut>.<uzantı>`
+ * (`handlePhotoFile`). Aynı alan adı olduğu için WebGL dokuları için CORS da gerekmez.
  */
 export const MANIFEST_KEY = 'gallery/index.json';
 export const TITLE_MAX = 120;
@@ -81,14 +83,53 @@ export function getStorage(): Storage | null {
   }
 }
 
-function photoUrls(storage: Storage, photo: GalleryPhoto) {
+// Görsel adresi, R2 anahtarının `/api/` altına konmuş hâlidir: `gallery/photos/…` → `/api/gallery/photos/…`.
+const FILE_URL_PREFIX = '/api/';
+const PHOTO_FILE_PATTERN = /^\/api\/(gallery\/photos\/[0-9a-f-]{36}\/(?:full|thumb)\.(?:webp|jpg))$/;
+// Kimliği her fotoğrafa özel olduğu için dosyalar değişmez. `s-maxage`, Vercel CDN'inin yanıtı saklaması içindir:
+// her görsel fonksiyondan bir kez geçer.
+const PHOTO_FILE_CACHE_CONTROL = 'public, max-age=31536000, s-maxage=31536000, immutable';
+const FORWARDED_FILE_HEADERS = ['content-type', 'content-length', 'etag', 'last-modified'];
+
+function photoUrls(photo: GalleryPhoto) {
   const keys = photoKeys(photo.id, photo.contentType);
-  return { url: storage.publicUrl(keys.full), thumbUrl: storage.publicUrl(keys.thumb) };
+  return { url: `${FILE_URL_PREFIX}${keys.full}`, thumbUrl: `${FILE_URL_PREFIX}${keys.thumb}` };
 }
 
-/** Panelin gördüğü fotoğraf: kayıt ve herkese açık adresleri. */
-export function toAdminPhoto(storage: Storage, photo: GalleryPhoto) {
-  return { ...photo, ...photoUrls(storage, photo) };
+/** Panelin gördüğü fotoğraf: kayıt ve görsel adresleri. */
+export function toAdminPhoto(photo: GalleryPhoto) {
+  return { ...photo, ...photoUrls(photo) };
+}
+
+/** `pathname` bir fotoğraf dosyası adresiyse true (`server/api.ts` yönlendirmesi için). */
+export function isPhotoFilePath(pathname: string): boolean {
+  return PHOTO_FILE_PATTERN.test(pathname);
+}
+
+/**
+ * Fotoğraf dosyasını R2'den okuyup aktarır. Yalnızca galeri fotoğraflarının kalıbına uyan anahtarlar kabul edilir,
+ * bucket'ın geri kalanına bu uçtan erişilemez. Galeri listesinde olmayan (ör. silinmiş) dosya da 404 döner.
+ */
+export async function handlePhotoFile(request: Request, pathname: string): Promise<Response> {
+  const method = request.method.toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD') return methodNotAllowed(['GET', 'HEAD']);
+  const key = PHOTO_FILE_PATTERN.exec(pathname)?.[1];
+  if (!key) return apiError('not_found', 404);
+  const storage = getStorage();
+  if (!storage) return apiError('storage_not_configured', 500);
+
+  const stored = await storage.getObject(key, method, request.headers.get('if-none-match'));
+  if (!stored) return apiError('not_found', 404);
+
+  const headers = new Headers({ 'Cache-Control': PHOTO_FILE_CACHE_CONTROL, 'X-Content-Type-Options': 'nosniff' });
+  for (const name of FORWARDED_FILE_HEADERS) {
+    const value = stored.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  return new Response(stored.status === 304 || method === 'HEAD' ? null : stored.body, {
+    status: stored.status,
+    headers,
+  });
 }
 
 /**
@@ -103,7 +144,7 @@ export async function handlePublicGallery(request: Request): Promise<Response> {
   const { manifest } = await readManifest(storage);
   const images = manifest.photos.map((photo) => ({
     id: photo.id,
-    ...photoUrls(storage, photo),
+    ...photoUrls(photo),
     width: photo.width,
     height: photo.height,
     alt: { tr: photo.title.tr || photo.description.tr, en: photo.title.en || photo.description.en },

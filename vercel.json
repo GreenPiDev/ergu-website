@@ -6,6 +6,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/admin/:path*", "destination": "/api/admin" },
+    { "source": "/api/gallery/:path*", "destination": "/api/gallery" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [

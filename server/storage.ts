@@ -6,14 +6,15 @@ import { AwsClient } from 'aws4fetch';
  * - `R2_ACCOUNT_ID`: Cloudflare hesap kimliği.
  * - `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`: yalnızca bu bucket'a "Object Read & Write" yetkili R2 API token'ı.
  * - `R2_BUCKET`: bucket adı.
- * - `R2_PUBLIC_URL`: bucket'ın herkese açık adresi (özel alan adı veya r2.dev), sonunda `/` olmadan.
+ *
+ * Bucket'ın herkese açık adresi (r2.dev) kullanılmaz: Türkiye'de erişim engeli var ve Cloudflare'e göre yalnızca
+ * geliştirme içindir. Görseller sitenin kendi alan adından, API üzerinden aktarılır (`server/gallery.ts`).
  */
 export type StorageConfig = {
   accountId: string;
   accessKeyId: string;
   secretAccessKey: string;
   bucket: string;
-  publicUrl: string;
 };
 
 export class StorageConfigError extends Error {}
@@ -23,12 +24,11 @@ export function readStorageConfig(): StorageConfig {
   const accessKeyId = process.env.R2_ACCESS_KEY_ID?.trim();
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim();
   const bucket = process.env.R2_BUCKET?.trim();
-  const publicUrl = process.env.R2_PUBLIC_URL?.trim().replace(/\/+$/, '');
 
-  if (!accountId || !accessKeyId || !secretAccessKey || !bucket || !publicUrl) {
+  if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
     throw new StorageConfigError('R2 ortam değişkenleri eksik.');
   }
-  return { accountId, accessKeyId, secretAccessKey, bucket, publicUrl };
+  return { accountId, accessKeyId, secretAccessKey, bucket };
 }
 
 export type StoredJson = { data: unknown; etag: string };
@@ -56,8 +56,17 @@ export function createStorage(config: StorageConfig) {
   }
 
   return {
-    publicUrl(key: string): string {
-      return `${config.publicUrl}/${key}`;
+    /**
+     * Dosyayı R2'den okur, gövdeyi belleğe almadan akış olarak döner. `ifNoneMatch` verilirse ve dosya değişmediyse
+     * R2 304 döner, o da olduğu gibi iletilir. Dosya yoksa `null`.
+     */
+    async getObject(key: string, method: 'GET' | 'HEAD', ifNoneMatch: string | null): Promise<Response | null> {
+      const headers: Record<string, string> = {};
+      if (ifNoneMatch) headers['If-None-Match'] = ifNoneMatch;
+      const response = await client.fetch(objectUrl(key), { method, headers });
+      if (response.status === 404) return null;
+      if (response.status === 304) return response;
+      return expectOk(response, `${method} ${key}`);
     },
 
     async getJson(key: string): Promise<StoredJson | null> {

@@ -98,7 +98,7 @@ async function createPhoto(request: Request, storage: Storage): Promise<Response
     return { manifest: { ...manifest, photos: [photo, ...manifest.photos] }, result: photo };
   });
   if (!saved) return apiError('conflict', 409);
-  return json({ photo: toAdminPhoto(storage, saved) }, 201);
+  return json({ photo: toAdminPhoto(saved) }, 201);
 }
 
 async function updatePhoto(request: Request, storage: Storage, id: string): Promise<Response> {
@@ -112,7 +112,7 @@ async function updatePhoto(request: Request, storage: Storage, id: string): Prom
     manifest.photos[index] = photo;
     return { manifest, result: photo };
   });
-  return updated ? json({ photo: toAdminPhoto(storage, updated) }) : apiError('not_found', 404);
+  return updated ? json({ photo: toAdminPhoto(updated) }) : apiError('not_found', 404);
 }
 
 async function deletePhoto(storage: Storage, id: string): Promise<Response> {
@@ -137,7 +137,7 @@ export async function handleAdminGallery(request: Request, method: string, subPa
   if (subPath === '') {
     if (method === 'GET') {
       const { manifest } = await readManifest(storage);
-      return json({ photos: manifest.photos.map((photo) => toAdminPhoto(storage, photo)) });
+      return json({ photos: manifest.photos.map(toAdminPhoto) });
     }
     if (method === 'POST') return createPhoto(request, storage);
     return methodNotAllowed(['GET', 'POST']);
