@@ -2,12 +2,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin, ViteDevServer } from 'vite';
 
 /**
- * Geliştirme sunucusunda `/api/admin/*` ve `/api/gallery` isteklerini Vercel Function'ların kullandığı kodla
- * karşılar (`server/api.ts`). Böylece yerelde ayrıca `vercel dev` gerekmez. Yayın derlemesine girmez.
+ * Geliştirme sunucusunda `/api/admin/*`, `/api/gallery` ve `/api/certificates` isteklerini Vercel Function'ların
+ * kullandığı kodla karşılar (`server/api.ts`). Böylece yerelde ayrıca `vercel dev` gerekmez. Yayın derlemesine girmez.
  * Ortam değişkenleri `vite.config.ts` içinde `.env.local` dosyasından `process.env`'e aktarılır.
  */
 // `server/api.ts › API_PREFIXES` ile aynı tutulur.
-const API_PREFIXES = ['/api/admin', '/api/gallery'];
+const API_PREFIXES = ['/api/admin', '/api/gallery', '/api/certificates'];
 const HANDLER_MODULE = '/server/api.ts';
 
 type HandlerModule = {

@@ -3,8 +3,7 @@
     "title": "Admin Panel · ERGÜ"
   },
   "brand": {
-    "logoAlt": "ERGÜ",
-    "panel": "Admin Panel"
+    "logoAlt": "ERGÜ"
   },
   "login": {
     "eyebrow": "Authorized access",
@@ -27,10 +26,10 @@
   "nav": {
     "label": "Panel menu",
     "overview": "Overview",
-    "gallery": "Photo Gallery"
+    "gallery": "Photo Gallery",
+    "certificates": "Certificates"
   },
   "account": {
-    "signedInAs": "Signed in",
     "viewSite": "Open site",
     "viewSiteHint": "(opens in a new tab)",
     "signOut": "Sign out"
@@ -117,6 +116,79 @@
       "unreadable": "This file could not be read. Try a JPEG, PNG or WebP photo.",
       "uploadIncomplete": "The upload could not be completed. Please try again.",
       "notFound": "Photo not found; it may have been deleted in another session.",
+      "unknown": "The action could not be completed. Check your connection and try again."
+    }
+  },
+  "certificates": {
+    "eyebrow": "Content",
+    "title": "Certificates",
+    "lead": "Add, edit and delete the certificates and documents shown on the site's Certificates page.",
+    "upload": "Upload certificate",
+    "count_one": "{{count}} certificate",
+    "count_other": "{{count}} certificates",
+    "listLabel": "Uploaded certificates",
+    "status": {
+      "loading": "Loading certificates…",
+      "empty": "No certificates have been uploaded yet. Start by uploading the first one.",
+      "retry": "Try again",
+      "uploaded": "Certificate uploaded.",
+      "updated": "Changes saved.",
+      "deleted": "Certificate deleted."
+    },
+    "item": {
+      "untitled": "Untitled",
+      "noDescription": "No description",
+      "edit": "Edit",
+      "delete": "Delete",
+      "editLabel": "Edit: {{name}}",
+      "deleteLabel": "Delete: {{name}}",
+      "dimensions": "{{width}} × {{height}} px",
+      "thumbAlt": "Thumbnail of {{name}}",
+      "englishMissing": "No English text"
+    },
+    "form": {
+      "createTitle": "Upload certificate",
+      "editTitle": "Edit certificate",
+      "close": "Close",
+      "file": "Certificate image",
+      "choose": "Choose image",
+      "change": "Choose another image",
+      "dropHint": "Drag a scan or photo of the certificate here or choose one. JPEG, PNG, WebP; up to 40 MB. It is resized automatically while keeping the text legible.",
+      "fileRequired": "Choose an image.",
+      "previewAlt": "Preview of the selected image",
+      "languages": "Text language",
+      "tabs": {
+        "tr": "Turkish",
+        "en": "English"
+      },
+      "tabHasError": "(has an invalid field)",
+      "titleLabel": "Title",
+      "descriptionLabel": "Description",
+      "optional": "optional",
+      "tooLong": "Up to {{max}} characters allowed.",
+      "textHint": "Title and description are optional (e.g. title: the document's name, description: its scope and issuing body). If the English text is empty, the Turkish text is shown on the English site.",
+      "cancel": "Cancel",
+      "submitCreate": "Upload",
+      "submitEdit": "Save",
+      "preparing": "Preparing image…",
+      "uploading": "Uploading… {{percent}}%",
+      "uploadingStatus": "Uploading…",
+      "saving": "Saving…"
+    },
+    "delete": {
+      "title": "Delete this certificate?",
+      "body": "The certificate will be permanently removed from the site and the server. This cannot be undone.",
+      "confirm": "Delete",
+      "deleting": "Deleting…",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "storageNotConfigured": "Image storage has not been configured yet. Please contact the site administrator.",
+      "sessionExpired": "Your session has expired. Refresh the page and sign in again.",
+      "tooLarge": "The file is too large. Choose an image up to 40 MB.",
+      "unreadable": "This file could not be read. Try a JPEG, PNG or WebP image.",
+      "uploadIncomplete": "The upload could not be completed. Please try again.",
+      "notFound": "Certificate not found; it may have been deleted in another session.",
       "unknown": "The action could not be completed. Check your connection and try again."
     }
   }

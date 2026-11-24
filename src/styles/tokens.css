@@ -75,6 +75,12 @@
   /* Galeri sayacı: rakamların yüksekliği (Saira'da büyük harf yüksekliği 0.7 em) küçük görsellerin yüksekliği kadardır. */
   --text-gallery-counter: calc(var(--gallery-thumb-height) / 0.7);
   --text-gallery-total: min(clamp(1.125rem, 0.95rem + 0.7vw, 1.75rem), 4svh);
+  /* Sertifikalar: karttaki belge adı ve büyük numara, alt satırdaki sayaç. Kart yüksekliği ekrandan geldiği için
+     kısa ekranlarda yüksekliğe göre de küçülürler. */
+  --text-certificate-title: min(clamp(1.125rem, 0.9rem + 0.75vw, 1.75rem), 4svh);
+  --text-certificate-number: min(clamp(1.25rem, 1.05rem + 0.8vw, 2rem), 4.4svh);
+  --text-certificate-counter: min(clamp(2.25rem, 1.5rem + 2.2vw, 4.5rem), 8svh);
+  --text-certificate-body: clamp(0.9375rem, 0.9rem + 0.15vw, 1.0625rem);
   --text-lead: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
   /* iOS odaklanınca sayfayı büyütmesin diye form alanları en az 16 px'tir. */
   --text-field: clamp(1rem, 0.95rem + 0.3vw, 1.25rem);
@@ -114,6 +120,13 @@
   /* Galerinin alt şeridindeki küçük görsellerin yüksekliği. */
   --gallery-thumb-height: min(clamp(3.5rem, 2.9rem + 1.6vw, 5rem), max(var(--touch-target), 9svh));
   --gallery-arrow-size: clamp(3rem, 2.6rem + 1.2vw, 4rem);
+  /* Sertifika kartları: aralık, iç boşluk, bilgi sütununun genişliği ve dik ekranda (bilgiler altta) kart genişliği. */
+  --certificate-card-gap: clamp(1rem, 0.6rem + 1.4vw, 2.5rem);
+  --certificate-card-padding: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem);
+  --certificate-info-width: clamp(13rem, 9rem + 9vw, 22rem);
+  --certificate-card-stacked-width: 26rem;
+  /* Dik ekranda kartın üstündeki belge görselinin yüksekliği. */
+  --certificate-stacked-image-height: min(44svh, 30rem);
   --admin-sidebar-width: 17rem;
   --radius-sm: 0.375rem;
 

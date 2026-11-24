@@ -1,0 +1,260 @@
+/*
+ * Hero'nun altındaki ekranın tamamı: ortada kart şeridi, altta ilerleme satırı. Kartların yüksekliği en uzun
+ * açıklamadan gelir (`--certificate-card-height`, CertificateTrack ölçer), genişliği belgenin oranından. Kartlar
+ * ekrandan uzun olursa bölüm de uzar.
+ */
+.section {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: var(--space-md);
+  min-block-size: max(18rem, calc(100svh - var(--page-hero-block-size)));
+  padding-block: var(--space-md) max(var(--space-md), env(safe-area-inset-bottom));
+  overflow: hidden;
+  color: var(--surface-fg);
+  background: var(--surface-bg);
+}
+
+.track {
+  display: flex;
+  gap: var(--certificate-card-gap);
+  inline-size: max-content;
+  min-inline-size: 100%;
+  align-self: center;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--gutter) max(var(--gutter), env(safe-area-inset-right));
+  list-style: none;
+}
+
+/* Dokunmatik cihazlarda şerit kendi içinde kayar, kartlar sol kenara oturur. */
+.section[data-mode='native'] .track {
+  inline-size: auto;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--gutter);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.section[data-mode='native'] .track::-webkit-scrollbar {
+  display: none;
+}
+
+.section[data-mode='native'] .card {
+  scroll-snap-align: start;
+}
+
+/* Kart: solda belge, sağda bilgileri. Beyaz zemin kâğıt bölümden ayrışır. */
+.card {
+  position: relative;
+  display: flex;
+  flex: none;
+  gap: var(--space-md);
+  block-size: var(--certificate-card-height, auto);
+  padding: var(--certificate-card-padding);
+  background: var(--color-white);
+}
+
+.media {
+  flex: none;
+  block-size: 100%;
+}
+
+.image {
+  display: block;
+  inline-size: auto;
+  block-size: 100%;
+  max-inline-size: none;
+  background: var(--color-gallery-placeholder);
+  outline: 1px solid var(--surface-line);
+  outline-offset: -1px;
+}
+
+/* Numara, başlık, açıklama ve düğme kartın sağ kenarına yaslıdır. */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  text-align: end;
+  inline-size: var(--certificate-info-width);
+  min-block-size: 0;
+}
+
+.number {
+  font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
+  font-size: var(--text-certificate-counter);
+  font-weight: var(--weight-heavy);
+  line-height: 0.8;
+}
+
+/*
+ * Başlıklar her kartta numaranın hemen altında başlar, açıklamalar düğmenin hemen üstünde biter: kartlar arasında
+ * başlıkların ilk satırı da açıklamaların son satırı da aynı hizadadır. Kalan boşluk ikisinin arasında kalır.
+ */
+.copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-certificate-title);
+  font-weight: var(--weight-display);
+  line-height: 1.08;
+  letter-spacing: var(--tracking-display);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.description {
+  margin-block-start: auto;
+  font-size: var(--text-certificate-body);
+  line-height: 1.5;
+  color: var(--surface-muted);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* Görünen düğme kartın altındadır, tıklama alanı tüm kartı kaplar. */
+.open {
+  display: inline-flex;
+  flex: none;
+  gap: 0.5rem;
+  align-items: center;
+  align-self: flex-end;
+  min-block-size: var(--touch-target);
+  font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
+  font-size: var(--text-nav);
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.04em;
+  color: var(--surface-fg);
+  --roll-hover-color: var(--surface-fg);
+}
+
+.open::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+}
+
+.open:focus-visible {
+  outline: none;
+}
+
+.open:focus-visible::after {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+/* Kartın alt kenarında, üzerine gelince soldan sağa dolan vurgu çizgisi. */
+.line {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 3px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .line,
+  .card:focus-within .line {
+    transform: scaleX(1);
+  }
+}
+
+.card:focus-within .line {
+  transform: scaleX(1);
+}
+
+/* Alt satır: öndeki kartın sırası (01/11) ve kaydırma ilerlemesi. */
+.footer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: center;
+  padding-inline: var(--gutter) max(var(--gutter), env(safe-area-inset-right));
+  font-family: var(--font-transition);
+  font-stretch: var(--stretch-transition);
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+}
+
+.bar {
+  position: relative;
+  display: block;
+  block-size: 2px;
+  background: var(--surface-line);
+}
+
+.progress {
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.counter {
+  display: flex;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+
+.current {
+  font-size: var(--text-certificate-number);
+}
+
+.total {
+  font-size: var(--text-certificate-number);
+  color: var(--surface-muted);
+}
+
+/*
+ * Dik ve dar ekranlarda (telefon, dikey tablet) bilgiler belgenin altına iner: yan yana sığmazdı. Kart ekranın
+ * çoğunu kaplar, yanında bir sonrakinin kenarı görünür. Görsel sabit yükseklikte, kartlar şeritte en uzun metne
+ * göre eşit boya uzar.
+ */
+@media (max-aspect-ratio: 4 / 5) {
+  .card {
+    flex-direction: column;
+    inline-size: min(var(--certificate-card-stacked-width), 82vw);
+  }
+
+  .media {
+    flex: none;
+    block-size: var(--certificate-stacked-image-height);
+  }
+
+  .image {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: contain;
+    object-position: 0 0;
+    background: none;
+    outline: none;
+  }
+
+  .info {
+    flex: 1;
+    gap: var(--space-sm);
+    inline-size: auto;
+  }
+
+  .number {
+    display: none;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    transition: none;
+  }
+}

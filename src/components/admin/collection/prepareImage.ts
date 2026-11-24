@@ -1,11 +1,14 @@
 /**
- * Yüklenecek fotoğrafı tarayıcıda hazırlar: EXIF yönünü uygular, iki boyuta küçültür ve WebP'ye çevirir.
+ * Yüklenecek görseli tarayıcıda hazırlar: EXIF yönünü uygular, iki boyuta küçültür ve WebP'ye çevirir.
  * Tarayıcı WebP üretemiyorsa (eski Safari) JPEG kullanılır. Telefondan gelen 5–10 MB'lık fotoğraflar böylece
- * birkaç yüz KB'a iner, site hızlı açılır.
+ * birkaç yüz KB'a iner, site hızlı açılır. Boyutlar koleksiyona göre değişir (`collectionAdminApi.ts`).
  */
-const FULL_MAX_EDGE = 2000;
-const THUMB_MAX_EDGE = 480;
-const QUALITY = { full: 0.86, thumb: 0.8 };
+export type ImageSizes = {
+  /** Büyük görselin uzun kenarı en fazla (px). Sunucu sınırı 4096 px'tir. */
+  fullMaxEdge: number;
+  thumbMaxEdge: number;
+  quality: { full: number; thumb: number };
+};
 /** Ham dosya için üst sınır: bundan büyük dosyalar tarayıcıyı zorlamasın diye hiç işlenmez. */
 export const MAX_SOURCE_BYTES = 40 * 1024 * 1024;
 
@@ -21,7 +24,7 @@ export class ImagePrepareError extends Error {
   readonly reason: 'tooLarge' | 'unreadable';
 
   constructor(reason: 'tooLarge' | 'unreadable') {
-    super(`Fotoğraf hazırlanamadı: ${reason}`);
+    super(`Görsel hazırlanamadı: ${reason}`);
     this.reason = reason;
   }
 }
@@ -48,7 +51,7 @@ async function render(bitmap: ImageBitmap, maxEdge: number, type: PreparedImage[
   return { blob, ...size };
 }
 
-export async function prepareImage(file: File): Promise<PreparedImage> {
+export async function prepareImage(file: File, sizes: ImageSizes): Promise<PreparedImage> {
   if (file.size > MAX_SOURCE_BYTES) throw new ImagePrepareError('tooLarge');
 
   let bitmap: ImageBitmap;
@@ -61,12 +64,12 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
   try {
     // İstenmeyen türde dosya dönerse (WebP kodlayıcısı olmayan tarayıcı PNG verir) JPEG'e geçilir.
     let contentType: PreparedImage['contentType'] = 'image/webp';
-    let full = await render(bitmap, FULL_MAX_EDGE, contentType, QUALITY.full);
+    let full = await render(bitmap, sizes.fullMaxEdge, contentType, sizes.quality.full);
     if (full.blob?.type !== 'image/webp') {
       contentType = 'image/jpeg';
-      full = await render(bitmap, FULL_MAX_EDGE, contentType, QUALITY.full);
+      full = await render(bitmap, sizes.fullMaxEdge, contentType, sizes.quality.full);
     }
-    const thumb = await render(bitmap, THUMB_MAX_EDGE, contentType, QUALITY.thumb);
+    const thumb = await render(bitmap, sizes.thumbMaxEdge, contentType, sizes.quality.thumb);
     if (!full.blob || !thumb.blob || full.blob.type !== contentType || thumb.blob.type !== contentType) {
       throw new ImagePrepareError('unreadable');
     }

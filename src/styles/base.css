@@ -91,6 +91,19 @@ html.has-custom-cursor * {
   border-radius: var(--scrollbar-size);
 }
 
+/*
+ * Scrollbar'ı gizleyen sayfalar (`useHiddenScrollbar`). Kaydırma sürer, yalnızca çubuk görünmez. Çubuk hiç olmadığı
+ * için ayrılan boşluk da kaldırılır, yoksa sağda boş bir şerit kalırdı.
+ */
+html[data-scrollbar='hidden'] {
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+}
+
+html[data-scrollbar='hidden']::-webkit-scrollbar {
+  display: none;
+}
+
 /* Firefox. Chrome'da scrollbar-color, yukarıdaki özel stilleri iptal ettiği için ayrıldı. */
 @supports not selector(::-webkit-scrollbar) {
   html {

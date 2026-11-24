@@ -1,5 +1,6 @@
 import { ImagesIcon } from '@phosphor-icons/react/dist/csr/Images';
 import { ArrowSquareOutIcon } from '@phosphor-icons/react/dist/csr/ArrowSquareOut';
+import { CertificateIcon } from '@phosphor-icons/react/dist/csr/Certificate';
 import { SignOutIcon } from '@phosphor-icons/react/dist/csr/SignOut';
 import { SquaresFourIcon } from '@phosphor-icons/react/dist/csr/SquaresFour';
 import type { Icon } from '@phosphor-icons/react';
@@ -14,6 +15,7 @@ import styles from './AdminShell.module.css';
 const NAV_ICONS: Record<AdminNavItem['id'], Icon> = {
   overview: SquaresFourIcon,
   gallery: ImagesIcon,
+  certificates: CertificateIcon,
 };
 
 type AdminShellProps = {
@@ -47,7 +49,6 @@ export function AdminShell({ user, onLogout }: AdminShellProps) {
             height={108}
             alt={t('brand.logoAlt')}
           />
-          <span className={styles.brandLabel}>{t('brand.panel')}</span>
         </Link>
 
         <nav className={styles.nav} aria-label={t('nav.label')}>
@@ -67,10 +68,6 @@ export function AdminShell({ user, onLogout }: AdminShellProps) {
         </nav>
 
         <div className={styles.account}>
-          <p className={styles.accountInfo}>
-            <span className={styles.accountLabel}>{t('account.signedInAs')}</span>
-            <span className={styles.accountEmail}>{user.email}</span>
-          </p>
           <div className={styles.accountActions}>
             <a className={styles.action} href={HOME_PATH} target="_blank" rel="noopener">
               <ArrowSquareOutIcon className={styles.actionIcon} aria-hidden="true" />

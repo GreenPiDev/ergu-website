@@ -1,0 +1,11 @@
+{
+  "listLabel": "Certificates and documents",
+  "untitled": "Document {{number}}",
+  "view": "View",
+  "viewLabel": "View: {{name}}",
+  "status": {
+    "loading": "Loading documents",
+    "empty": "No documents have been added yet.",
+    "error": "The documents could not be loaded right now. Please try again later."
+  }
+}

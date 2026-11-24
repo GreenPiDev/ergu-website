@@ -5,6 +5,7 @@ import { usePageRevealHold } from '../animations/pageReveal';
 import { GalleryCarousel } from '../components/gallery/GalleryCarousel';
 import { useGalleryImages } from '../components/gallery/useGalleryImages';
 import { PageHero } from '../components/layout/PageHero/PageHero';
+import { useHiddenScrollbar } from '../hooks/useHiddenScrollbar';
 import styles from './GalleryPage.module.css';
 
 // Perde, liste ve öndeki fotoğraflar gelene kadar bekler; yavaş bağlantıda sayfa perdede kalmasın diye sınırlıdır.
@@ -15,6 +16,8 @@ export function GalleryPage() {
   const { t, i18n } = useTranslation();
   const { t: tGallery } = useTranslation('gallery');
   const state = useGalleryImages();
+  // Galeri silindirle gezilir, dikey scrollbar yanıltıcı olurdu.
+  useHiddenScrollbar();
   const [isCarouselReady, setCarouselReady] = useState(false);
   const hasImages = state.status === 'ready' && state.images.length > 0;
   // Tek bekletme: liste gelince bırakılıp silindir için yeniden alınsaydı aradaki anda perde kalkabilirdi.

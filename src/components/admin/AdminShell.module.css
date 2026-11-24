@@ -48,17 +48,6 @@
   block-size: calc(var(--logo-height) * 0.8);
 }
 
-.brandLabel {
-  padding-inline-start: var(--space-sm);
-  overflow: hidden;
-  font-size: var(--text-admin-small);
-  font-weight: var(--weight-medium);
-  color: var(--surface-muted);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  border-inline-start: 1px solid var(--surface-line);
-}
-
 .nav {
   grid-area: nav;
   margin-inline: calc(var(--gutter) * -1);
@@ -112,10 +101,6 @@
 
 .account {
   grid-area: account;
-}
-
-.accountInfo {
-  display: none;
 }
 
 .accountActions {
@@ -197,13 +182,13 @@
   }
 
   .brand {
-    flex-direction: column;
-    align-items: flex-start;
+    justify-content: center;
   }
 
-  .brandLabel {
-    padding-inline-start: 0;
-    border-inline-start: 0;
+  /* Logo kenar çubuğunun iç genişliğini doldurur, oranı korunur. */
+  .logo {
+    inline-size: 100%;
+    block-size: auto;
   }
 
   .nav {
@@ -234,25 +219,6 @@
     gap: var(--space-sm);
     padding-block-start: var(--space-md);
     border-block-start: 1px solid var(--surface-line);
-  }
-
-  .accountInfo {
-    display: grid;
-    gap: 0.25rem;
-    min-inline-size: 0;
-  }
-
-  .accountLabel {
-    font-size: var(--text-admin-eyebrow);
-    letter-spacing: var(--tracking-eyebrow);
-    text-transform: uppercase;
-    color: var(--surface-muted);
-  }
-
-  .accountEmail {
-    overflow: hidden;
-    font-size: var(--text-admin-small);
-    text-overflow: ellipsis;
   }
 
   .accountActions {

@@ -17,8 +17,10 @@ export const ADMIN_BASE_PATH = '/admin-panel';
 export const ADMIN_MAIN_ID = 'admin-main';
 
 export const ADMIN_GALLERY_PATH = `${ADMIN_BASE_PATH}/gallery`;
+export const ADMIN_CERTIFICATES_PATH = `${ADMIN_BASE_PATH}/certificates`;
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { id: 'overview', labelKey: 'nav.overview', path: ADMIN_BASE_PATH },
   { id: 'gallery', labelKey: 'nav.gallery', path: ADMIN_GALLERY_PATH },
+  { id: 'certificates', labelKey: 'nav.certificates', path: ADMIN_CERTIFICATES_PATH },
 ];

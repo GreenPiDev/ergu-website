@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { gsap, MOTION, useGSAP } from '../../../animations/gsap';
 import { usePrefersReducedMotion } from '../../../hooks/useDevice';
 import { useScrollLock } from '../../../hooks/useSmoothScroll';
-import { RollText } from '../RollText/RollText';
 import styles from './Lightbox.module.css';
 
 const CLOSE_TIME_SCALE = 1.5;
@@ -22,7 +21,7 @@ type LightboxProps = {
  * Yerel `dialog` kullanılmaz, üst katmana çıkıp özel imlecin altında kalırdı.
  */
 export function Lightbox({ src, alt, onClose, isDocument = false }: LightboxProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const prefersReducedMotion = usePrefersReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
   const curtainRef = useRef<HTMLDivElement>(null);
@@ -96,9 +95,6 @@ export function Lightbox({ src, alt, onClose, isDocument = false }: LightboxProp
 
       <button ref={closeButtonRef} className={styles.close} type="button" aria-label={t('a11y.close')} onClick={close}>
         <span className={styles.closeMark} aria-hidden="true" />
-        <span className={styles.closeLabel}>
-          <RollText text={t('a11y.close').toLocaleUpperCase(i18n.language)} />
-        </span>
       </button>
     </div>,
     document.body,

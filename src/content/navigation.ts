@@ -25,11 +25,16 @@ const group = (id: MainId, children: NavNode[]): NavGroupNode => ({
 export const HOME_PATH = '/home';
 export const CONTACT_PATH = '/contact';
 export const GALLERY_PATH = '/gallery';
+export const CERTIFICATES_PATH = '/certificates';
 
 /** Header'daki asıl menü. */
 export const MAIN_NAV: NavNode[] = [
   link('home', HOME_PATH),
-  group('corporate', [link('contact', CONTACT_PATH), link('gallery', GALLERY_PATH), link('certificates', '/certificates')]),
+  group('corporate', [
+    link('contact', CONTACT_PATH),
+    link('gallery', GALLERY_PATH),
+    link('certificates', CERTIFICATES_PATH),
+  ]),
   group('industries', [
     link('solarPlants', '/industries/solar-power-plants'),
     link('biomassPlants', '/industries/biomass-power-plants'),

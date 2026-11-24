@@ -46,7 +46,7 @@
   margin: auto;
 }
 
-/* Mobilde turuncu kare içinde siyah çarpı, daha geniş ekranlarda yazı. */
+/* Her ekranda turuncu kare içinde siyah çarpı. Erişilebilir adı "Kapat"tır. */
 .close {
   position: absolute;
   inset-block-start: calc(var(--space-sm) + env(safe-area-inset-top));
@@ -56,13 +56,7 @@
   justify-content: center;
   min-inline-size: var(--touch-target);
   min-block-size: var(--touch-target);
-  font-family: var(--font-transition);
-  font-stretch: var(--stretch-transition);
-  font-size: var(--text-scroll-cue);
-  font-weight: var(--weight-heavy);
-  color: var(--color-accent);
   background: var(--color-accent);
-  --roll-hover-color: var(--color-black);
 }
 
 .closeMark {
@@ -70,6 +64,7 @@
   display: block;
   inline-size: 1.125rem;
   block-size: 1.125rem;
+  transition: transform var(--duration-base) var(--ease-out);
 }
 
 .closeMark::before,
@@ -90,21 +85,15 @@
   transform: rotate(-45deg);
 }
 
-.closeLabel {
-  display: none;
+/* Fareyle üstüne gelince çarpı çeyrek tur döner. */
+@media (hover: hover) and (pointer: fine) {
+  .close:hover .closeMark {
+    transform: rotate(90deg);
+  }
 }
 
-@media (min-width: 37.5rem) {
-  .close {
-    padding-inline: var(--space-sm);
-    background: none;
-  }
-
+@media (prefers-reduced-motion: reduce) {
   .closeMark {
-    display: none;
-  }
-
-  .closeLabel {
-    display: block;
+    transition: none;
   }
 }

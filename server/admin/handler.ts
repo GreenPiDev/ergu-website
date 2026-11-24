@@ -1,6 +1,7 @@
 import { apiError as error, json, methodNotAllowed, readJsonBody } from '../http.js';
 import { AdminConfigError, readAdminConfig, type AdminConfig } from './config.js';
-import { handleAdminGallery } from './gallery.js';
+import { COLLECTIONS } from '../imageCollection.js';
+import { handleAdminCollection } from './collection.js';
 import { verifyPassword } from './password.js';
 import {
   clearedSessionCookie,
@@ -18,10 +19,9 @@ import {
  * - `POST /api/admin/login`   { email, password } → oturum çerezi
  * - `POST /api/admin/logout`  → çerez silinir
  * - `GET  /api/admin/session` → oturum açıksa kullanıcı, değilse 401
- * - `/api/admin/gallery/*`    → fotoğraf galerisi (`gallery.ts`), oturum gerekir
+ * - `/api/admin/gallery/*`, `/api/admin/certificates/*` → görsel koleksiyonları (`collection.ts`), oturum gerekir
  */
 const BASE_PATH = '/api/admin';
-const GALLERY_PATH = `${BASE_PATH}/gallery`;
 // Hatalı girişte yanıt geciktirilir: deneme yanılma yavaşlar, doğru ve yanlış e-posta aynı sürede döner.
 const FAILED_LOGIN_DELAY_MS = 600;
 const MAX_FIELD_LENGTH = 256;
@@ -94,9 +94,13 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
 
   if (UNSAFE_METHODS.has(method) && !isSameOrigin(request)) return error('forbidden', 403);
 
-  if (route === GALLERY_PATH || route.startsWith(`${GALLERY_PATH}/`)) {
+  const collection = COLLECTIONS.find(({ name }) => {
+    const path = `${BASE_PATH}/${name}`;
+    return route === path || route.startsWith(`${path}/`);
+  });
+  if (collection) {
     if (!currentSession(request, config)) return error('unauthorized', 401);
-    return handleAdminGallery(request, method, route.slice(GALLERY_PATH.length));
+    return handleAdminCollection(request, collection, method, route.slice(`${BASE_PATH}/${collection.name}`.length));
   }
 
   switch (route) {

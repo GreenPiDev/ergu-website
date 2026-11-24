@@ -8,7 +8,7 @@ import { AwsClient } from 'aws4fetch';
  * - `R2_BUCKET`: bucket adı.
  *
  * Bucket'ın herkese açık adresi (r2.dev) kullanılmaz: Türkiye'de erişim engeli var ve Cloudflare'e göre yalnızca
- * geliştirme içindir. Görseller sitenin kendi alan adından, API üzerinden aktarılır (`server/gallery.ts`).
+ * geliştirme içindir. Görseller sitenin kendi alan adından, API üzerinden aktarılır (`server/imageCollection.ts`).
  */
 export type StorageConfig = {
   accountId: string;
@@ -73,7 +73,9 @@ export function createStorage(config: StorageConfig) {
       const response = await client.fetch(objectUrl(key));
       if (response.status === 404) return null;
       await expectOk(response, `GET ${key}`);
-      return { data: await response.json(), etag: response.headers.get('etag') ?? '' };
+      // R2 sıkıştırarak gönderdiği yanıtta ETag'i zayıf (`W/"…"`) verir, `If-Match` ise zayıf ETag'i hiç eşleştirmez
+      // ve her yazma 412 alır. Değer aynı MD5'tir: önek atılınca koşullu yazma doğru çalışır.
+      return { data: await response.json(), etag: (response.headers.get('etag') ?? '').replace(/^W\//, '') };
     },
 
     /** `etag` verilirse yalnızca dosya o sürümdeyse, `null` verilirse yalnızca dosya yoksa yazar. */

@@ -1,0 +1,11 @@
+{
+  "listLabel": "Sertifika ve belgeler",
+  "untitled": "Belge {{number}}",
+  "view": "İncele",
+  "viewLabel": "İncele: {{name}}",
+  "status": {
+    "loading": "Belgeler yükleniyor",
+    "empty": "Henüz belge eklenmedi.",
+    "error": "Belgeler şu an yüklenemedi. Lütfen daha sonra yeniden deneyin."
+  }
+}

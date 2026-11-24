@@ -21,6 +21,12 @@
   border-radius: var(--radius-sm);
 }
 
+/* Belgeler dikeydir, kırpılmadan bütün sayfa görünür. */
+.list[data-shape='portrait'] .thumb {
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+}
+
 .copy {
   display: grid;
   gap: 0.25rem;
