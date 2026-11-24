@@ -7,7 +7,7 @@
  * Listelerde ilk sıradaki ana iletişim bilgisidir, tek değer gösterilecek yerlerde o kullanılır.
  */
 export const COMPANY = {
-  name: 'ERGU ENERJİ',
+  name: 'ERGÜ ENERJİ',
   /** Ekranda göründüğü haliyle. Arama bağlantısı bundan üretilir. */
   phones: ['+90 312 577 81 88', '+90 533 087 06 14'],
   emails: ['info@erguenerji.com', 'yapun79@mail.ru'],
