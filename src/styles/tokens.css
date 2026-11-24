@@ -3,10 +3,10 @@
   --color-white: #ffffff;
   --color-black: #0b0c0d;
   --color-carbon: #0f1011;
-  --color-paper: #f2f1ed;
+  --color-paper: #e9e7e1;
   --color-accent: #da7e21;
   /* Galeri: dokusu henüz inmemiş fotoğraf paneli. Kâğıt zeminden bir ton koyu. */
-  --color-gallery-placeholder: #e2e0da;
+  --color-gallery-placeholder: #d9d6cf;
   /* Form hataları. Kâğıt ve beyaz zeminde AA kontrastlıdır. */
   --color-error: #b3261e;
   /* Şehir hero'sundaki lokasyon perdeleri ve butonlarının çizgisi. Toplamalı karışımla parladıkları için doygun ve açık. */
@@ -72,7 +72,8 @@
   --text-contact-number: clamp(1.125rem, 0.95rem + 0.6vw, 1.625rem);
   --text-contact-section: clamp(2.25rem, 1.3rem + 3.8vw, 5.5rem);
   /* Galeri sayacı. Kısa ekranlarda silindire yer kalsın diye yüksekliğe de bağlıdır. */
-  --text-gallery-counter: min(clamp(2.75rem, 1.8rem + 3.6vw, 6rem), 10svh);
+  /* Galeri sayacı: rakamların yüksekliği (Saira'da büyük harf yüksekliği 0.7 em) küçük görsellerin yüksekliği kadardır. */
+  --text-gallery-counter: calc(var(--gallery-thumb-height) / 0.7);
   --text-gallery-total: min(clamp(1.125rem, 0.95rem + 0.7vw, 1.75rem), 4svh);
   --text-lead: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
   /* iOS odaklanınca sayfayı büyütmesin diye form alanları en az 16 px'tir. */
@@ -99,11 +100,13 @@
   --gutter: clamp(1rem, 2.4vw, 2.5rem);
   --header-height: clamp(4rem, 3.5rem + 1.5vw, 5.5rem);
   /*
-   * Sayfa hero'su header'ın üstüne biner. Masaüstü ve tablette ekranın üçte biridir, telefonda alt kenarı biraz
-   * yukarıdadır. Arka plan görseli her cihazda üçte birlik kutuda kadrajlanır, kısalan bantta yalnızca altı kesilir.
+   * Sayfa hero'su header'ın üstüne biner. Masaüstü ve tablette ekranın %27'si, telefonda biraz daha alçaktır. Arka plan
+   * görseli her cihazda üçte birlik kutuda kadrajlanır, bantta yalnızca altı kesilir.
    */
-  --page-hero-height: 28svh;
+  --page-hero-height: 23svh;
   --page-hero-media-height: 33.333svh;
+  /* Bandın gerçek yüksekliği: yatay telefonda oran header'dan bile kısa kalır, bant en az bu kadar olur. */
+  --page-hero-block-size: max(var(--page-hero-height), calc(var(--header-height) + 4.5rem));
   --logo-height: clamp(2.5rem, 2.2rem + 0.8vw, 3.25rem);
   --nav-gap: clamp(1.25rem, 2.2vw, 3rem);
   --touch-target: 2.75rem;
@@ -140,7 +143,7 @@
 
 @media (min-width: 37.5rem) {
   :root {
-    --page-hero-height: var(--page-hero-media-height);
+    --page-hero-height: 27svh;
   }
 }
 

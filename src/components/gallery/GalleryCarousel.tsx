@@ -16,7 +16,6 @@ import { setCursorInteractive, setCursorLabel } from '../ui/CustomCursor/cursorE
 import { CarouselController } from './carouselController';
 import { LAYOUTS, type ScreenRect } from './cylinderLayout';
 import type { GalleryImage } from './galleryApi';
-import { GalleryArrow } from './GalleryArrow';
 import type { GalleryCanvasHandle, GalleryColors } from './GalleryCanvas';
 import { GalleryCounter } from './GalleryCounter';
 import { GalleryLightbox } from './GalleryLightbox';
@@ -74,6 +73,8 @@ export function GalleryCarousel({ images, onReady }: GalleryCarouselProps) {
   const dragRef = useRef<DragState | null>(null);
   const cursorRef = useRef<CursorState>('none');
   const [activeIndex, setActiveIndex] = useState(0);
+  // Şeridin ortaladığı fotoğraf: kayarken geçilen her fotoğrafa değil, doğrudan varış noktasına kayar.
+  const [destinationIndex, setDestinationIndex] = useState(0);
   const [isLightboxOpen, setLightboxOpen] = useState(false);
   const [isReady, setReady] = useState(false);
   const [colors, setColors] = useState<GalleryColors | null>(null);
@@ -86,7 +87,10 @@ export function GalleryCarousel({ images, onReady }: GalleryCarouselProps) {
     return () => window.clearTimeout(timer);
   }, [activeIndex]);
 
-  const controller = useMemo(() => new CarouselController(images.length, setActiveIndex), [images.length]);
+  const controller = useMemo(
+    () => new CarouselController(images.length, setActiveIndex, setDestinationIndex),
+    [images.length],
+  );
   useEffect(() => () => controller.destroy(), [controller]);
   useEffect(() => {
     controller.setReducedMotion(prefersReducedMotion);
@@ -100,6 +104,7 @@ export function GalleryCarousel({ images, onReady }: GalleryCarouselProps) {
     setColors({
       background: style.getPropertyValue('--surface-bg').trim(),
       placeholder: style.getPropertyValue('--color-gallery-placeholder').trim(),
+      frame: style.getPropertyValue('--surface-fg').trim(),
     });
   }, []);
 
@@ -314,15 +319,15 @@ export function GalleryCarousel({ images, onReady }: GalleryCarouselProps) {
         </div>
       </div>
 
-      <div className={styles.bar}>
-        <GalleryCounter index={activeIndex} total={images.length} />
-        <div className={styles.arrows}>
-          <GalleryArrow direction={-1} label={t('previous')} onClick={() => controller.step(-1)} />
-          <GalleryArrow direction={1} label={t('next')} onClick={() => controller.step(1)} />
-        </div>
+      <div className={styles.footer}>
+        <GalleryCounter className={styles.counter} index={activeIndex} total={images.length} />
+        <GalleryThumbnails
+          images={images}
+          activeIndex={activeIndex}
+          focusIndex={destinationIndex}
+          onSelect={goToThumbnail}
+        />
       </div>
-
-      <GalleryThumbnails images={images} activeIndex={activeIndex} onSelect={goToThumbnail} />
 
       <p className={styles.srOnly} aria-live="polite">
         {t('announce', { current: announcedIndex + 1, total: images.length })}

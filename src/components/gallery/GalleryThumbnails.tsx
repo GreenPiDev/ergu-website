@@ -11,11 +11,13 @@ const MAX_ASPECT = 1.8;
 interface GalleryThumbnailsProps {
   images: readonly GalleryImage[];
   activeIndex: number;
+  /** Şeridin ortaladığı fotoğraf. Silindir kayarken öndeki değil varılacak fotoğraftır, şerit tek seferde kayar. */
+  focusIndex: number;
   onSelect: (index: number) => void;
 }
 
-/** Bütün fotoğrafların küçük halleri. Öndeki fotoğraf değiştikçe şerit onu ortaya kaydırır. */
-export function GalleryThumbnails({ images, activeIndex, onSelect }: GalleryThumbnailsProps) {
+/** Bütün fotoğrafların küçük halleri. Silindirin varacağı fotoğraf değiştikçe şerit onu ortaya kaydırır. */
+export function GalleryThumbnails({ images, activeIndex, focusIndex, onSelect }: GalleryThumbnailsProps) {
   const { t } = useTranslation('gallery');
   const prefersReducedMotion = usePrefersReducedMotion();
   const listRef = useRef<HTMLUListElement>(null);
@@ -23,13 +25,13 @@ export function GalleryThumbnails({ images, activeIndex, onSelect }: GalleryThum
   // Sayfa değil yalnızca şerit kayar (scrollIntoView sayfayı da kaydırırdı).
   useEffect(() => {
     const list = listRef.current;
-    const item = list?.children[activeIndex];
+    const item = list?.children[focusIndex];
     if (!list || !(item instanceof HTMLElement)) return;
     list.scrollTo({
       left: item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2,
       behavior: prefersReducedMotion ? 'auto' : 'smooth',
     });
-  }, [activeIndex, prefersReducedMotion]);
+  }, [focusIndex, prefersReducedMotion]);
 
   return (
     <nav className={styles.root} aria-label={t('thumbnails')}>

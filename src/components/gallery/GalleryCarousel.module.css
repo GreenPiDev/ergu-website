@@ -1,10 +1,15 @@
-/* Galeri tek ekranı doldurur: silindir, altında sayaç ve oklar, en altta bütün fotoğrafların şeridi. */
+/*
+ * Galeri tek ekranı doldurur: silindir, altında solda sayaç, sağında bütün fotoğrafların şeridi.
+ * Silindir ok tuşlarıyla da döner, sayfada ok düğmesi yoktur.
+ * Bölüm, hero'nun altında ekranın kalanını doldurur: sayfa kaydırmadan sığar. Çok kısa ekranlarda (yatay telefon)
+ * silindir küçülüp kullanılmaz hale gelmesin diye en az yüksekliği vardır, orada sayfa kayar.
+ */
 .root {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto;
-  block-size: 100svh;
+  grid-template-rows: minmax(0, 1fr) auto;
+  block-size: calc(100svh - var(--page-hero-block-size));
   min-block-size: 30rem;
-  padding-block: var(--header-height) calc(var(--space-sm) + env(safe-area-inset-bottom));
+  padding-block: var(--space-md) calc(var(--space-sm) + env(safe-area-inset-bottom));
   color: var(--surface-fg);
   background: var(--surface-bg);
 }
@@ -39,18 +44,24 @@
   inset: 0;
 }
 
-.bar {
+/* Sayaç şeridin solunda, rakamların üst ve alt kenarı küçük görsellerin üst ve alt kenarıyla hizalıdır. */
+.footer {
+  /* Şeridin sayaca uzaklığı (GalleryThumbnails). Sayacın solundaki boşlukla eşittir. */
+  --thumbs-inline-start: var(--space-sm);
+
   display: flex;
-  gap: var(--space-md);
-  align-items: flex-end;
-  justify-content: space-between;
-  padding-block: var(--space-sm);
-  padding-inline: var(--gutter);
+  align-items: center;
+  min-inline-size: 0;
+  padding-block-start: var(--space-sm);
 }
 
-.arrows {
-  display: flex;
-  gap: var(--space-sm);
+.footer > nav {
+  flex: 1;
+}
+
+.counter {
+  flex: none;
+  padding-inline-start: var(--space-sm);
 }
 
 .srOnly {

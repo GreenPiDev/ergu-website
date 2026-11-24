@@ -35,10 +35,16 @@ export class CarouselController {
   private settleTimer = 0;
   private activeRaw = 0;
   private readonly onActiveChange: (index: number) => void;
+  private readonly onDestinationChange: (index: number) => void;
 
-  constructor(count: number, onActiveChange: (index: number) => void) {
+  /**
+   * onActiveChange: öndeki fotoğraf her değiştiğinde (kayarken geçilenler dahil).
+   * onDestinationChange: silindirin varacağı fotoğraf; kayarken bir kez, varış noktası belli olunca çağrılır.
+   */
+  constructor(count: number, onActiveChange: (index: number) => void, onDestinationChange: (index: number) => void) {
     this.count = Math.max(1, count);
     this.onActiveChange = onActiveChange;
+    this.onDestinationChange = onDestinationChange;
   }
 
   setReducedMotion(reduced: boolean) {
@@ -65,6 +71,7 @@ export class CarouselController {
     if (raw !== this.activeRaw) {
       this.activeRaw = raw;
       this.onActiveChange(wrapIndex(raw, this.count));
+      if (!this.tween) this.onDestinationChange(wrapIndex(raw, this.count));
     }
   }
 
@@ -105,12 +112,13 @@ export class CarouselController {
     this.slideTo(base + direction);
   }
 
-  /** Sıradaki bir fotoğrafa en kısa yönden kayarak gider (thumbnail). */
+  /**
+   * Sıradaki bir fotoğrafa kayarak gider (thumbnail). En kısa yoldan değil, şeritteki sıraya göre döner: şeritte sağdaki
+   * fotoğraf seçilince silindir de o yöne döner, ikisi aynı yönde hareket eder.
+   */
   goTo(index: number) {
     const base = Math.round(this.target);
-    let diff = wrapIndex(index - wrapIndex(base, this.count), this.count);
-    if (diff > this.count / 2) diff -= this.count;
-    this.slideTo(base + diff);
+    this.slideTo(base + index - wrapIndex(base, this.count));
   }
 
   /** Sonsuz dizideki bir sıraya kayarak gider (silindirde yan fotoğrafa tıklama). */
@@ -125,6 +133,7 @@ export class CarouselController {
     let diff = wrapIndex(index - wrapIndex(base, this.count), this.count);
     if (diff > this.count / 2) diff -= this.count;
     this.position = this.target = base + diff;
+    this.onDestinationChange(index);
   }
 
   destroy() {
@@ -137,6 +146,7 @@ export class CarouselController {
     window.clearTimeout(this.settleTimer);
     this.target = destination;
     this.slideDestination = destination;
+    this.onDestinationChange(wrapIndex(destination, this.count));
     const distance = Math.abs(destination - this.position);
     if (distance < 1e-3) return;
     if (this.reducedMotion) {

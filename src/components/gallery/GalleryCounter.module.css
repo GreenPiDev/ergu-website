@@ -8,6 +8,8 @@
   font-variant-numeric: tabular-nums;
   line-height: 0.82;
   white-space: nowrap;
+  /* Satır kutusu rakamların üst ve alt kenarına kırpılır: sayaç yanındaki öğelerle kenardan hizalanır. */
+  text-box: trim-both cap alphabetic;
 }
 
 .current {

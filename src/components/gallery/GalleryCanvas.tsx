@@ -27,6 +27,8 @@ export interface GalleryColors {
   background: string;
   /** Dokusu henüz inmemiş panelin rengi. */
   placeholder: string;
+  /** Panelin kenarındaki ince çizgi. */
+  frame: string;
 }
 
 interface GalleryCanvasProps {
@@ -46,7 +48,7 @@ interface GalleryCanvasProps {
 // Panel yatayda bu kadar parçaya bölünür, kavis bunlarla çizilir.
 const PANEL_SEGMENTS = 32;
 // Arkadaki paneller zemine doğru solar: en arkada rengin bu kadarı kalır.
-const BACK_VISIBILITY = 0.42;
+const BACK_VISIBILITY = 0.28;
 // Doku inince panel bu sürede (sn) belirir.
 const REVEAL_TIME = 0.5;
 // Silindir bu hızdan (fotoğraf/sn) hızlı dönerken yalnızca varış noktasının çevresindeki dokular istenir.
@@ -54,11 +56,27 @@ const FAST_SPEED = 6;
 // Perde, öndeki fotoğraflar inmese de en geç bu kadar (sn) bekler.
 const READY_TIMEOUT = 4;
 
+/*
+ * Panel, parlak fotoğraf baskısı gibi görünür: ince koyu kenar çizgisi açık zeminden ayırır, kenarlara doğru hafif iç
+ * gölge derinlik verir, silindir döndükçe panellerin üzerinden ince bir ışık bandı geçer.
+ */
+// Kenar çizgisinin kalınlığı (CSS pikseli) ve opaklığı.
+const FRAME_WIDTH = 1;
+const FRAME_OPACITY = 0.55;
+// İç gölge: kenarda rengin bu kadarı kararır, panelin kısa kenarının bu oranı boyunca açılır.
+const VIGNETTE_STRENGTH = 0.14;
+const VIGNETTE_SIZE = 0.16;
+// Işık bandı: silindirin hangi açısında (radyan, eksi = sol) en parlak olduğu, darlığı ve parlaklığı.
+const SHEEN_ANGLE = -0.12;
+const SHEEN_SHARPNESS = 140;
+const SHEEN_STRENGTH = 0.1;
+
 const vertexShader = /* glsl */ `
   uniform float uTheta;
   uniform float uRadius;
   varying vec2 vUv;
   varying float vFacing;
+  varying float vAngle;
 
   void main() {
     // Düz panel silindir yüzeyine sarılır: x yay uzunluğudur.
@@ -66,6 +84,7 @@ const vertexShader = /* glsl */ `
     vec3 curved = vec3(sin(angle) * uRadius, position.y, cos(angle) * uRadius);
     vUv = uv;
     vFacing = cos(angle);
+    vAngle = angle;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(curved, 1.0);
   }
 `;
@@ -73,20 +92,49 @@ const vertexShader = /* glsl */ `
 const fragmentShader = /* glsl */ `
   uniform sampler2D uMap;
   uniform vec2 uCover;
+  uniform float uFlipY;
   uniform float uReveal;
   uniform vec3 uBackground;
   uniform vec3 uPlaceholder;
   uniform float uBackVisibility;
+  uniform vec3 uFrame;
+  uniform float uFrameWidth;
+  uniform float uFrameOpacity;
+  uniform float uPanelAspect;
+  uniform float uVignetteStrength;
+  uniform float uVignetteSize;
+  uniform float uSheenAngle;
+  uniform float uSheenSharpness;
+  uniform float uSheenStrength;
   varying vec2 vUv;
   varying float vFacing;
+  varying float vAngle;
 
   void main() {
     vec2 uv = vUv;
     // Arkadaki panellerin içi görünür: fotoğraf ayna görüntüsü olmasın diye çevrilir.
     if (!gl_FrontFacing) uv.x = 1.0 - uv.x;
+    // ImageBitmap dokusu GPU'ya ters yüklenir (galleryTextures.ts).
+    if (uFlipY > 0.5) uv.y = 1.0 - uv.y;
     // object-fit: cover
     uv = (uv - 0.5) * uCover + 0.5;
     vec3 color = mix(uPlaceholder, texture2D(uMap, uv).rgb, uReveal);
+
+    // Kenara uzaklık: x panel genişliği, y yüksekliği cinsinden; iç gölge için ikisi de kısa kenara göre ölçeklenir.
+    vec2 edge = min(vUv, 1.0 - vUv);
+    vec2 edgeShort = vec2(edge.x * max(uPanelAspect, 1.0), edge.y * max(1.0 / uPanelAspect, 1.0));
+    vec2 fade = smoothstep(vec2(0.0), vec2(uVignetteSize), edgeShort);
+    color *= 1.0 - uVignetteStrength * (1.0 - fade.x * fade.y);
+
+    // Işık bandı, panelin silindirdeki açısına bağlıdır: döndükçe panelin üzerinden kayar.
+    float sheen = pow(max(cos(vAngle - uSheenAngle), 0.0), uSheenSharpness);
+    color += sheen * uSheenStrength * uReveal;
+
+    // Kenar çizgisi ekran pikseliyle ölçülür, uzaklık ve kavis ne olursa olsun aynı incelikte kalır.
+    vec2 edgePx = edge / max(fwidth(vUv), vec2(1e-6));
+    float line = 1.0 - smoothstep(uFrameWidth - 0.5, uFrameWidth + 0.5, min(edgePx.x, edgePx.y));
+    color = mix(color, uFrame, line * uFrameOpacity);
+
     float front = smoothstep(-1.0, 1.0, vFacing);
     color = mix(uBackground, color, mix(uBackVisibility, 1.0, front));
     gl_FragColor = vec4(color, 1.0);
@@ -117,7 +165,11 @@ class CylinderScene {
   private elapsed = 0;
   private readySent = false;
 
-  constructor(images: readonly GalleryImage[], layout: CylinderLayout, colors: GalleryColors, anisotropy: number) {
+  private readonly renderer: THREE.WebGLRenderer;
+
+  constructor(images: readonly GalleryImage[], layout: CylinderLayout, colors: GalleryColors, renderer: THREE.WebGLRenderer) {
+    this.renderer = renderer;
+    const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     this.images = images;
     this.layout = layout;
     this.panel = getPanelSize(layout);
@@ -133,10 +185,20 @@ class CylinderScene {
           uRadius: { value: RADIUS },
           uMap: { value: emptyTexture },
           uCover: { value: new THREE.Vector2(1, 1) },
+          uFlipY: { value: 0 },
           uReveal: { value: 0 },
           uBackground: { value: new THREE.Color(colors.background) },
           uPlaceholder: { value: new THREE.Color(colors.placeholder) },
           uBackVisibility: { value: BACK_VISIBILITY },
+          uFrame: { value: new THREE.Color(colors.frame) },
+          uFrameWidth: { value: FRAME_WIDTH * renderer.getPixelRatio() },
+          uFrameOpacity: { value: FRAME_OPACITY },
+          uPanelAspect: { value: layout.panelAspect },
+          uVignetteStrength: { value: VIGNETTE_STRENGTH },
+          uVignetteSize: { value: VIGNETTE_SIZE },
+          uSheenAngle: { value: SHEEN_ANGLE },
+          uSheenSharpness: { value: SHEEN_SHARPNESS },
+          uSheenStrength: { value: SHEEN_STRENGTH },
         },
       });
       const mesh = new THREE.Mesh(this.geometry, material);
@@ -155,6 +217,8 @@ class CylinderScene {
     const speed = Math.abs(position - this.previousPosition) / Math.max(delta, 1e-3);
     this.previousPosition = position;
     const target = controller.target;
+    // Ekranın piksel oranı değişebilir (pencere başka ekrana taşınınca); çizgi CSS pikseliyle aynı incelikte kalır.
+    const frameWidth = FRAME_WIDTH * this.renderer.getPixelRatio();
 
     const half = Math.floor(layout.slots / 2);
     const base = Math.round(position);
@@ -164,6 +228,7 @@ class CylinderScene {
       const index = wrapIndex(raw, count);
       const uniforms = slot.material.uniforms;
       uniforms.uTheta.value = (raw - position) * panel.step;
+      uniforms.uFrameWidth.value = frameWidth;
 
       if (slot.imageIndex !== index) {
         slot.imageIndex = index;
@@ -179,6 +244,7 @@ class CylinderScene {
         slot.texture = texture;
         slot.reveal = 0;
         uniforms.uMap.value = texture ?? emptyTexture;
+        uniforms.uFlipY.value = texture && textures.flipY ? 1 : 0;
         if (texture) {
           const imageAspect = images[index].width / images[index].height;
           const cover = uniforms.uCover.value as THREE.Vector2;
@@ -191,6 +257,8 @@ class CylinderScene {
     }
 
     const activeIndex = wrapIndex(controller.activeRawIndex, count);
+    // Bir sonraki karede çizilecek doku şimdiden yüklenir; her karede bir tane, kare atlamasın diye.
+    textures.uploadNext(this.renderer, activeIndex);
     textures.evict(activeIndex);
 
     if (this.readySent) return false;
@@ -216,7 +284,7 @@ function Cylinder({ images, controller, layout, colors, reducedMotion, handleRef
   const panel = useMemo(() => getPanelSize(layout), [layout]);
 
   const scene = useMemo(
-    () => new CylinderScene(images, layout, colors, Math.min(8, gl.capabilities.getMaxAnisotropy())),
+    () => new CylinderScene(images, layout, colors, gl),
     [images, layout, colors, gl],
   );
   useEffect(() => () => scene.dispose(), [scene]);

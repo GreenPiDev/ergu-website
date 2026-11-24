@@ -48,7 +48,7 @@ function measureTitle(element: HTMLElement, text: string) {
   };
 }
 
-/** Ana sayfa dışındaki sayfaların girişi: ekranın üçte biri yüksekliğinde bant, içinde büyük ve şeffaf sayfa adı. */
+/** Ana sayfa dışındaki sayfaların girişi: ekranın yaklaşık dörtte biri yüksekliğinde bant, içinde büyük ve şeffaf sayfa adı. */
 export function PageHero({ title, image }: PageHeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const { pathname } = useLocation();

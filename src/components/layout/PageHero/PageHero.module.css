@@ -1,5 +1,5 @@
 /*
- * Ekranın üçte biri yüksekliğinde bant (telefonda biraz daha alçak, bkz. --page-hero-height). Header bandın üstüne
+ * Ekranın %27'si yüksekliğinde bant (telefonda biraz daha alçak, bkz. --page-hero-height). Header bandın üstüne
  * biner: ikisinin de üst kenarı sayfanın en üstüdür.
  * Başlık, sığabileceği en büyük boyuttan küçük tutulur ve alt kenardaki çizginin az üstüne oturur. Arkada sayfaya özel
  * görsel durur (src/content/pageHeroImages.ts), üstündeki koyu örtü başlığı ve header'ı okunaklı tutar.
@@ -15,9 +15,7 @@
   container-type: inline-size;
   display: flex;
   align-items: flex-end;
-  block-size: var(--page-hero-height);
-  /* Yatay telefonda üçte bir, header'dan bile kısa kalır. */
-  min-block-size: calc(var(--header-height) + 4.5rem);
+  block-size: var(--page-hero-block-size);
   padding-block: var(--header-height) calc(var(--line-total) + var(--space-sm));
   padding-inline: var(--gutter);
   /* Telefonda görsel bandın altından taşar, taşan kısım kesilir. */
@@ -32,7 +30,7 @@
 }
 
 /*
- * Görsel, bant telefonda kısalsa da üçte birlik kutuda kadrajlanır ve üste yaslanır. Böylece kadrajı değişmez, bandın
+ * Görsel, bant kısa olsa da üçte birlik kutuda kadrajlanır ve üste yaslanır. Böylece kadrajı değişmez, bandın
  * altında kalan kısmı kesilir. Yatay telefonda bant en az yüksekliğe çıkarsa görsel yine bandı doldurur.
  */
 .media {
@@ -61,7 +59,7 @@
 
 /* --title-em (başlık uzunluğu) ve --title-bearing (ilk harfin sol boşluğu) PageHero tarafından ölçülür. */
 .title {
-  --title-height: max(var(--page-hero-height), calc(var(--header-height) + 4.5rem)) - var(--header-height) -
+  --title-height: var(--page-hero-block-size) - var(--header-height) -
     var(--line-total) - var(--space-sm);
   /* Başlık, bandı doldurmak yerine sığabileceği en büyük boyutun bu oranında durur. */
   --title-scale: 0.55;
