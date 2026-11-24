@@ -122,6 +122,10 @@ export function PageHero({ title, image }: PageHeroProps) {
             ease: MOTION.ease,
             stagger: { amount: MOTION.heroTitleStaggerAmount },
             delay,
+            // Bölünmüş DOM'da seçim vurgusu maskelerden taşar: animasyon bitince başlık düz metne döner.
+            onComplete: () => {
+              self.revert();
+            },
           }),
       });
     },

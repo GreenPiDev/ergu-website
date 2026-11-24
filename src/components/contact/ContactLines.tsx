@@ -164,6 +164,10 @@ export function ContactLines() {
             ease: MOTION.ease,
             stagger: MOTION.stagger,
             delay,
+            // Bölünmüş DOM'da kelime arası boşlukların seçim vurgusu maskeden taşar: animasyon bitince düz metne dönülür.
+            onComplete: () => {
+              self.revert();
+            },
           }),
       });
     },

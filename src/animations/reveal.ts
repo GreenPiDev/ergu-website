@@ -16,6 +16,11 @@ export function revealWordsOnScroll(target: HTMLElement) {
         ease: MOTION.ease,
         stagger: MOTION.stagger,
         scrollTrigger: { trigger: target, start: REVEAL_START, once: true },
+        // Bölünmüş DOM'da kelime arası boşluklar maskenin dışında kalır ve seçim vurgusu taşar: animasyon
+        // bitince başlık düz metne döner.
+        onComplete: () => {
+          self.revert();
+        },
       }),
   });
 }
